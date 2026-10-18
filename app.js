@@ -1219,7 +1219,7 @@
         // Spawn XP toast without flow glow
         spawnXpToast(earnedXp, mult, currentWordEl, false, false);
 
-        StorageManager.updateWordStat(rank, true, isHadBackspace, liveWpm, target);
+        gameState = StorageManager.updateWordStat(rank, true, isHadBackspace, liveWpm, target);
         if (typeof updatePatternHeat === "function") {
           updatePatternHeat(wordObj, false, true);
         }
@@ -1290,7 +1290,7 @@
         }
 
         // Update Spaced Repetition stats and session pattern heat
-        StorageManager.updateWordStat(rank, false, isHadBackspace, liveWpm, target);
+        gameState = StorageManager.updateWordStat(rank, false, isHadBackspace, liveWpm, target);
         if (typeof updatePatternHeat === "function") {
           updatePatternHeat(wordObj, !isHadBackspace, isHadBackspace);
         }
@@ -1316,7 +1316,7 @@
         // Spawn XP toast
         spawnXpToast(earnedXp, mult, currentWordEl, false, flowMomentum >= 100);
 
-        StorageManager.updateWordStat(rank, false, isHadBackspace, liveWpm, target);
+        gameState = StorageManager.updateWordStat(rank, false, isHadBackspace, liveWpm, target);
         if (typeof updatePatternHeat === "function") {
           updatePatternHeat(wordObj, false, isHadBackspace);
         }

@@ -261,7 +261,7 @@ const StorageManager = {
 
     save.lifetimeWords += 1;
     this.saveGameSave(save);
-    return st;
+    return save;
   },
 
   // Get performance breakdown for all 5 Keybr motor buckets
@@ -383,6 +383,12 @@ const StorageManager = {
     }
   }
 };
+
+if (typeof window !== 'undefined') {
+  window.StorageManager = StorageManager;
+  window.STORAGE_KEYS = STORAGE_KEYS;
+  window.DEFAULT_GAME_SAVE = DEFAULT_GAME_SAVE;
+}
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { StorageManager, STORAGE_KEYS, DEFAULT_GAME_SAVE };

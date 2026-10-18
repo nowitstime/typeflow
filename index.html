@@ -2872,6 +2872,7 @@ function buildHydratedDictionary(rawWordsString) {
       freqRank: item.freqRank,
       tier,
       bioCost: item.bioCost,
+      compositeScore: item.compositeScore,
       primaryPattern: item.primaryPattern,
       tags: item.tags
     };
@@ -3603,7 +3604,7 @@ const StorageManager = {
 
     save.lifetimeWords += 1;
     this.saveGameSave(save);
-    return st;
+    return save;
   },
 
   // Get performance breakdown for all 5 Keybr motor buckets
@@ -3725,6 +3726,12 @@ const StorageManager = {
     }
   }
 };
+
+if (typeof window !== 'undefined') {
+  window.StorageManager = StorageManager;
+  window.STORAGE_KEYS = STORAGE_KEYS;
+  window.DEFAULT_GAME_SAVE = DEFAULT_GAME_SAVE;
+}
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { StorageManager, STORAGE_KEYS, DEFAULT_GAME_SAVE };
@@ -4952,7 +4959,7 @@ if (typeof module !== 'undefined' && module.exports) {
         // Spawn XP toast without flow glow
         spawnXpToast(earnedXp, mult, currentWordEl, false, false);
 
-        StorageManager.updateWordStat(rank, true, isHadBackspace, liveWpm, target);
+        gameState = StorageManager.updateWordStat(rank, true, isHadBackspace, liveWpm, target);
         if (typeof updatePatternHeat === "function") {
           updatePatternHeat(wordObj, false, true);
         }
@@ -5023,7 +5030,7 @@ if (typeof module !== 'undefined' && module.exports) {
         }
 
         // Update Spaced Repetition stats and session pattern heat
-        StorageManager.updateWordStat(rank, false, isHadBackspace, liveWpm, target);
+        gameState = StorageManager.updateWordStat(rank, false, isHadBackspace, liveWpm, target);
         if (typeof updatePatternHeat === "function") {
           updatePatternHeat(wordObj, !isHadBackspace, isHadBackspace);
         }
@@ -5049,7 +5056,7 @@ if (typeof module !== 'undefined' && module.exports) {
         // Spawn XP toast
         spawnXpToast(earnedXp, mult, currentWordEl, false, flowMomentum >= 100);
 
-        StorageManager.updateWordStat(rank, false, isHadBackspace, liveWpm, target);
+        gameState = StorageManager.updateWordStat(rank, false, isHadBackspace, liveWpm, target);
         if (typeof updatePatternHeat === "function") {
           updatePatternHeat(wordObj, false, isHadBackspace);
         }

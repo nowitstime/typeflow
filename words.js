@@ -185,6 +185,7 @@ function buildHydratedDictionary(rawWordsString) {
       freqRank: item.freqRank,
       tier,
       bioCost: item.bioCost,
+      compositeScore: item.compositeScore,
       primaryPattern: item.primaryPattern,
       tags: item.tags
     };
