@@ -1,0 +1,6109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TypeFlow - OLED Typing & Flow Roguelike</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --bg-color: #000000;
+  --bg-secondary: #0b0f14;
+  --main-color: #38bdf8;
+  --main-color-hover: #7dd3fc;
+  --caret-color: #38bdf8;
+  --sub-color: #526071;
+  --sub-alt-color: #121820;
+  --border-color: #1a2332;
+  --text-color: #f1f5f9;
+  --error-color: #f87171;
+  --error-extra-color: #991b1b;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Roboto Mono', monospace;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --line-height: 42px;
+  --font-size: 28px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: var(--font-mono);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 20px;
+  overflow-x: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* App Wrapper */
+.app-container {
+  width: 100%;
+  max-width: 1000px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+/* Header */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.logo-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--main-color);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000000;
+  font-weight: 700;
+  font-size: 18px;
+  font-family: var(--font-sans);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+}
+
+.logo-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-color);
+  letter-spacing: -0.5px;
+}
+
+.logo-title span {
+  color: var(--main-color);
+}
+
+/* Mode Selector Tabs */
+.mode-tabs {
+  display: flex;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 4px;
+}
+
+.mode-tab {
+  background: none;
+  border: none;
+  color: var(--sub-color);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-tab:hover {
+  color: var(--text-color);
+}
+
+.mode-tab.active {
+  background: var(--sub-alt-color);
+  color: var(--main-color);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.15);
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Flow Difficulty Slider & Custom Input Control */
+.flow-diff-pill {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 4px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--sub-color);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.flow-diff-pill:focus-within {
+  border-color: rgba(56, 189, 248, 0.45);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
+}
+
+.diff-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--sub-color);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* Custom Minimalist OLED Slider */
+.diff-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 90px;
+  height: 5px;
+  background: var(--sub-alt-color);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.diff-slider:hover {
+  border-color: rgba(56, 189, 248, 0.45);
+}
+
+.diff-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--main-color);
+  border: 2px solid #000000;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.7);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.diff-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.18);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.95);
+}
+
+.diff-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--main-color);
+  border: 2px solid #000000;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.7);
+  cursor: pointer;
+}
+
+/* Number Input Box */
+.diff-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: #000000;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 2px 6px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.diff-input-wrap:focus-within {
+  border-color: var(--main-color);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.35);
+}
+
+.diff-input {
+  width: 36px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-color);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+  padding: 0;
+  -moz-appearance: textfield;
+}
+
+.diff-input::-webkit-outer-spin-button,
+.diff-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.diff-unit {
+  font-size: 10px;
+  color: var(--sub-color);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Egg Basket Pill in Header */
+.egg-basket-btn {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.2s ease;
+}
+
+.egg-basket-btn:hover {
+  border-color: var(--main-color);
+  background: var(--sub-alt-color);
+}
+
+.egg-basket-btn.has-eggs {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);
+  animation: eggBasketPulse 2s infinite ease-in-out;
+}
+
+@keyframes eggBasketPulse {
+  0%, 100% { transform: translateY(0); box-shadow: 0 0 10px rgba(56, 189, 248, 0.3); }
+  50% { transform: translateY(-2px); box-shadow: 0 0 18px rgba(56, 189, 248, 0.6); }
+}
+
+.egg-basket-icon {
+  font-size: 15px;
+}
+
+/* Level HUD Card */
+.level-hud-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #090e15;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 5px 12px;
+  min-width: 170px;
+}
+
+.level-hud-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.hud-level-badge {
+  background: rgba(56, 189, 248, 0.18);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.hud-level-title {
+  color: var(--text-color);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.hud-xp-ratio {
+  color: var(--sub-color);
+  font-size: 10px;
+}
+
+.hud-level-bar-bg {
+  width: 100%;
+  height: 5px;
+  background: var(--sub-alt-color);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.hud-level-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #38bdf8, #34d399);
+  border-radius: 3px;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+  transition: width 0.3s ease-out;
+}
+
+.config-pill {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--sub-color);
+}
+
+.config-item {
+  cursor: pointer;
+  transition: color 0.2s ease;
+  font-weight: 500;
+}
+
+.config-item:hover,
+.config-item.active {
+  color: var(--main-color);
+}
+
+.icon-btn {
+  background: none;
+  border: 1px solid transparent;
+  color: var(--sub-color);
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.icon-btn:hover {
+  color: var(--text-color);
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.icon-btn.active {
+  color: var(--main-color);
+}
+
+/* Main Typing Stage */
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  min-height: 360px;
+}
+
+/* Test Area */
+.test-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  position: relative;
+}
+
+.test-top-bar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 4px;
+}
+
+.timer-display {
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--main-color);
+  text-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
+  transition: opacity 0.2s;
+  letter-spacing: -1px;
+}
+
+/* Flow Mode RPG Gauge */
+.flow-top-gauge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.flow-metrics-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.flow-speed-tag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.flow-speed-tag.in-flow {
+  border-color: #2dd4bf;
+  box-shadow: 0 0 12px rgba(45, 212, 191, 0.25);
+  color: #2dd4bf;
+}
+
+.flow-speed-tag.slow {
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
+.flow-speed-tag.resting {
+  border-color: var(--sub-color);
+  color: var(--sub-color);
+}
+
+.speed-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sub-color);
+  transition: background 0.2s ease;
+}
+
+.flow-speed-tag.in-flow .speed-status-dot {
+  background: #2dd4bf;
+  box-shadow: 0 0 8px #2dd4bf;
+}
+
+.flow-speed-tag.slow .speed-status-dot {
+  background: #f59e0b;
+}
+
+.flow-multiplier-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.flow-multiplier-badge.max-flow {
+  background: rgba(251, 191, 36, 0.15);
+  border-color: #fbbf24;
+  color: #fbbf24;
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.4);
+}
+
+.flow-metrics-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.egg-chance-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 130px;
+}
+
+.egg-chance-label {
+  font-size: 11px;
+  color: var(--sub-color);
+}
+
+.egg-chance-label strong {
+  color: #38bdf8;
+}
+
+.egg-chance-bar-bg {
+  width: 100%;
+  height: 5px;
+  background: var(--sub-alt-color);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.egg-chance-bar-fill {
+  height: 100%;
+  width: 5%;
+  background: linear-gradient(90deg, #38bdf8, #c084fc);
+  border-radius: 3px;
+  transition: width 0.3s ease-out;
+}
+
+.deck-size-tag {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--sub-color);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.deck-size-tag strong {
+  color: var(--text-color);
+}
+
+/* Pace Paused Breathing State */
+.words-box.pace-paused {
+  border-color: rgba(245, 158, 11, 0.25);
+  animation: paceBreathe 3s infinite ease-in-out;
+}
+
+@keyframes paceBreathe {
+  0%, 100% { box-shadow: 0 0 0 rgba(245, 158, 11, 0); }
+  50% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.12); }
+}
+
+/* Floating XP Toasts */
+.xp-toast-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 25;
+}
+
+.xp-toast {
+  position: absolute;
+  color: #38bdf8;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+  animation: floatToastUp 1s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+}
+
+.xp-toast.bonus {
+  color: #fbbf24;
+  text-shadow: 0 0 12px rgba(251, 191, 36, 0.9);
+  font-size: 16px;
+}
+
+@keyframes floatToastUp {
+  0% { opacity: 0; transform: translateY(0) scale(0.8); }
+  20% { opacity: 1; transform: translateY(-8px) scale(1.1); }
+  80% { opacity: 0.9; transform: translateY(-24px) scale(1); }
+  100% { opacity: 0; transform: translateY(-38px) scale(0.9); }
+}
+
+.live-stats {
+  display: flex;
+  gap: 20px;
+  font-size: 15px;
+  color: var(--sub-color);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.live-stats.visible {
+  opacity: 1;
+}
+
+.live-stats strong {
+  color: var(--text-color);
+}
+
+/* Words Display Box */
+.words-box {
+  position: relative;
+  height: calc(var(--line-height) * 3); /* exactly 3 lines */
+  overflow: hidden;
+  outline: none;
+  cursor: default;
+}
+
+.words-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 14px;
+  line-height: var(--line-height);
+  font-size: var(--font-size);
+  letter-spacing: 0.5px;
+  transition: transform 0.18s ease-out;
+  position: relative;
+}
+
+.word {
+  display: inline-flex;
+  position: relative;
+  white-space: nowrap;
+  color: var(--sub-color);
+  transition: color 0.15s ease;
+}
+
+.word.error {
+  border-bottom: 2px solid var(--error-color);
+}
+
+.letter {
+  position: relative;
+  transition: color 0.1s ease;
+}
+
+.letter.correct {
+  color: var(--text-color);
+}
+
+.letter.incorrect {
+  color: var(--error-color);
+}
+
+.letter.extra {
+  color: var(--error-extra-color);
+}
+
+/* Caret / Cursor */
+.caret {
+  position: absolute;
+  width: 2.5px;
+  height: 32px;
+  background-color: var(--caret-color);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.85);
+  border-radius: 2px;
+  top: 5px;
+  left: 0;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 1;
+  transition: left 0.08s linear, top 0.1s ease-out;
+}
+
+/* Focus Overlay */
+.focus-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  cursor: pointer;
+  z-index: 20;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.focus-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.focus-notice {
+  font-size: 16px;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  padding: 12px 22px;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.focus-notice svg {
+  fill: var(--main-color);
+}
+
+/* Hidden Input for Keyboard capture (optimized for desktop & mobile virtual keyboards) */
+#typing-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  font-size: 16px;
+  pointer-events: auto;
+  border: none;
+  outline: none;
+  background: transparent;
+  caret-color: transparent;
+}
+
+/* Controls Under Test */
+.test-bottom-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px 0 10px;
+}
+
+.restart-btn {
+  background: none;
+  border: 1px solid transparent;
+  color: var(--sub-color);
+  cursor: pointer;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.restart-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.restart-btn:hover {
+  color: var(--text-color);
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.restart-btn:hover svg {
+  transform: rotate(90deg);
+  fill: var(--main-color);
+}
+
+.restart-btn:focus-visible {
+  outline: 2px solid var(--main-color);
+}
+
+.key-hint {
+  font-size: 11px;
+  background: var(--sub-alt-color);
+  border: 1px solid var(--border-color);
+  color: var(--sub-color);
+  padding: 3px 6px;
+  border-radius: 4px;
+}
+
+/* Results Section */
+.results-section {
+  display: none;
+  flex-direction: column;
+  gap: 28px;
+  animation: fadeIn 0.3s ease;
+  width: 100%;
+}
+
+.results-section.visible {
+  display: flex;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 36px;
+  align-items: center;
+}
+
+.hero-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.stat-card.hero {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-card.hero .stat-label {
+  font-size: 20px;
+  color: var(--sub-color);
+  font-weight: 500;
+}
+
+.stat-card.hero .stat-value {
+  font-size: 64px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--main-color);
+  text-shadow: 0 0 20px rgba(56, 189, 248, 0.35);
+  letter-spacing: -2px;
+}
+
+.stat-card.hero.acc .stat-value {
+  font-size: 50px;
+  color: var(--text-color);
+  text-shadow: none;
+}
+
+.secondary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  padding: 24px;
+  border-radius: 16px;
+}
+
+.sub-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sub-stat .stat-label {
+  font-size: 13px;
+  color: var(--sub-color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sub-stat .stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.sub-stat .stat-detail {
+  font-size: 12px;
+  color: var(--sub-color);
+}
+
+/* Chart Container & Hover Tooltip */
+.chart-container {
+  width: 100%;
+  height: 200px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 16px 20px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--sub-color);
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chart-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.chart-legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-color {
+  width: 10px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.legend-color.avg { background: var(--main-color); }
+.legend-color.pace { background: #2dd4bf; }
+.legend-color.raw { background: #64748b; }
+
+.legend-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.legend-dot.err-fixed { background: #34d399; }
+.legend-dot.err-unfixed { background: var(--error-color); }
+
+.chart-header-stats {
+  color: var(--text-color);
+  font-weight: 500;
+  font-size: 13px;
+}
+
+#wpm-chart {
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+}
+
+/* Floating Tooltip */
+.chart-tooltip {
+  position: absolute;
+  background: #070a0e;
+  border: 1px solid var(--main-color);
+  color: var(--text-color);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  pointer-events: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 10px rgba(56, 189, 248, 0.2);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 30;
+  transform: translate(-50%, -120%);
+  white-space: nowrap;
+}
+
+.chart-tooltip.visible {
+  opacity: 1;
+}
+
+.tooltip-time {
+  font-weight: 700;
+  color: var(--main-color);
+  margin-bottom: 3px;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1.4;
+}
+
+.dot-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot-wpm { background: var(--main-color); }
+.dot-pace { background: #2dd4bf; }
+.dot-raw { background: #64748b; }
+.dot-err { background: var(--error-color); }
+.dot-fixed { background: #34d399; }
+
+.badge-fixed {
+  color: #34d399;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-unfixed {
+  color: var(--error-color);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.results-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.btn-primary {
+  background: var(--main-color);
+  color: #000000;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  padding: 12px 28px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
+}
+
+.btn-primary:hover {
+  background: var(--main-color-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+}
+
+.btn-primary svg {
+  fill: currentColor;
+  width: 18px;
+  height: 18px;
+}
+
+/* Footer */
+footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--sub-color);
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.footer-left, .footer-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.shortcut-badge {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--sub-color);
+  padding: 3px 7px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+/* Modals Backdrop & Base Card */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal-card {
+  background: #080c10;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 660px;
+  max-height: 85vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 26px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.95), 0 0 24px rgba(56, 189, 248, 0.12);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 16px;
+}
+
+.modal-title-wrap h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-color);
+  margin-bottom: 4px;
+}
+
+.hatchery-subtitle {
+  font-size: 13px;
+  color: var(--sub-color);
+}
+
+.egg-basket-counter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 6px 14px;
+  border-radius: 10px;
+}
+
+.basket-icon {
+  font-size: 17px;
+}
+
+/* Hatchery Interactive Stage */
+.hatch-stage {
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 20px 0;
+}
+
+.egg-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.15s ease;
+}
+
+.egg-container:hover {
+  transform: scale(1.03);
+}
+
+.egg-container.wobble {
+  animation: eggWobble 0.25s ease-in-out;
+}
+
+@keyframes eggWobble {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(-8deg); }
+  75% { transform: rotate(8deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.egg-aura {
+  position: absolute;
+  width: 140px;
+  height: 180px;
+  border-radius: 50%;
+  filter: blur(28px);
+  opacity: 0.45;
+  transition: background 0.3s ease;
+  z-index: 1;
+}
+
+.egg-shell {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.egg-rarity-chip {
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+  border: 1px solid currentColor;
+}
+
+.egg-svg {
+  width: 120px;
+  height: 155px;
+  filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.4));
+  transition: filter 0.3s ease;
+}
+
+.egg-body {
+  fill: #0c1219;
+  stroke: var(--main-color);
+  stroke-width: 3.5;
+  transition: fill 0.2s, stroke 0.2s;
+}
+
+.egg-crack-1, .egg-crack-2 {
+  stroke: #ffffff;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  filter: drop-shadow(0 0 8px #ffffff);
+}
+
+.hatch-prompt {
+  font-size: 13px;
+  color: var(--sub-color);
+  font-family: var(--font-mono);
+  margin-top: 4px;
+}
+
+.hatch-prompt kbd {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+/* Word Reveal Card */
+.word-reveal-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(45, 212, 191, 0.08));
+  border: 2px solid var(--main-color);
+  border-radius: 16px;
+  padding: 28px 36px;
+  text-align: center;
+  box-shadow: 0 0 35px rgba(56, 189, 248, 0.3);
+  animation: cardRevealFlip 0.4s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes cardRevealFlip {
+  0% { transform: scale(0.7) rotateY(60deg); opacity: 0; }
+  100% { transform: scale(1) rotateY(0deg); opacity: 1; }
+}
+
+.reveal-tag {
+  font-size: 11px;
+  letter-spacing: 1px;
+  font-weight: 700;
+  color: #38bdf8;
+  text-transform: uppercase;
+}
+
+.reveal-word-title {
+  font-size: 34px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-color);
+  letter-spacing: -0.5px;
+}
+
+.reveal-word-meta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.reveal-tier-badge {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid currentColor;
+}
+
+.reveal-xp-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: #34d399;
+}
+
+.reveal-motor-badge {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 14px;
+  border-radius: 20px;
+  border: 1px solid currentColor;
+  background: rgba(255, 255, 255, 0.05);
+  margin-top: 4px;
+  transition: all 0.2s ease;
+}
+
+.reveal-deck-notice {
+  font-size: 12px;
+  color: var(--sub-color);
+  margin-top: 4px;
+}
+
+/* Empty Hatchery State */
+.hatch-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  padding: 30px 20px;
+}
+
+.empty-icon {
+  font-size: 42px;
+}
+
+.empty-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.empty-desc {
+  font-size: 13px;
+  color: var(--sub-color);
+  max-width: 380px;
+  line-height: 1.5;
+}
+
+/* Egg Queue Ribbon */
+.egg-queue-ribbon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 4px;
+  overflow-x: auto;
+  border-top: 1px solid var(--border-color);
+}
+
+.queue-egg-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.queue-egg-chip.active {
+  border-color: currentColor;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.queue-egg-chip:hover {
+  transform: translateY(-1px);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 16px;
+}
+
+.modal-footer.space-between {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-danger-outline {
+  background: transparent;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  color: #f87171;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-danger-outline:hover {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: #f87171;
+  color: #fca5a5;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--sub-color);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  color: var(--text-color);
+  border-color: var(--sub-color);
+}
+
+/* Lifetime Stats Modal */
+.stats-pbs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.pb-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pb-card.highlight {
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.1);
+}
+
+.pb-label {
+  font-size: 12px;
+  color: var(--sub-color);
+  text-transform: uppercase;
+}
+
+.pb-val {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--main-color);
+}
+
+.pb-date {
+  font-size: 11px;
+  color: var(--sub-color);
+}
+
+.history-table-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.history-table-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.history-table th, .history-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.history-table th {
+  color: var(--sub-color);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.history-table td {
+  color: var(--text-color);
+}
+
+/* Flow RPG & Keybr Motor Mastery Styles */
+.stats-modal-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.stats-tab {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--sub-color);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.stats-tab:hover {
+  color: var(--text-color);
+  border-color: var(--sub-color);
+}
+
+.stats-tab.active {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: #38bdf8;
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+.stats-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+.rpg-overview-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 14px;
+}
+
+.rpg-hero-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rpg-hero-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rpg-level-chip {
+  font-size: 18px;
+  font-weight: 700;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+}
+
+.rpg-title-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.rpg-xp-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--sub-color);
+  font-family: var(--font-mono);
+}
+
+.rpg-bar-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.rpg-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #38bdf8, #818cf8);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.rpg-metrics-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rpg-sub-stat {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 9px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rpg-sub-label {
+  font-size: 11px;
+  color: var(--sub-color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.rpg-sub-val {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-color);
+  font-family: var(--font-mono);
+}
+
+.motor-mastery-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section-heading-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.section-subtitle {
+  font-size: 12px;
+  color: var(--sub-color);
+}
+
+.motor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.motor-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+
+.motor-card.proficient {
+  border-color: rgba(52, 211, 153, 0.4);
+  box-shadow: 0 0 16px rgba(52, 211, 153, 0.08);
+}
+
+.motor-card.locked {
+  opacity: 0.5;
+  border-style: dashed;
+}
+
+.motor-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.motor-badge {
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.motor-status-pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.motor-status-pill.proficient {
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.35);
+}
+
+.motor-status-pill.developing {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+.motor-status-pill.locked {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--sub-color);
+  border: 1px solid var(--border-color);
+}
+
+.motor-desc {
+  font-size: 11px;
+  color: var(--sub-color);
+  line-height: 1.4;
+}
+
+.motor-metrics-row {
+  display: flex;
+  justify-content: space-around;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 11px;
+}
+
+.motor-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.motor-metric-label {
+  font-size: 9px;
+  color: var(--sub-color);
+  text-transform: uppercase;
+}
+
+.motor-metric-val {
+  font-weight: 700;
+  color: var(--text-color);
+  font-family: var(--font-mono);
+}
+
+.deck-explorer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.deck-explorer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.deck-filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.deck-filter-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--sub-color);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-mono);
+}
+
+.deck-filter-btn:hover {
+  color: var(--text-color);
+  border-color: var(--sub-color);
+}
+
+.deck-filter-btn.active {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border-color: #38bdf8;
+}
+
+.deck-words-scroll {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+}
+
+.deck-word-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.deck-word-chip:hover {
+  transform: translateY(-1px);
+  border-color: #38bdf8;
+}
+
+.deck-chip-srs {
+  font-size: 11px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  :root {
+    --line-height: 38px;
+    --font-size: 22px;
+  }
+  
+  .results-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  
+  .hero-stats {
+    flex-direction: row;
+    justify-content: space-around;
+  }
+
+  .stat-card.hero .stat-value {
+    font-size: 48px;
+  }
+
+  .stat-card.hero.acc .stat-value {
+    font-size: 42px;
+  }
+
+  .rpg-overview-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .motor-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   Flow State Breathing System, Portal Vignette, & Prismatic Caret
+   ========================================================================== */
+
+/* Full-Screen Flow Vignette & Corner Portals */
+.flow-vignette-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 1;
+}
+
+/* 4-Corner Electric Blue / Cyan Portals with Multi-Stop Organic Aura */
+.flow-vignette-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 0% 0%, rgba(56, 189, 248, 0.85) 0%, rgba(14, 165, 233, 0.35) 25%, transparent 50%),
+    radial-gradient(ellipse at 100% 0%, rgba(56, 189, 248, 0.85) 0%, rgba(14, 165, 233, 0.35) 25%, transparent 50%),
+    radial-gradient(ellipse at 0% 100%, rgba(56, 189, 248, 0.85) 0%, rgba(14, 165, 233, 0.35) 25%, transparent 50%),
+    radial-gradient(ellipse at 100% 100%, rgba(56, 189, 248, 0.85) 0%, rgba(14, 165, 233, 0.35) 25%, transparent 50%);
+  opacity: var(--portal-alpha, 0);
+  transition: opacity 0.3s ease-out;
+  pointer-events: none;
+}
+
+/* Inset Perimeter Glow with Multi-Depth Azure & Teal Radiance */
+.flow-vignette-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 140px rgba(56, 189, 248, 0.75),
+              inset 0 0 60px rgba(45, 212, 191, 0.45),
+              inset 0 0 25px rgba(14, 165, 233, 0.65);
+  opacity: var(--vignette-alpha, 0);
+  transition: opacity 0.3s ease-out;
+  pointer-events: none;
+}
+
+/* Subtle Organic Breathing Pulse (3.4s Sine Cycle) */
+.flow-vignette-overlay.breathing::after {
+  animation: flowBreatheLoop 3.4s ease-in-out infinite alternate;
+}
+
+@keyframes flowBreatheLoop {
+  0% {
+    filter: brightness(0.9);
+    transform: scale(1);
+  }
+  100% {
+    filter: brightness(1.28);
+    transform: scale(1.008);
+  }
+}
+
+/* Focus Mode Ambient Dimming (Continuous Analog Dimmer) */
+header .header-left,
+header .header-controls,
+footer,
+#brand-logo {
+  opacity: var(--focus-opacity, 1);
+  transition: opacity 0.15s ease-out;
+}
+
+/* Pre-Flow Caret High-Energy Anticipation (85% - 99% Flow) */
+.caret.caret-flow-high {
+  box-shadow: 0 0 5px rgba(56, 189, 248, 0.85),
+              0 0 9px rgba(168, 85, 247, 0.45) !important;
+  transition: box-shadow 0.3s ease;
+}
+
+/* 🌈 Barber Shop Rainbow Spiral Caret (100% Flow State) */
+.caret.caret-rainbow {
+  width: 4px;
+  background: transparent !important;
+  overflow: hidden;
+  box-shadow: 0 0 5px rgba(56, 189, 248, 0.8),
+              0 0 9px rgba(255, 0, 85, 0.35) !important;
+  border-radius: 2px;
+}
+
+.caret.caret-rainbow::before {
+  content: '';
+  position: absolute;
+  top: -48px;
+  left: -4px;
+  right: -4px;
+  height: calc(100% + 96px);
+  background: repeating-linear-gradient(
+    135deg,
+    #ff0055 0px,
+    #ff6600 5.66px,
+    #ffcc00 11.31px,
+    #00ff88 16.97px,
+    #00ccff 22.63px,
+    #7928ca 28.28px,
+    #ff0055 33.94px
+  );
+  animation: barberPoleDown 1.0s linear infinite !important;
+  will-change: transform;
+}
+
+@keyframes barberPoleDown {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(48px);
+  }
+}
+
+/* Rainbow XP Toast at 100% Flow */
+.xp-toast.rainbow {
+  background: linear-gradient(135deg, #ff0055, #ffcc00, #00ff88, #00ccff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.8));
+  font-weight: 800;
+}
+
+/* Flow Multiplier Badge Momentum Bar & Rainbow Accents */
+.flow-multiplier-badge {
+  position: relative;
+  overflow: hidden;
+}
+
+.momentum-bar-bg {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+}
+
+.momentum-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: #38bdf8;
+  transition: background 0.3s ease;
+}
+
+.momentum-bar-fill.rainbow {
+  background: linear-gradient(90deg, #ff0055, #ffcc00, #00ff88, #00ccff);
+}
+
+.flow-multiplier-badge.rainbow-max {
+  background: linear-gradient(135deg, rgba(255, 0, 85, 0.18), rgba(0, 204, 255, 0.18));
+  border-color: #38bdf8;
+  color: #38bdf8;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.6), 0 0 28px rgba(255, 0, 85, 0.35);
+  animation: badgeRainbowPulse 1.8s ease-in-out infinite alternate;
+}
+
+.flow-multiplier-badge.cushion-active {
+  box-shadow: 0 0 22px rgba(56, 189, 248, 0.95), 0 0 38px rgba(255, 0, 85, 0.6) !important;
+  border-color: #00ff88 !important;
+}
+
+.flow-multiplier-badge.cushion-active .mult-icon {
+  animation: cushionBoltPulse 0.75s ease-in-out infinite alternate;
+}
+
+@keyframes cushionBoltPulse {
+  0% { transform: scale(1); filter: drop-shadow(0 0 2px #38bdf8); }
+  100% { transform: scale(1.3); filter: drop-shadow(0 0 8px #ff0055); }
+}
+
+@keyframes badgeRainbowPulse {
+  0% {
+    border-color: #38bdf8;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+  }
+  50% {
+    border-color: #f43f5e;
+    box-shadow: 0 0 16px rgba(244, 63, 94, 0.5);
+  }
+  100% {
+    border-color: #a855f7;
+    box-shadow: 0 0 16px rgba(168, 85, 247, 0.5);
+  }
+}
+
+/* ==========================================================================
+   In-Situ 3-Slot Egg Nest & Keyboard-Native Hatching (Tab + "egg")
+   ========================================================================== */
+
+.egg-nest {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.nest-slot {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  user-select: none;
+}
+
+.nest-slot .slot-dot {
+  color: var(--sub-color);
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0.35;
+}
+
+.nest-slot.has-egg {
+  border-color: rgba(56, 189, 248, 0.45);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
+  cursor: pointer;
+}
+
+.nest-slot .egg-glyph {
+  font-size: 18px;
+  line-height: 1;
+  filter: drop-shadow(0 0 4px var(--slot-egg-color, #38bdf8));
+  transition: transform 0.15s ease;
+}
+
+/* Focused Egg in Hatch Mode (Tab) */
+.nest-slot.hatch-focused {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.7), inset 0 0 8px rgba(56, 189, 248, 0.3) !important;
+  transform: scale(1.08);
+}
+
+.nest-crack-prompt {
+  display: none;
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0ea5e9;
+  color: #000000;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  box-shadow: 0 0 8px rgba(14, 165, 233, 0.65);
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.nest-slot.hatch-focused .nest-crack-prompt {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  animation: promptPulse 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes promptPulse {
+  0% { transform: translateX(-50%) translateY(0); }
+  100% { transform: translateX(-50%) translateY(-2px); }
+}
+
+.nest-crack-prompt span.typed {
+  color: #ffffff;
+  text-decoration: underline;
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
+}
+
+.nest-crack-prompt span.untyped {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+/* Wobble & Fracture animations */
+.nest-slot.wobble-1 {
+  animation: eggWobble1 0.2s ease-in-out;
+}
+.nest-slot.wobble-2 {
+  animation: eggWobble2 0.22s ease-in-out;
+}
+
+@keyframes eggWobble1 {
+  0% { transform: scale(1.08) rotate(0deg); }
+  25% { transform: scale(1.12) rotate(-8deg); }
+  75% { transform: scale(1.12) rotate(8deg); }
+  100% { transform: scale(1.08) rotate(0deg); }
+}
+
+@keyframes eggWobble2 {
+  0% { transform: scale(1.1) rotate(0deg); }
+  20% { transform: scale(1.16) rotate(-14deg); }
+  60% { transform: scale(1.16) rotate(14deg); }
+  100% { transform: scale(1.1) rotate(0deg); }
+}
+
+/* Hatched Word Revealed State in Slot */
+.nest-slot.revealed-word {
+  width: auto;
+  min-width: 64px;
+  padding: 0 10px;
+  border-color: #22c55e !important;
+  background: rgba(34, 197, 94, 0.12);
+  box-shadow: 0 0 14px rgba(34, 197, 94, 0.4);
+  animation: revealWordPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes revealWordPop {
+  0% { transform: scale(0.85); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.nest-slot.revealed-word .revealed-word-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: #22c55e;
+  white-space: nowrap;
+}
+
+.nest-hint {
+  font-size: 10px;
+  color: var(--sub-color);
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-left: 4px;
+  display: none;
+}
+
+.nest-hint.visible {
+  display: inline-block;
+  animation: hintBlink 2.4s ease-in-out infinite;
+}
+
+@keyframes hintBlink {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; color: #38bdf8; }
+}
+
+.egg-nest.nest-shake {
+  animation: nestShakeAnim 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes nestShakeAnim {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+  </style>
+</head>
+<body>
+  <!-- Flow Atmosphere Vignette Overlay -->
+  <div class="flow-vignette-overlay" id="flow-vignette-overlay"></div>
+  <div class="app-container">
+    <!-- Header -->
+    <header>
+      <div class="header-left">
+        <div class="logo-area" id="brand-logo" title="Reset Test">
+          <div class="logo-icon">⚡</div>
+          <div class="logo-title">type<span>flow</span></div>
+        </div>
+
+        <!-- Mode Selector Tabs -->
+        <div class="mode-tabs" id="mode-tabs">
+          <button class="mode-tab" data-mode="classic" id="tab-classic">⏱️ Classic</button>
+          <button class="mode-tab active" data-mode="flow" id="tab-flow">🎮 Flow RPG</button>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <!-- Classic Duration Pill (Visible in Classic Mode) -->
+        <div class="config-pill" id="classic-duration-pill" style="display: none;" title="Test Duration">
+          <span class="config-item active" data-time="30">30s</span>
+          <span class="config-item" data-time="15">15s</span>
+          <span class="config-item" data-time="60">60s</span>
+        </div>
+
+        <!-- Flow Difficulty Slider & Custom Input (Visible in Flow Mode) -->
+        <div class="flow-diff-pill" id="flow-target-pill" title="Pace Difficulty Target (WPM)">
+          <span class="diff-label">Pace:</span>
+          <input type="range" id="diff-slider" class="diff-slider" min="15" max="120" step="1" value="40" aria-label="Difficulty slider">
+          <div class="diff-input-wrap">
+            <input type="number" id="diff-input" class="diff-input" min="10" max="300" step="1" value="40" aria-label="Target WPM input">
+            <span class="diff-unit">wpm</span>
+          </div>
+        </div>
+
+        <!-- Egg Basket Pill in Header (deprecated, replaced by in-situ nest) -->
+        <button class="egg-basket-btn" id="egg-basket-btn" style="display: none !important;">
+          <span id="egg-count-badge">0 Eggs</span>
+        </button>
+
+        <!-- Level HUD Card in Header -->
+        <div class="level-hud-card" id="level-hud-card" title="Player Level & XP Progress">
+          <div class="level-hud-info">
+            <span class="hud-level-badge" id="hud-level-badge">Lv. 1</span>
+            <span class="hud-level-title" id="hud-level-title">Novice Typist</span>
+            <span class="hud-xp-ratio" id="hud-xp-ratio">0/100 XP</span>
+          </div>
+          <div class="hud-level-bar-bg">
+            <div class="hud-level-bar-fill" id="hud-level-bar-fill"></div>
+          </div>
+        </div>
+
+        <!-- Stats Modal Toggle Button -->
+        <button class="icon-btn" id="stats-btn" title="View Lifetime Stats & Personal Bests">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+          </svg>
+        </button>
+
+        <!-- Sound Button -->
+        <button class="icon-btn" id="sound-btn" title="Toggle Mechanical Keyboard Sounds">
+          <svg id="sound-icon-on" style="display: none;" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+          </svg>
+          <svg id="sound-icon-off" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+      <!-- Active Typing Stage Section -->
+      <section class="test-section" id="test-section">
+        <!-- Floating XP Layer -->
+        <div class="xp-toast-layer" id="xp-toast-layer"></div>
+
+        <div class="test-top-bar">
+          <!-- Classic Timer Display -->
+          <div class="timer-display" id="timer" style="display: none;">30</div>
+
+          <!-- Flow Mode Speedometer & Streak Display -->
+          <div class="flow-top-gauge" id="flow-gauge">
+            <div class="flow-metrics-left">
+              <div class="flow-speed-tag" id="flow-speed-tag">
+                <span class="speed-status-dot" id="speed-status-dot"></span>
+                <span class="speed-text" id="speed-indicator-text">Target: 40 WPM</span>
+              </div>
+              <div class="flow-multiplier-badge" id="flow-multiplier-badge">
+                <span class="mult-icon">⚡</span>
+                <span id="flow-mult-val">1.0x Flow</span>
+                <div class="momentum-bar-bg">
+                  <div class="momentum-bar-fill" id="momentum-bar-fill"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- In-Situ 3-Slot Egg Nest (Zero Modals, Hands-on-Keyboard) -->
+            <div class="egg-nest" id="egg-nest" title="Egg Nest (Max 3) • Press Tab to Hatch">
+              <div class="nest-slot" id="nest-slot-0" data-slot="0">
+                <span class="slot-dot">·</span>
+                <div class="nest-crack-prompt" id="crack-prompt-0">
+                  <span class="p-e">e</span><span class="p-g1">g</span><span class="p-g2">g</span>
+                </div>
+              </div>
+              <div class="nest-slot" id="nest-slot-1" data-slot="1">
+                <span class="slot-dot">·</span>
+                <div class="nest-crack-prompt" id="crack-prompt-1">
+                  <span class="p-e">e</span><span class="p-g1">g</span><span class="p-g2">g</span>
+                </div>
+              </div>
+              <div class="nest-slot" id="nest-slot-2" data-slot="2">
+                <span class="slot-dot">·</span>
+                <div class="nest-crack-prompt" id="crack-prompt-2">
+                  <span class="p-e">e</span><span class="p-g1">g</span><span class="p-g2">g</span>
+                </div>
+              </div>
+              <span class="nest-hint" id="nest-hint">tab: hatch</span>
+            </div>
+          </div>
+
+          <!-- Live Stats (Classic) -->
+          <div class="live-stats" id="live-stats">
+            <span>wpm: <strong id="live-wpm">0</strong></span>
+            <span>acc: <strong id="live-acc">100%</strong></span>
+          </div>
+        </div>
+
+        <div class="words-box" id="words-box" tabindex="0">
+          <div class="caret" id="caret"></div>
+          <div class="words-wrapper" id="words-wrapper">
+            <!-- Words dynamically generated by script -->
+          </div>
+
+          <div class="focus-overlay" id="focus-overlay">
+            <div class="focus-notice">
+              <svg width="20" height="20" viewBox="0 0 24 24">
+                <path d="M13 1.07V3.12C16.96 3.65 20.08 6.77 20.61 10.73H22.66C22.11 5.65 18.08 1.62 13 1.07M13 20.88V22.93C18.08 22.38 22.11 18.35 22.66 13.27H20.61C20.08 17.23 16.96 20.35 13 20.88M3.39 13.27C3.92 17.23 7.04 20.35 11 20.88V22.93C5.92 22.38 1.89 18.35 1.34 13.27H3.39M11 3.12V1.07C5.92 1.62 1.89 5.65 1.34 10.73H3.39C3.92 6.77 7.04 3.65 11 3.12M12 6C8.69 6 6 8.69 6 12C6 15.31 8.69 18 12 18C15.31 18 18 15.31 18 12C18 8.69 15.31 6 12 6M12 8C14.21 8 16 9.79 16 12C16 14.21 14.21 16 12 16C9.79 16 8 14.21 8 12C8 9.79 9.79 8 12 8Z"/>
+              </svg>
+              <span>Click or tap here to focus</span>
+            </div>
+          </div>
+        </div>
+
+        <input type="text" id="typing-input" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+
+        <div class="test-bottom-bar">
+          <button class="restart-btn" id="restart-btn" title="Restart Session (Tab + Enter)">
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+            </svg>
+            <span id="restart-btn-label">restart flow</span>
+            <span class="key-hint">tab + enter</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Classic Results Section -->
+      <section class="results-section" id="results-section">
+        <div class="results-grid">
+          <div class="hero-stats">
+            <div class="stat-card hero">
+              <span class="stat-label">wpm</span>
+              <span class="stat-value" id="res-wpm">0</span>
+            </div>
+            <div class="stat-card hero acc">
+              <span class="stat-label">acc</span>
+              <span class="stat-value" id="res-acc">0%</span>
+            </div>
+          </div>
+
+          <div class="secondary-stats">
+            <div class="sub-stat">
+              <span class="stat-label">raw wpm</span>
+              <span class="stat-value" id="res-raw">0</span>
+              <span class="stat-detail">total keystrokes</span>
+            </div>
+            <div class="sub-stat">
+              <span class="stat-label">characters</span>
+              <span class="stat-value" id="res-chars">0/0/0/0</span>
+              <span class="stat-detail">correct / err / extra / miss</span>
+            </div>
+            <div class="sub-stat">
+              <span class="stat-label">errors fixed</span>
+              <span class="stat-value" id="res-fixed">0</span>
+              <span class="stat-detail" id="res-fixed-detail">0 corrected</span>
+            </div>
+            <div class="sub-stat">
+              <span class="stat-label">consistency</span>
+              <span class="stat-value" id="res-consistency">0%</span>
+              <span class="stat-detail">pace variance</span>
+            </div>
+            <div class="sub-stat">
+              <span class="stat-label">test time</span>
+              <span class="stat-value" id="res-time">30s</span>
+              <span class="stat-detail" id="res-time-detail">standard mode</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <div class="chart-header">
+            <div class="chart-header-left">
+              <span>WPM Timeline</span>
+              <div class="chart-legend">
+                <div class="legend-item"><span class="legend-color avg"></span> Avg WPM</div>
+                <div class="legend-item"><span class="legend-color pace"></span> Pace (3s)</div>
+                <div class="legend-item"><span class="legend-color raw"></span> Raw</div>
+                <div class="legend-item"><span class="legend-dot err-fixed"></span> Fixed</div>
+                <div class="legend-item"><span class="legend-dot err-unfixed"></span> Unfixed</div>
+              </div>
+            </div>
+            <span class="chart-header-stats" id="chart-hover-stats">Hover or tap points for details</span>
+          </div>
+          <canvas id="wpm-chart"></canvas>
+
+          <!-- Interactive Hover Tooltip -->
+          <div class="chart-tooltip" id="chart-tooltip">
+            <div class="tooltip-time" id="tooltip-time">0s</div>
+            <div class="tooltip-row"><span class="dot-indicator dot-wpm"></span> Avg Speed: <strong id="tooltip-wpm">0 WPM</strong></div>
+            <div class="tooltip-row"><span class="dot-indicator dot-pace"></span> Pace (3s): <strong id="tooltip-pace">0 WPM</strong></div>
+            <div class="tooltip-row"><span class="dot-indicator dot-raw"></span> Raw Speed: <strong id="tooltip-raw">0 WPM</strong></div>
+            <div class="tooltip-row" id="tooltip-err-row"><span class="dot-indicator dot-fixed"></span> Errors: <strong>0</strong></div>
+          </div>
+        </div>
+
+        <div class="results-actions">
+          <button class="btn-primary" id="next-test-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/>
+            </svg>
+            <span>Next Test</span>
+            <span class="key-hint" style="background: rgba(0,0,0,0.18); border-color: rgba(0,0,0,0.2); color: #000000;">Tab + Enter</span>
+          </button>
+        </div>
+      </section>
+
+
+
+      <!-- Lifetime Stats Modal -->
+      <section class="modal-backdrop" id="stats-modal" style="display: none;">
+        <div class="modal-card stats-card">
+          <div class="modal-header">
+            <div class="modal-title-wrap">
+              <h2>📊 Lifetime Stats & Mastery</h2>
+              <div class="stats-modal-tabs">
+                <button class="stats-tab active" id="tab-stats-flow" data-tab="flow">🎮 Flow RPG & Mastery</button>
+                <button class="stats-tab" id="tab-stats-classic" data-tab="classic">⏱️ Classic Records</button>
+              </div>
+            </div>
+            <button class="icon-btn close-modal-btn" id="close-stats-btn" title="Close Stats">✕</button>
+          </div>
+
+          <!-- Flow RPG & Keybr Mastery Pane -->
+          <div class="stats-pane" id="pane-stats-flow">
+            <!-- RPG Overview Cards -->
+            <div class="rpg-overview-grid">
+              <div class="rpg-hero-card">
+                <div class="rpg-hero-top">
+                  <span class="rpg-level-chip" id="stats-rpg-level">Lv. 1</span>
+                  <span class="rpg-title-text" id="stats-rpg-title">Novice Typist</span>
+                </div>
+                <div class="rpg-xp-info">
+                  <span class="rpg-xp-label">XP Progress</span>
+                  <span class="rpg-xp-numbers" id="stats-rpg-xp">0 / 100 XP</span>
+                </div>
+                <div class="rpg-bar-track">
+                  <div class="rpg-bar-fill" id="stats-rpg-xp-bar"></div>
+                </div>
+              </div>
+
+              <div class="rpg-metrics-column">
+                <div class="rpg-sub-stat">
+                  <span class="rpg-sub-label">Unlocked Vocabulary</span>
+                  <span class="rpg-sub-val" id="stats-rpg-words-count">1 / 1,000</span>
+                </div>
+                <div class="rpg-sub-stat">
+                  <span class="rpg-sub-label">Eggs Hatched</span>
+                  <span class="rpg-sub-val" id="stats-rpg-eggs-count">0</span>
+                </div>
+                <div class="rpg-sub-stat">
+                  <span class="rpg-sub-label">Best Flow Streak</span>
+                  <span class="rpg-sub-val" id="stats-rpg-high-streak">0 words</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Keybr Motor Mastery Matrix -->
+            <div class="motor-mastery-section">
+              <div class="section-heading-wrap">
+                <div class="section-title">🧠 Neuromuscular Motor Patterns</div>
+                <div class="section-subtitle">Physical finger mechanics & proficiency tracking across your deck</div>
+              </div>
+              <div class="motor-grid" id="motor-grid">
+                <!-- Dynamically populated 5 motor cards -->
+              </div>
+            </div>
+
+            <!-- Active Deck Explorer Section -->
+            <div class="deck-explorer-section">
+              <div class="deck-explorer-header">
+                <div>
+                  <span class="section-title">Active Deck Words (<span id="deck-unlocked-count">1</span>)</span>
+                  <div class="section-subtitle">Spaced repetition memory and burst speeds</div>
+                </div>
+                <div class="deck-filters" id="deck-filters">
+                  <button class="deck-filter-btn active" data-filter="all">All</button>
+                  <button class="deck-filter-btn" data-filter="HOME_CORE">Home Core</button>
+                  <button class="deck-filter-btn" data-filter="ALTERNATING">Alternator</button>
+                  <button class="deck-filter-btn" data-filter="SUFFIX_CURL">Suffixes</button>
+                  <button class="deck-filter-btn" data-filter="REACH_PINKY">Reaches</button>
+                  <button class="deck-filter-btn" data-filter="DOUBLE_BOUNCE">Bounces</button>
+                </div>
+              </div>
+              <div class="deck-words-scroll" id="deck-words-scroll">
+                <!-- Dynamically populated word chips -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Classic Records Pane -->
+          <div class="stats-pane" id="pane-stats-classic" style="display: none;">
+            <div class="stats-pbs-grid">
+              <div class="pb-card">
+                <span class="pb-label">15s Record</span>
+                <span class="pb-val" id="pb-15s">0 WPM</span>
+                <span class="pb-date" id="pb-15s-date">--</span>
+              </div>
+              <div class="pb-card highlight">
+                <span class="pb-label">30s Record</span>
+                <span class="pb-val" id="pb-30s">0 WPM</span>
+                <span class="pb-date" id="pb-30s-date">--</span>
+              </div>
+              <div class="pb-card">
+                <span class="pb-label">60s Record</span>
+                <span class="pb-val" id="pb-60s">0 WPM</span>
+                <span class="pb-date" id="pb-60s-date">--</span>
+              </div>
+            </div>
+
+            <div class="secondary-stats" style="margin-top: 16px;">
+              <div class="sub-stat">
+                <span class="stat-label">total tests</span>
+                <span class="stat-value" id="stats-total-tests">0</span>
+              </div>
+              <div class="sub-stat">
+                <span class="stat-label">total words</span>
+                <span class="stat-value" id="stats-total-words">0</span>
+              </div>
+              <div class="sub-stat">
+                <span class="stat-label">keystrokes</span>
+                <span class="stat-value" id="stats-total-keys">0</span>
+              </div>
+              <div class="sub-stat">
+                <span class="stat-label">time typing</span>
+                <span class="stat-value" id="stats-total-time">0m</span>
+              </div>
+            </div>
+
+            <div class="history-table-wrap">
+              <div class="history-table-title">Recent Tests</div>
+              <table class="history-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Mode</th>
+                    <th>WPM</th>
+                    <th>Raw</th>
+                    <th>Acc</th>
+                  </tr>
+                </thead>
+                <tbody id="stats-history-tbody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="modal-footer space-between" style="margin-top: 18px;">
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <button class="btn-danger-outline" id="reset-rpg-stats-btn" title="Reset Flow RPG progress back to Level 1, 0 XP, and 1 Word">Reset RPG (Ground Zero) ↺</button>
+              <button class="btn-secondary" id="reset-classic-stats-btn" style="font-size: 12px; padding: 7px 14px;" title="Reset Classic Mode Personal Bests & Records">Clear Records</button>
+            </div>
+            <button class="btn-secondary" id="close-stats-footer-btn">Close</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      <div class="footer-left">
+        <span><span class="shortcut-badge">tab</span> + <span class="shortcut-badge">enter</span> - restart</span>
+        <span><span class="shortcut-badge">esc</span> - pause / hatchery</span>
+      </div>
+      <div class="footer-right">
+        <span>TypeFlow v2.0 • Flow RPG Edition</span>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+/**
+ * TypeFlow - Hybrid Biomechanical & Frequency Dictionary Sorter
+ * 1,000 Most Common English Words Ranked by Hybrid Biomechanical Friction & Frequency
+ * Zero-hardcode runtime dictionary hydration pipeline (<2ms)
+ * Flow-Aware Spaced Repetition (SRS) Pacing
+ */
+
+// 1. Overview & Raw Words String
+const RAW_WORDS =
+  "the be of and to in he have it that for they with as not on she at by this we you do but his from or which what go their can who get if would her all my make about know will up one time there year so think when them some me people take out into just see him your come could now than like other how then its our two more these want way look first also new because day use no man find here thing give many well only those tell very even back any good woman through us life child work down may after should call world over school still try last ask need too feel three state never become between high really something most another much family own leave put old while mean keep student why let great same big group begin seem country help talk where turn problem every start hand might american show part against place such again few case week company system each right program hear question during play government run small number off always move night live point believe hold today bring happen next without before large million must home under water room write mother area national money story young fact month different lot study book eye job word though business issue side kind four head far black long both little house yes since provide service around friend important father sit away until power hour game often yet line political end among ever stand bad lose however member pay law meet car city almost include continue set later community name five once white least learn real change team minute best several idea kid body information nothing ago lead social understand whether watch together follow parent stop face anything create public already speak others read level allow add office spend door health person art sure war history party within grow result open morning walk reason low win research girl guy early food moment himself air teacher force offer enough education across although remember foot second boy maybe toward able age policy everything love process music including consider appear actually buy probably human wait serve market die send expect sense build stay fall nation plan cut college interest death course someone experience behind reach local kill six remain effect suggest class control raise care perhaps late hard field else pass former sell major sometimes require along development themselves report role better economic effort decide rate strong possible heart drug leader light voice wife whole police mind finally pull return free military price less according decision explain son hope develop view relationship carry town road drive arm true federal break difference thank receive value international building action full model join season society tax director position player agree especially record pick wear paper special space ground form support event official whose matter everyone center couple site project hit base activity star table court produce eat teach oil half situation easy cost industry figure street image itself phone either data cover quite picture clear practice piece land recent describe product doctor wall patient worker news test movie certain north personal simply third technology catch step baby computer type attention draw film republican tree source red nearly organization choose cause hair century evidence window difficult listen soon culture billion chance brother energy period summer realize hundred available plant likely opportunity term short letter condition choice single rule daughter administration south husband congress floor campaign material population economy medical hospital church close thousand risk current fire future wrong involve defense anyone increase security bank myself certainly west sport board seek per subject officer private rest behavior deal performance fight throw top quickly past goal bed order author fill represent focus foreign drop blood upon agency push nature color recently store reduce sound note fine near movement page enter share common poor natural race concern series significant similar hot language usually response dead rise animal factor decade article shoot east save artist scene stock career despite central eight thus treatment beyond happy exactly protect approach lie size dog fund serious occur media ready sign thought list individual simple quality pressure accept answer resource identify left meeting determine prepare disease whatever success argue cup particularly amount ability staff recognize indicate character growth loss degree wonder attack herself traditional television box training pretty election everybody physical lay general feeling standard bill message fail outside arrive analysis benefit sex forward lawyer present section environmental glass skill sister professor operation financial crime stage compare authority miss design sort act ten knowledge gun station blue strategy clearly discuss indeed truth song example democratic check environment leg dark various rather laugh guess executive prove hang entire rock forget claim remove manager enjoy network legal religious cold final main science green memory card above seat cell establish nice trial expert spring firm democrat radio visit management avoid imagine tonight huge ball finish yourself theory impact respond statement maintain charge popular onto reveal direction weapon employee cultural contain peace pain apply measure wide shake fly interview manage chair fish particular camera structure politics perform bit weight suddenly discover candidate production treat trip evening affect inside conference unit style adult worry range mention deep front edge specific writer trouble necessary throughout challenge fear shoulder institution middle sea dream bar beautiful property instead improve stuff detail method somebody magazine hotel soldier reflect heavy sexual bag heat marriage tough sing surface purpose exist pattern whom skin agent owner machine gas ahead generation commercial address cancer item reality coach yard beat violence total tend investment discussion finger garden notice collection modern task partner positive civil kitchen consumer shot budget painting scientist safe agreement capital mouth nor victim newspaper threat rich score account wheat audience dinner vote western relate travel debate prevent citizen majority apart fellow born mental traffic colleague scale mountain forest quarter target element release champion journey silence shadow silver golden ocean island whisper thunder diamond castle horizon mystery harmony courage victory legend ancient stellar galaxy crystal spirit starlight";
+
+// 2. Keyboard Geography & Friction Sets
+const LEFT_HAND = new Set("qwertasdfgzxcvb".split(""));
+const TOP_ROW   = new Set("qwertyuiop".split(""));
+const BOT_ROW   = new Set("zxcvbnm".split(""));
+
+const PATTERN_COST = {
+  HOME_CORE: 0.0,
+  ALTERNATING: 1.0,
+  SUFFIX_CURL: 2.5,
+  DOUBLE_BOUNCE: 3.5,
+  REACH_PINKY: 5.0
+};
+
+// 2.1 Rarity Tier Definitions & Multipliers
+const WORD_TIERS = {
+  COMMON:   { id: 1, name: 'Common',   color: '#38bdf8', minRank: 1,   maxRank: 100,  baseCost: 40,   reward: 10 },
+  UNCOMMON: { id: 2, name: 'Uncommon', color: '#34d399', minRank: 101, maxRank: 350,  baseCost: 100,  reward: 25 },
+  RARE:     { id: 3, name: 'Rare',     color: '#c084fc', minRank: 351, maxRank: 700,  baseCost: 220,  reward: 60 },
+  EPIC:     { id: 4, name: 'Epic',     color: '#fbbf24', minRank: 701, maxRank: 1000, baseCost: 450,  reward: 150 }
+};
+
+// 10 simple starter words (Rank 1 to 10)
+const STARTER_WORD_RANKS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+// Motor & Touch-Typing Buckets (Keybr-inspired)
+const MOTOR_BUCKETS = {
+  HOME_CORE: {
+    id: 'HOME_CORE',
+    name: 'Home Core & Center Flow',
+    tag: 'Home Core Flow',
+    description: 'Index & middle home keys (T, H, E, A, O, I, N, S). Optimal baseline rhythm.',
+    color: '#38bdf8'
+  },
+  ALTERNATING: {
+    id: 'ALTERNATING',
+    name: 'Hand Alternator',
+    tag: 'Hand Alternator ⚡',
+    description: 'Strict Left ↔ Right hand transitions. Maximum burst speed potential.',
+    color: '#2dd4bf'
+  },
+  SUFFIX_CURL: {
+    id: 'SUFFIX_CURL',
+    name: 'Suffix & Inward Curl',
+    tag: 'Suffix Curl 🌀',
+    description: 'Smooth curling rolls (-ing, -ight, -tion, -ment, -ould, -able, etc.).',
+    color: '#c084fc'
+  },
+  REACH_PINKY: {
+    id: 'REACH_PINKY',
+    name: 'Lateral & Pinky Reach',
+    tag: 'Lateral Reach 🎯',
+    description: 'Extensions to pinky (A, Q, Z) and corner reach keys (W, P, V, B, C, Y, K).',
+    color: '#fbbf24'
+  },
+  DOUBLE_BOUNCE: {
+    id: 'DOUBLE_BOUNCE',
+    name: 'Double-Letter Bounce',
+    tag: 'Double Bounce 💥',
+    description: 'Quick single-finger tap cadences (ee, oo, ll, ss, tt) and vertical hurdles.',
+    color: '#f472b6'
+  }
+};
+
+// 3.2 Session Motor Bucket Heat (0.0 to 2.0 cap)
+const patternHeat = {
+  HOME_CORE: 0,
+  ALTERNATING: 0,
+  SUFFIX_CURL: 0,
+  REACH_PINKY: 0,
+  DOUBLE_BOUNCE: 0
+};
+
+// 4.3 Anti-Clumping Cooldown Buffer
+let recentHistory = [];
+
+function resetRecentHistory() {
+  recentHistory = [];
+}
+
+/**
+ * 2. Neuromuscular Motor Pattern Tag Detector
+ */
+function detectMotorTags(word) {
+  const tags = [];
+
+  // 1. DOUBLE_BOUNCE: Matches consecutive identical letters OR vertical hurdle bigrams
+  if (/([a-z])\1|(ed|de|lo|ol|sw|ws|fr|rf|ju|uj|ki|ik)/.test(word)) {
+    tags.push("DOUBLE_BOUNCE");
+  }
+
+  // 2. SUFFIX_CURL: length >= 5 AND matches suffix endings
+  if (word.length >= 5 && /(ing|tion|ment|ight|ence|able|ness|ly|ed)$/.test(word)) {
+    tags.push("SUFFIX_CURL");
+  }
+
+  // 3. REACH_PINKY: Matches [qzxj] OR contains >= 2 characters from [qzxvpbjky]
+  const reachMatches = word.match(/[qzxvpbjky]/g) || [];
+  if (/[qzxj]/.test(word) || reachMatches.length >= 2) {
+    tags.push("REACH_PINKY");
+  }
+
+  // 4. ALTERNATING: length >= 4 where >= 75% of adjacent character transitions alternate hands
+  if (word.length >= 4) {
+    let switches = 0;
+    for (let i = 1; i < word.length; i++) {
+      if (LEFT_HAND.has(word[i]) !== LEFT_HAND.has(word[i - 1])) switches++;
+    }
+    if (switches / (word.length - 1) >= 0.75) tags.push("ALTERNATING");
+  }
+
+  // 5. HOME_CORE: Fallback default if tags is empty
+  if (tags.length === 0) tags.push("HOME_CORE");
+
+  return tags;
+}
+
+/**
+ * 2.1 Biomechanical Cost Computation
+ * Evaluates physical finger friction: Length Factor + Motor Pattern Costs + Row Hurdle Penalties
+ */
+function computeBiomechanicalCost(word, tags) {
+  let cost = Math.max(0, word.length - 3) * 1.2;
+
+  for (const tag of tags) {
+    cost += (PATTERN_COST[tag] || 0);
+  }
+
+  for (let i = 1; i < word.length; i++) {
+    const prev = word[i - 1];
+    const curr = word[i];
+    if ((TOP_ROW.has(prev) && BOT_ROW.has(curr)) || (BOT_ROW.has(prev) && TOP_ROW.has(curr))) {
+      cost += 1.0;
+    }
+  }
+  return cost;
+}
+
+/**
+ * 2.2 & 2.3 Hybrid Sorter & Runtime Dictionary Hydration (<2ms)
+ * Scores words by composite friction & frequency, pins Ground Zero ("the" = -1),
+ * sorts progression, and assigns tiers.
+ */
+function buildHydratedDictionary(rawWordsString) {
+  const rawList = rawWordsString.trim().split(/\s+/).slice(0, 1000);
+
+  // 1. Tag and score based on frequency index + physical hurdle costs
+  const scored = rawList.map((word, freqIdx) => {
+    const tags = detectMotorTags(word);
+    const bioCost = computeBiomechanicalCost(word, tags);
+    const compositeScore = freqIdx === 0 ? -1 : (freqIdx * 0.55) + (bioCost * 22.0);
+
+    return {
+      word,
+      freqRank: freqIdx + 1,
+      bioCost: Number(bioCost.toFixed(2)),
+      compositeScore,
+      primaryPattern: tags[0],
+      tags
+    };
+  });
+
+  // 2. Sort by composite score ascending
+  scored.sort((a, b) => a.compositeScore - b.compositeScore);
+
+  // 3. Assign final progression ranks (1-1000) and tier metadata
+  return scored.map((item, sortedIdx) => {
+    const rank = sortedIdx + 1;
+    const tier = sortedIdx < 100 ? "COMMON"
+               : sortedIdx < 350 ? "UNCOMMON"
+               : sortedIdx < 700 ? "RARE" : "EPIC";
+    return {
+      word: item.word,
+      rank,
+      freqRank: item.freqRank,
+      tier,
+      bioCost: item.bioCost,
+      primaryPattern: item.primaryPattern,
+      tags: item.tags
+    };
+  });
+}
+
+// Runtime Startup Hydration (<2ms)
+const DICTIONARY = buildHydratedDictionary(RAW_WORDS);
+
+// Progression-ordered array view (Rank 1 to 1000)
+const RANKED_WORDS = DICTIONARY.map(item => item.word);
+
+// Backward-compatible classification helper
+function classifyWord(word, index) {
+  if (typeof index !== 'number') {
+    index = RANKED_WORDS.indexOf(word);
+    if (index === -1) index = 0;
+  }
+  const tags = detectMotorTags(word);
+  const tier = index < 100 ? "COMMON"
+             : index < 350 ? "UNCOMMON"
+             : index < 700 ? "RARE" : "EPIC";
+  return {
+    word,
+    rank: index + 1,
+    tier,
+    primaryPattern: tags[0],
+    tags
+  };
+}
+
+// Backward-compatible alias
+function classifyWordMotor(word) {
+  return detectMotorTags(word)[0];
+}
+
+function getWordComplexity(word) {
+  if (!word) return 1;
+  if (word.length <= 4) return 1;
+  if (word.length <= 6) return 2;
+  return 3;
+}
+
+/**
+ * Returns metadata for a given 1-indexed word progression rank
+ */
+function getWordMetadata(rank) {
+  const index = Math.max(0, Math.min(DICTIONARY.length - 1, rank - 1));
+  const wordObj = DICTIONARY[index] || classifyWord(RANKED_WORDS[index] || 'type', index);
+  const tier = WORD_TIERS[wordObj.tier] || WORD_TIERS.COMMON;
+  const bucket = MOTOR_BUCKETS[wordObj.primaryPattern] || MOTOR_BUCKETS.HOME_CORE;
+  const tierProgress = (rank - tier.minRank) / Math.max(1, tier.maxRank - tier.minRank);
+  const cost = Math.round(tier.baseCost + tierProgress * (tier.baseCost * 0.8));
+
+  return {
+    rank,
+    word: wordObj.word,
+    freqRank: wordObj.freqRank,
+    bioCost: wordObj.bioCost,
+    tierId: tier.id,
+    tierName: tier.name,
+    tierColor: tier.color,
+    cost,
+    reward: tier.reward,
+    bucketId: wordObj.primaryPattern,
+    bucketName: bucket.name,
+    bucketTag: bucket.tag,
+    bucketColor: bucket.color,
+    complexity: getWordComplexity(wordObj.word),
+    tags: wordObj.tags,
+    primaryPattern: wordObj.primaryPattern
+  };
+}
+
+function getWordBaseXp(rank) {
+  if (rank > 700) return 150; // Epic
+  if (rank > 350) return 60;  // Rare
+  if (rank > 100) return 25;  // Uncommon
+  return 10;                  // Common
+}
+
+const EGG_RARITIES = {
+  common:   { id: 'common',   name: 'Common Egg',   color: '#38bdf8', minRank: 1,   maxRank: 100 },
+  uncommon: { id: 'uncommon', name: 'Uncommon Egg', color: '#34d399', minRank: 101, maxRank: 350 },
+  rare:     { id: 'rare',     name: 'Rare Egg',     color: '#c084fc', minRank: 351, maxRank: 700 },
+  epic:     { id: 'epic',     name: 'Epic Egg',     color: '#fbbf24', minRank: 701, maxRank: 1000 }
+};
+
+function rollNewEgg(unlockedRanks, currentStreak = 0, forceRarity = null, wordStats = {}, targetWpm = 40) {
+  const unlockedSet = new Set(unlockedRanks || [1]);
+
+  // Group unowned candidate words by rarity tier & motor bucket
+  const allUnowned = [];
+  const unownedByTier = {
+    common: [],
+    uncommon: [],
+    rare: [],
+    epic: []
+  };
+  const unownedByBucket = {
+    HOME_CORE: [],
+    ALTERNATING: [],
+    SUFFIX_CURL: [],
+    REACH_PINKY: [],
+    DOUBLE_BOUNCE: []
+  };
+
+  for (let r = 1; r <= RANKED_WORDS.length; r++) {
+    if (!unlockedSet.has(r)) {
+      const meta = getWordMetadata(r);
+      allUnowned.push(r);
+      const tierKey = meta.tierName.toLowerCase();
+      if (unownedByTier[tierKey]) unownedByTier[tierKey].push(r);
+      if (unownedByBucket[meta.bucketId]) unownedByBucket[meta.bucketId].push(r);
+    }
+  }
+
+  // Fallback if all words unlocked
+  if (allUnowned.length === 0) {
+    allUnowned.push(1);
+  }
+
+  // 1. Dynamic Rarity Determination (Progressive Curve: ~85% Common, ~13% Uncommon, ~1.8% Rare, ~0.2% Epic)
+  let pickedRarity = forceRarity;
+  if (!pickedRarity) {
+    const cCount = unownedByTier.common.length;
+    const uCount = unownedByTier.uncommon.length;
+    const rCount = unownedByTier.rare.length;
+    const eCount = unownedByTier.epic.length;
+
+    let wCommon = 0;
+    let wUncommon = 0;
+    let wRare = 0;
+    let wEpic = 0;
+
+    if (cCount > 0) {
+      // Phase 1: Common tier active (~85% Common, ~13% Uncommon, ~1.8% Rare, ~0.2% Epic)
+      const factor = Math.sqrt(cCount / 100.0);
+      wCommon = 85.0 * factor;
+      const spill = 85.0 * (1.0 - factor);
+      wUncommon = (13.0 + spill * 0.88) * (uCount > 0 ? 1 : 0);
+      wRare = (1.8 + spill * 0.10) * (rCount > 0 ? 1 : 0);
+      wEpic = (0.2 + spill * 0.02) * (eCount > 0 ? 1 : 0);
+    } else if (uCount > 0) {
+      // Phase 2: Common completed; Uncommon dominant (~80% Uncommon, ~17% Rare, ~3% Epic)
+      const factor = Math.sqrt(uCount / 250.0);
+      wCommon = 0;
+      wUncommon = 80.0 * factor;
+      const spill = 80.0 * (1.0 - factor);
+      wRare = (17.0 + spill * 0.85) * (rCount > 0 ? 1 : 0);
+      wEpic = (3.0 + spill * 0.15) * (eCount > 0 ? 1 : 0);
+    } else if (rCount > 0) {
+      // Phase 3: Rare dominant (~85% Rare, ~15% Epic)
+      const factor = Math.sqrt(rCount / 350.0);
+      wCommon = 0;
+      wUncommon = 0;
+      wRare = 85.0 * factor;
+      wEpic = 15.0 + 85.0 * (1.0 - factor);
+    } else {
+      wCommon = 0;
+      wUncommon = 0;
+      wRare = 0;
+      wEpic = 100.0;
+    }
+
+    const tierWeights = [
+      { id: 'common', weight: wCommon },
+      { id: 'uncommon', weight: wUncommon },
+      { id: 'rare', weight: wRare },
+      { id: 'epic', weight: wEpic }
+    ].filter(tw => tw.weight > 0 && unownedByTier[tw.id].length > 0);
+
+    const totalWeight = tierWeights.reduce((s, tw) => s + tw.weight, 0);
+    if (totalWeight > 0) {
+      let rand = Math.random() * totalWeight;
+      for (const tw of tierWeights) {
+        rand -= tw.weight;
+        if (rand <= 0) {
+          pickedRarity = tw.id;
+          break;
+        }
+      }
+    }
+    if (!pickedRarity) pickedRarity = (tierWeights[0] && tierWeights[0].id) || 'common';
+  }
+
+  // 2. Determine active buckets in player's unlocked deck
+  const activeBucketCounts = {};
+  const activeBucketStats = {};
+  (unlockedRanks || [1]).forEach(rank => {
+    const meta = getWordMetadata(rank);
+    activeBucketCounts[meta.bucketId] = (activeBucketCounts[meta.bucketId] || 0) + 1;
+    if (!activeBucketStats[meta.bucketId]) {
+      activeBucketStats[meta.bucketId] = { totalHits: 0, totalWpm: 0, count: 0, totalErrors: 0 };
+    }
+    const st = wordStats[rank] || { cleanHits: 0, lastWpm: targetWpm, errorCount: 0 };
+    activeBucketStats[meta.bucketId].totalHits += (st.cleanHits || 0);
+    activeBucketStats[meta.bucketId].totalWpm += (st.lastWpm || 0);
+    activeBucketStats[meta.bucketId].totalErrors += (st.errorCount || 0);
+    activeBucketStats[meta.bucketId].count += 1;
+  });
+
+  // Identify proficient active buckets (consistent clean speed at or above target WPM)
+  const proficientBuckets = [];
+  Object.keys(activeBucketStats).forEach(bId => {
+    const s = activeBucketStats[bId];
+    const avgHits = s.totalHits / Math.max(1, s.count);
+    const avgWpm = s.totalWpm / Math.max(1, s.count);
+    const avgErrors = s.totalErrors / Math.max(1, s.count);
+    if (avgHits >= 3 && avgWpm >= targetWpm && avgErrors <= 1.0) {
+      proficientBuckets.push(bId);
+    }
+  });
+
+  const inactiveBuckets = Object.keys(MOTOR_BUCKETS).filter(bId => !activeBucketCounts[bId] && unownedByBucket[bId].length > 0);
+
+  // 3. Candidate Selection Combining Target Rarity & Motor Progression
+  const tierCandidates = unownedByTier[pickedRarity] || allUnowned;
+  let rollType = 'reinforce';
+  let candidateRanks = [];
+
+  if (forceRarity) {
+    candidateRanks = tierCandidates;
+    rollType = 'deepen';
+  } else if (proficientBuckets.length > 0) {
+    // Proficient: 75% Deepen existing pattern, 25% Branch to new motor bucket
+    const canBranch = inactiveBuckets.length > 0 && Math.random() < 0.25;
+    if (canBranch) {
+      const branchBucket = inactiveBuckets[Math.floor(Math.random() * inactiveBuckets.length)];
+      const branchInTier = tierCandidates.filter(r => getWordMetadata(r).bucketId === branchBucket);
+      if (branchInTier.length > 0) {
+        candidateRanks = branchInTier;
+        rollType = 'branch';
+      } else {
+        // Fallback: take intro words from the branch bucket directly
+        const intro = unownedByBucket[branchBucket].filter(r => getWordMetadata(r).complexity <= 2);
+        candidateRanks = intro.length > 0 ? intro : unownedByBucket[branchBucket];
+        if (candidateRanks.length > 0) {
+          rollType = 'branch';
+          pickedRarity = getWordMetadata(candidateRanks[0]).tierName.toLowerCase();
+        }
+      }
+    }
+    
+    if (candidateRanks.length === 0) {
+      // Deepen proficient buckets
+      rollType = 'deepen';
+      const deepenInTier = tierCandidates.filter(r => proficientBuckets.includes(getWordMetadata(r).bucketId));
+      if (deepenInTier.length > 0) {
+        const higherComp = deepenInTier.filter(r => getWordMetadata(r).complexity >= 2);
+        candidateRanks = higherComp.length > 0 ? higherComp : deepenInTier;
+      } else {
+        candidateRanks = tierCandidates;
+      }
+    }
+  } else {
+    // Developing: reinforce active buckets with accessible Level 1 words
+    rollType = 'reinforce';
+    const activeList = Object.keys(activeBucketCounts);
+    const activeInTier = tierCandidates.filter(r => activeList.includes(getWordMetadata(r).bucketId));
+    if (activeInTier.length > 0) {
+      const level1 = activeInTier.filter(r => getWordMetadata(r).complexity === 1);
+      candidateRanks = level1.length > 0 ? level1 : activeInTier;
+    } else {
+      candidateRanks = tierCandidates;
+    }
+  }
+
+  // Fallback if candidate pool is empty
+  if (!candidateRanks || candidateRanks.length === 0) {
+    candidateRanks = tierCandidates.length > 0 ? tierCandidates : allUnowned;
+  }
+
+  // Bias slightly towards earlier frequency ranks within candidate pool
+  candidateRanks.sort((a, b) => a - b);
+  const poolSlice = candidateRanks.slice(0, Math.min(25, candidateRanks.length));
+  const pickedRank = poolSlice[Math.floor(Math.random() * poolSlice.length)];
+
+  const word = RANKED_WORDS[pickedRank - 1] || 'flow';
+  const meta = getWordMetadata(pickedRank);
+  const finalRarity = pickedRarity || meta.tierName.toLowerCase();
+  const tierDef = EGG_RARITIES[finalRarity] || EGG_RARITIES.common;
+
+  return {
+    id: 'egg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+    rarity: finalRarity,
+    name: tierDef.name,
+    color: tierDef.color,
+    wordRank: pickedRank,
+    word: word,
+    tierName: meta.tierName,
+    tierColor: meta.tierColor,
+    baseXp: getWordBaseXp(pickedRank),
+    bucketId: meta.bucketId,
+    bucketName: meta.bucketName,
+    bucketTag: meta.bucketTag,
+    bucketColor: meta.bucketColor,
+    complexity: meta.complexity,
+    rollType: rollType // 'deepen', 'branch', or 'reinforce'
+  };
+}
+
+
+/**
+ * 3.2 Session Motor Bucket Heat update
+ * When an error or backspace occurs on a word, increment heat +0.3 on all its tags (cap 2.0).
+ * When completed cleanly at/above target WPM, decay heat -0.05 on all its tags (floor 0.0).
+ */
+function updatePatternHeat(wordObj, isCleanAndOnPace, hadErrorOrBackspace) {
+  if (!wordObj || !wordObj.tags) return;
+  for (const tag of wordObj.tags) {
+    if (hadErrorOrBackspace) {
+      patternHeat[tag] = Math.min(2.0, Math.round(((patternHeat[tag] || 0) + 0.3) * 100) / 100);
+    } else if (isCleanAndOnPace) {
+      patternHeat[tag] = Math.max(0.0, Math.round(((patternHeat[tag] || 0) - 0.05) * 100) / 100);
+    }
+  }
+}
+
+/**
+ * 4.1 & 4.2 Dynamic Flow Governor & Word Weight Calculation
+ * Prevents SRS Death Spirals by modulating challengeScale based on flowMomentum.
+ */
+function calculateWordWeight(wordObj, userStats = {}, targetWpm = 40, currentMomentum = 0) {
+  const s = (userStats && userStats[wordObj.rank]) || {
+    seen: 0,
+    unfixedErr: 0,
+    fixedErr: 0,
+    avgWpm: targetWpm,
+    streak: 0
+  };
+
+  const seen = s.seen ?? s.timesSeen ?? 0;
+  const unfixedErr = s.unfixedErr ?? s.errorCount ?? 0;
+  const fixedErr = s.fixedErr ?? 0;
+  const avgWpm = s.avgWpm ?? s.lastWpm ?? targetWpm;
+  const streak = s.streak ?? s.cleanHits ?? 0;
+
+  const curiosity = seen < 4 ? (4 - seen) * 0.4 : 0;
+  const errorWeight = (unfixedErr * 2.5) + (fixedErr * 0.8);
+  const paceDeficit = avgWpm < targetWpm
+    ? Math.min(2.0, ((targetWpm - avgWpm) / targetWpm) * 3.0)
+    : 0;
+  const tagHeat = wordObj.tags.reduce((sum, tag) => sum + (patternHeat[tag] || 0), 0);
+  const masteryDecay = streak > 3 ? (streak - 3) * 0.1 : 0;
+
+  // Flow Governor: Sub-Flow (0.35), Transition (0.85), Apex Testing (1.25)
+  const challengeScale = currentMomentum < 85 ? 0.35 : (currentMomentum >= 100 ? 1.25 : 0.85);
+  const rawWeight = 1.0 + curiosity + ((errorWeight + paceDeficit + tagHeat) * challengeScale) - masteryDecay;
+
+  return Math.max(0.3, rawWeight);
+}
+
+/**
+ * 4.3 Flow-Modulated SRS Generator with Anti-Clumping Cooldown Buffer
+ */
+function generateWords(batchSize = 70, unlockedRanks = [1], dictionary = DICTIONARY, userStats = {}, targetWpm = 40, currentMomentum = 0) {
+  if (!unlockedRanks || unlockedRanks.length === 0) unlockedRanks = [1];
+  const pool = unlockedRanks.map(rank => dictionary[rank - 1]).filter(Boolean);
+  if (pool.length === 0) {
+    pool.push(dictionary[0] || classifyWord("the", 0));
+  }
+  const cooldownCap = Math.min(6, Math.floor(pool.length * 0.6));
+  const batch = [];
+
+  for (let i = 0; i < batchSize; i++) {
+    const candidates = pool.filter(w => !recentHistory.includes(w.word));
+    const activePool = candidates.length > 0 ? candidates : pool;
+
+    const weights = activePool.map(w => calculateWordWeight(w, userStats, targetWpm, currentMomentum));
+    const totalWeight = weights.reduce((a, b) => a + b, 0);
+
+    let roll = Math.random() * totalWeight;
+    let picked = activePool[activePool.length - 1];
+    for (let j = 0; j < activePool.length; j++) {
+      roll -= weights[j];
+      if (roll <= 0) {
+        picked = activePool[j];
+        break;
+      }
+    }
+
+    batch.push(picked.word);
+
+    if (cooldownCap > 0) {
+      recentHistory.push(picked.word);
+      if (recentHistory.length > cooldownCap) recentHistory.shift();
+    }
+  }
+
+  return batch;
+}
+
+function getSrsWeightedRandomWords(unlockedRanks, userStats, targetWpm, count = 70, currentMomentum = 0) {
+  return generateWords(count, unlockedRanks, DICTIONARY, userStats, targetWpm, currentMomentum);
+}
+
+function getRandomWords(count = 70) {
+  const topSlice = RANKED_WORDS.slice(0, 250);
+  const result = [];
+  let lastWord = '';
+  for (let i = 0; i < count; i++) {
+    let nextWord;
+    do {
+      const idx = Math.floor(Math.random() * topSlice.length);
+      nextWord = topSlice[idx];
+    } while (nextWord === lastWord);
+    result.push(nextWord);
+    lastWord = nextWord;
+  }
+  return result;
+}
+
+if (typeof window !== 'undefined') {
+  window.RAW_WORDS = RAW_WORDS;
+  window.RANKED_WORDS = RANKED_WORDS;
+  window.DICTIONARY = DICTIONARY;
+  window.PATTERN_COST = PATTERN_COST;
+  window.detectMotorTags = detectMotorTags;
+  window.computeBiomechanicalCost = computeBiomechanicalCost;
+  window.buildHydratedDictionary = buildHydratedDictionary;
+  window.patternHeat = patternHeat;
+  window.recentHistory = recentHistory;
+  window.resetRecentHistory = resetRecentHistory;
+  window.classifyWord = classifyWord;
+  window.classifyWordMotor = classifyWordMotor;
+  window.updatePatternHeat = updatePatternHeat;
+  window.calculateWordWeight = calculateWordWeight;
+  window.generateWords = generateWords;
+  window.getSrsWeightedRandomWords = getSrsWeightedRandomWords;
+  window.getRandomWords = getRandomWords;
+  window.getWordMetadata = getWordMetadata;
+  window.getWordBaseXp = getWordBaseXp;
+  window.rollNewEgg = rollNewEgg;
+  window.WORD_TIERS = WORD_TIERS;
+  window.MOTOR_BUCKETS = MOTOR_BUCKETS;
+  window.EGG_RARITIES = EGG_RARITIES;
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    RAW_WORDS,
+    RANKED_WORDS,
+    DICTIONARY,
+    PATTERN_COST,
+    detectMotorTags,
+    computeBiomechanicalCost,
+    buildHydratedDictionary,
+    patternHeat,
+    recentHistory,
+    resetRecentHistory,
+    classifyWord,
+    classifyWordMotor,
+    updatePatternHeat,
+    calculateWordWeight,
+    generateWords,
+    getSrsWeightedRandomWords,
+    getRandomWords,
+    getWordMetadata,
+    getWordBaseXp,
+    rollNewEgg,
+    WORD_TIERS,
+    MOTOR_BUCKETS,
+    EGG_RARITIES
+  };
+}
+
+
+/**
+ * TypeFlow - Persistent Storage Manager (localStorage)
+ * Handles Classic Mode stats and Flow Game Mode progression, XP, Levels, Eggs, & SRS data.
+ */
+
+const STORAGE_KEYS = {
+  CLASSIC_STATS: 'typeflow_classic_stats_v1',
+  GAME_SAVE: 'typeflow_game_save_v2', // v2 for 1-word genesis, XP & Egg architecture
+  ACTIVE_MODE: 'typeflow_active_mode'
+};
+
+const DEFAULT_CLASSIC_STATS = {
+  personalBests: {
+    15: { wpm: 0, acc: 0, date: null },
+    30: { wpm: 0, acc: 0, date: null },
+    60: { wpm: 0, acc: 0, date: null }
+  },
+  totalTests: 0,
+  totalWords: 0,
+  totalKeystrokes: 0,
+  totalTimeSeconds: 0,
+  recentHistory: [] // Last 15 tests
+};
+
+const DEFAULT_GAME_SAVE = {
+  level: 1,
+  currentXp: 0,
+  targetWpm: 40, // Default target WPM goal
+  unlockedRanks: [1], // Starts with literally 1 word: "the" (Rank 1)!
+  eggBasket: [], // Array of unhatched eggs [{ id, rarity, wordRank, tierName, tierColor }]
+  wordStats: {}, // Spaced Repetition stats: { [rank]: { timesSeen, errorCount, cleanHits, lastWpm } }
+  lifetimeWords: 0,
+  highStreak: 0
+};
+
+const StorageManager = {
+  // Load classic stats
+  getClassicStats() {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.CLASSIC_STATS);
+      if (!data) return JSON.parse(JSON.stringify(DEFAULT_CLASSIC_STATS));
+      return Object.assign({}, DEFAULT_CLASSIC_STATS, JSON.parse(data));
+    } catch (e) {
+      return JSON.parse(JSON.stringify(DEFAULT_CLASSIC_STATS));
+    }
+  },
+
+  // Record a completed classic test
+  recordClassicTest(duration, wpm, rawWpm, acc, consistency, keystrokes, wordsCount) {
+    try {
+      const stats = this.getClassicStats();
+      stats.totalTests += 1;
+      stats.totalKeystrokes += (keystrokes || 0);
+      stats.totalWords += (wordsCount || 0);
+      stats.totalTimeSeconds += (duration || 30);
+
+      const durKey = duration.toString();
+      if (!stats.personalBests[durKey] || wpm > stats.personalBests[durKey].wpm) {
+        stats.personalBests[durKey] = {
+          wpm,
+          acc,
+          date: new Date().toISOString()
+        };
+      }
+
+      stats.recentHistory.unshift({
+        date: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+        duration,
+        wpm,
+        rawWpm,
+        acc,
+        consistency
+      });
+      if (stats.recentHistory.length > 15) {
+        stats.recentHistory.pop();
+      }
+
+      localStorage.setItem(STORAGE_KEYS.CLASSIC_STATS, JSON.stringify(stats));
+      return stats;
+    } catch (e) {
+      console.error('Failed to save classic stats:', e);
+      return null;
+    }
+  },
+
+  // XP Required to advance from level L to L+1
+  getXpForLevel(level) {
+    return Math.round(100 * Math.pow(level, 1.35));
+  },
+
+  // Title corresponding to player Level
+  getLevelTitle(level) {
+    if (level >= 20) return 'Grandmaster of Keys';
+    if (level >= 15) return 'Flow Master';
+    if (level >= 10) return 'Velocity Adept';
+    if (level >= 5)  return 'Rhythm Apprentice';
+    return 'Novice Typist';
+  },
+
+  // Load game mode save
+  getGameSave() {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.GAME_SAVE);
+      if (!data) {
+        const fresh = JSON.parse(JSON.stringify(DEFAULT_GAME_SAVE));
+        this.saveGameSave(fresh);
+        return fresh;
+      }
+      const parsed = JSON.parse(data);
+      const state = Object.assign({}, DEFAULT_GAME_SAVE, parsed);
+      // Ensure unlockedRanks at least has [1]
+      if (!state.unlockedRanks || state.unlockedRanks.length === 0) {
+        state.unlockedRanks = [1];
+      }
+      // Ensure egg nest does not exceed 3 slots
+      if (state.eggBasket && state.eggBasket.length > 3) {
+        state.eggBasket = state.eggBasket.slice(0, 3);
+      }
+      return state;
+    } catch (e) {
+      return JSON.parse(JSON.stringify(DEFAULT_GAME_SAVE));
+    }
+  },
+
+  // Save game mode save
+  saveGameSave(saveState) {
+    try {
+      localStorage.setItem(STORAGE_KEYS.GAME_SAVE, JSON.stringify(saveState));
+      return true;
+    } catch (e) {
+      console.error('Failed to save game state:', e);
+      return false;
+    }
+  },
+
+  // Add XP and handle potential level-up
+  addXp(amount) {
+    const save = this.getGameSave();
+    save.currentXp += amount;
+    let leveledUp = false;
+    let oldLevel = save.level;
+    let bonusEggRarity = null;
+
+    let req = this.getXpForLevel(save.level);
+    while (save.currentXp >= req) {
+      save.currentXp -= req;
+      save.level += 1;
+      leveledUp = true;
+      req = this.getXpForLevel(save.level);
+
+      // Level-up reward: determine bonus egg rarity
+      if (save.level % 10 === 0) {
+        bonusEggRarity = 'epic';
+      } else if (save.level % 5 === 0) {
+        bonusEggRarity = 'rare';
+      } else {
+        bonusEggRarity = 'uncommon';
+      }
+    }
+
+    this.saveGameSave(save);
+    return {
+      leveledUp,
+      oldLevel,
+      newLevel: save.level,
+      bonusEggRarity,
+      currentXp: save.currentXp,
+      nextLevelXp: req,
+      title: this.getLevelTitle(save.level),
+      save
+    };
+  },
+
+  // Update target WPM
+  setTargetWpm(wpm) {
+    const save = this.getGameSave();
+    save.targetWpm = wpm;
+    this.saveGameSave(save);
+    return save;
+  },
+
+  // Add an Egg to the nest (Hard limit of 3 slots)
+  addEgg(egg) {
+    const save = this.getGameSave();
+    if (!save.eggBasket) save.eggBasket = [];
+    if (save.eggBasket.length >= 3) {
+      return { success: false, reason: 'Nest full', save };
+    }
+    save.eggBasket.push(egg);
+    this.saveGameSave(save);
+    return { success: true, save };
+  },
+
+  // Hatch an Egg: unlocks the word and removes the egg from basket
+  hatchEgg(eggIndex = 0) {
+    const save = this.getGameSave();
+    if (!save.eggBasket || !save.eggBasket[eggIndex]) {
+      return { success: false, reason: 'Egg not found' };
+    }
+
+    const egg = save.eggBasket.splice(eggIndex, 1)[0];
+    if (!save.unlockedRanks.includes(egg.wordRank)) {
+      save.unlockedRanks.push(egg.wordRank);
+      save.unlockedRanks.sort((a, b) => a - b);
+    }
+    this.saveGameSave(save);
+    return { success: true, egg, save };
+  },
+
+  // Update SRS memory for a word (3.1 Per-Word Persistent Telemetry)
+  updateWordStat(rank, hasUnfixedError, hadBackspace = false, wordWpm = 0, targetWpm = 40) {
+    const save = this.getGameSave();
+    if (!save.wordStats) save.wordStats = {};
+    if (!save.wordStats[rank]) {
+      save.wordStats[rank] = {
+        seen: 0,
+        unfixedErr: 0,
+        fixedErr: 0,
+        avgWpm: wordWpm || targetWpm,
+        streak: 0,
+        timesSeen: 0,
+        errorCount: 0,
+        cleanHits: 0,
+        lastWpm: wordWpm || targetWpm
+      };
+    }
+
+    const st = save.wordStats[rank];
+    st.seen = (st.seen ?? st.timesSeen ?? 0) + 1;
+    st.timesSeen = st.seen;
+    st.unfixedErr = st.unfixedErr ?? st.errorCount ?? 0;
+    st.fixedErr = st.fixedErr ?? 0;
+    st.streak = st.streak ?? st.cleanHits ?? 0;
+    st.avgWpm = st.avgWpm ?? st.lastWpm ?? targetWpm;
+
+    const wpm = wordWpm || 0;
+    st.lastWpm = wpm;
+    // Exponential moving average: avgWpm = (avgWpm * 0.7) + (wordWpm * 0.3)
+    st.avgWpm = Math.round(((st.avgWpm * 0.7) + (wpm * 0.3)) * 10) / 10;
+
+    if (hasUnfixedError) {
+      st.unfixedErr += 1.0;
+      st.streak = 0;
+      st.cleanHits = 0;
+    } else {
+      if (hadBackspace) {
+        st.fixedErr += 1.0;
+        st.streak = 0;
+        st.cleanHits = 0;
+      } else if (wpm >= targetWpm) {
+        st.streak += 1;
+        st.cleanHits = st.streak;
+        st.unfixedErr = Math.max(0.0, Math.round((st.unfixedErr - 0.25) * 100) / 100);
+        st.fixedErr = Math.max(0.0, Math.round((st.fixedErr - 0.35) * 100) / 100);
+      } else {
+        st.streak = 0;
+        st.cleanHits = 0;
+      }
+    }
+    st.errorCount = Math.round(st.unfixedErr + st.fixedErr);
+
+    save.lifetimeWords += 1;
+    this.saveGameSave(save);
+    return st;
+  },
+
+  // Get performance breakdown for all 5 Keybr motor buckets
+  getBucketStats(saveState) {
+    const save = saveState || this.getGameSave();
+    const stats = {};
+    const unlocked = save.unlockedRanks || [1];
+
+    // Pre-populate all 5 buckets from MOTOR_BUCKETS so locked patterns are tracked
+    if (typeof MOTOR_BUCKETS !== 'undefined') {
+      Object.keys(MOTOR_BUCKETS).forEach(bId => {
+        const mb = MOTOR_BUCKETS[bId];
+        stats[bId] = {
+          bucketId: bId,
+          bucketName: mb.name,
+          bucketTag: mb.tag,
+          bucketColor: mb.color,
+          description: mb.description,
+          count: 0,
+          totalHits: 0,
+          totalWpm: 0,
+          totalErrors: 0,
+          isProficient: false,
+          isDiscovered: false
+        };
+      });
+    }
+
+    unlocked.forEach(rank => {
+      if (typeof getWordMetadata === 'function') {
+        const meta = getWordMetadata(rank);
+        if (!stats[meta.bucketId]) {
+          stats[meta.bucketId] = {
+            bucketId: meta.bucketId,
+            bucketName: meta.bucketName,
+            bucketTag: meta.bucketTag,
+            bucketColor: meta.bucketColor,
+            description: '',
+            count: 0,
+            totalHits: 0,
+            totalWpm: 0,
+            totalErrors: 0,
+            isProficient: false,
+            isDiscovered: false
+          };
+        }
+        const b = stats[meta.bucketId];
+        const st = (save.wordStats && save.wordStats[rank]) || {};
+        b.count += 1;
+        b.isDiscovered = true;
+        b.totalHits += (st.streak ?? st.cleanHits ?? 0);
+        b.totalWpm += (st.avgWpm ?? st.lastWpm ?? save.targetWpm ?? 40);
+        b.totalErrors += ((st.unfixedErr || 0) + (st.fixedErr || 0)) || (st.errorCount || 0);
+      }
+    });
+
+    Object.values(stats).forEach(b => {
+      if (b.count > 0) {
+        const avgHits = b.totalHits / b.count;
+        const avgWpm = b.totalWpm / b.count;
+        const avgErrors = b.totalErrors / b.count;
+        b.avgHits = Math.round(avgHits * 10) / 10;
+        b.avgWpm = Math.round(avgWpm);
+        b.avgErrors = Math.round(avgErrors * 10) / 10;
+        b.isProficient = (avgHits >= 3) && (avgWpm >= (save.targetWpm || 40)) && (avgErrors <= 1.0);
+      } else {
+        b.avgHits = 0;
+        b.avgWpm = 0;
+        b.avgErrors = 0;
+        b.isProficient = false;
+        b.isDiscovered = false;
+      }
+    });
+
+    return stats;
+  },
+
+  // Reset game save (Ground Zero)
+  resetGameSave() {
+    try {
+      localStorage.removeItem(STORAGE_KEYS.GAME_SAVE);
+      const fresh = JSON.parse(JSON.stringify(DEFAULT_GAME_SAVE));
+      this.saveGameSave(fresh);
+      return fresh;
+    } catch (e) {
+      return DEFAULT_GAME_SAVE;
+    }
+  },
+
+  // Reset classic stats & personal bests
+  resetClassicStats() {
+    try {
+      localStorage.removeItem(STORAGE_KEYS.CLASSIC_STATS);
+      const fresh = JSON.parse(JSON.stringify(DEFAULT_CLASSIC_STATS));
+      localStorage.setItem(STORAGE_KEYS.CLASSIC_STATS, JSON.stringify(fresh));
+      return fresh;
+    } catch (e) {
+      return DEFAULT_CLASSIC_STATS;
+    }
+  },
+
+  // Active Mode ('flow' or 'classic')
+  getActiveMode() {
+    try {
+      const mode = localStorage.getItem(STORAGE_KEYS.ACTIVE_MODE);
+      return (mode === 'classic' || mode === 'flow') ? mode : 'flow';
+    } catch (e) {
+      return 'flow';
+    }
+  },
+
+  setActiveMode(mode) {
+    try {
+      const clean = (mode === 'classic') ? 'classic' : 'flow';
+      localStorage.setItem(STORAGE_KEYS.ACTIVE_MODE, clean);
+      return clean;
+    } catch (e) {
+      return mode;
+    }
+  }
+};
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { StorageManager, STORAGE_KEYS, DEFAULT_GAME_SAVE };
+}
+
+
+/**
+ * TypeFlow - Minimalist Typing Test & Flow Roguelike Game Engine
+ * OLED Black & Light Blue Theme
+ * Spaced Repetition (SRS), Target WPM Pacing, XP Levels & Egg Hatchery
+ */
+
+(function () {
+  // Mode State: 'flow' (default) or 'classic', loaded from StorageManager
+  let currentMode = (typeof StorageManager !== "undefined" && StorageManager.getActiveMode)
+    ? StorageManager.getActiveMode()
+    : "flow";
+
+  // DOM Elements - Header & Tabs
+  const tabClassic = document.getElementById("tab-classic");
+  const tabFlow = document.getElementById("tab-flow");
+  const classicDurationPill = document.getElementById("classic-duration-pill");
+  const flowTargetPill = document.getElementById("flow-target-pill");
+  const diffSlider = document.getElementById("diff-slider");
+  const diffInput = document.getElementById("diff-input");
+  const targetItems = document.querySelectorAll(".target-item");
+  const eggBasketBtn = document.getElementById("egg-basket-btn");
+  const eggCountBadge = document.getElementById("egg-count-badge");
+  const levelHudCard = document.getElementById("level-hud-card");
+  const hudLevelBadge = document.getElementById("hud-level-badge");
+  const hudLevelTitle = document.getElementById("hud-level-title");
+  const hudXpRatio = document.getElementById("hud-xp-ratio");
+  const hudLevelBarFill = document.getElementById("hud-level-bar-fill");
+  const statsBtn = document.getElementById("stats-btn");
+  const openDeckMasteryBtn = document.getElementById("open-deck-mastery-btn");
+  const brandLogo = document.getElementById("brand-logo");
+  const soundBtn = document.getElementById("sound-btn");
+  const soundIconOn = document.getElementById("sound-icon-on");
+  const soundIconOff = document.getElementById("sound-icon-off");
+  const configItems = document.querySelectorAll(".config-item");
+
+  // DOM Elements - Typing Stage
+  const testSection = document.getElementById("test-section");
+  const timerEl = document.getElementById("timer");
+  const flowGauge = document.getElementById("flow-gauge");
+  const flowSpeedTag = document.getElementById("flow-speed-tag");
+  const speedIndicatorText = document.getElementById("speed-indicator-text");
+  const flowMultiplierBadge = document.getElementById("flow-multiplier-badge");
+  const flowMultVal = document.getElementById("flow-mult-val");
+  const momentumBarFill = document.getElementById("momentum-bar-fill");
+  const flowVignetteOverlay = document.getElementById("flow-vignette-overlay");
+  const eggChancePct = document.getElementById("egg-chance-pct");
+  const eggChanceBarFill = document.getElementById("egg-chance-bar-fill");
+  const deckSizeTag = document.getElementById("deck-size-tag");
+  const deckCountNum = document.getElementById("deck-count-num");
+  const xpToastLayer = document.getElementById("xp-toast-layer");
+  const liveStats = document.getElementById("live-stats");
+  const liveWpmEl = document.getElementById("live-wpm");
+  const liveAccEl = document.getElementById("live-acc");
+  const wordsBox = document.getElementById("words-box");
+  const wordsWrapper = document.getElementById("words-wrapper");
+  const caret = document.getElementById("caret");
+  const typingInput = document.getElementById("typing-input");
+  const focusOverlay = document.getElementById("focus-overlay");
+  const restartBtn = document.getElementById("restart-btn");
+  const restartBtnLabel = document.getElementById("restart-btn-label");
+
+  // DOM Elements - Results Screen (Classic)
+  const resultsSection = document.getElementById("results-section");
+  const nextTestBtn = document.getElementById("next-test-btn");
+  const resWpmEl = document.getElementById("res-wpm");
+  const resAccEl = document.getElementById("res-acc");
+  const resRawEl = document.getElementById("res-raw");
+  const resCharsEl = document.getElementById("res-chars");
+  const resFixedEl = document.getElementById("res-fixed");
+  const resFixedDetailEl = document.getElementById("res-fixed-detail");
+  const resConsistencyEl = document.getElementById("res-consistency");
+  const resTimeEl = document.getElementById("res-time");
+  const resTimeDetailEl = document.getElementById("res-time-detail");
+  const chartCanvas = document.getElementById("wpm-chart");
+  const chartTooltip = document.getElementById("chart-tooltip");
+  const tooltipTime = document.getElementById("tooltip-time");
+  const tooltipWpm = document.getElementById("tooltip-wpm");
+  const tooltipPace = document.getElementById("tooltip-pace");
+  const tooltipRaw = document.getElementById("tooltip-raw");
+  const tooltipErrRow = document.getElementById("tooltip-err-row");
+  const chartHoverStats = document.getElementById("chart-hover-stats");
+
+  // DOM Elements - 3-Slot In-Situ Egg Nest
+  const eggNest = document.getElementById("egg-nest");
+  const nestSlots = [
+    document.getElementById("nest-slot-0"),
+    document.getElementById("nest-slot-1"),
+    document.getElementById("nest-slot-2")
+  ];
+  const nestHint = document.getElementById("nest-hint");
+
+  // DOM Elements - Stats Modal
+  const statsModal = document.getElementById("stats-modal");
+  const tabStatsFlow = document.getElementById("tab-stats-flow");
+  const tabStatsClassic = document.getElementById("tab-stats-classic");
+  const paneStatsFlow = document.getElementById("pane-stats-flow");
+  const paneStatsClassic = document.getElementById("pane-stats-classic");
+  const statsRpgLevel = document.getElementById("stats-rpg-level");
+  const statsRpgTitle = document.getElementById("stats-rpg-title");
+  const statsRpgXp = document.getElementById("stats-rpg-xp");
+  const statsRpgXpBar = document.getElementById("stats-rpg-xp-bar");
+  const statsRpgWordsCount = document.getElementById("stats-rpg-words-count");
+  const statsRpgEggsCount = document.getElementById("stats-rpg-eggs-count");
+  const statsRpgHighStreak = document.getElementById("stats-rpg-high-streak");
+  const motorGrid = document.getElementById("motor-grid");
+  const deckUnlockedCount = document.getElementById("deck-unlocked-count");
+  const deckFilters = document.getElementById("deck-filters");
+  const deckWordsScroll = document.getElementById("deck-words-scroll");
+  const closeStatsBtn = document.getElementById("close-stats-btn");
+  const closeStatsFooterBtn = document.getElementById("close-stats-footer-btn");
+  const resetRpgStatsBtn = document.getElementById("reset-rpg-stats-btn");
+  const resetClassicStatsBtn = document.getElementById("reset-classic-stats-btn");
+  const pb15s = document.getElementById("pb-15s");
+  const pb15sDate = document.getElementById("pb-15s-date");
+  const pb30s = document.getElementById("pb-30s");
+  const pb30sDate = document.getElementById("pb-30s-date");
+  const pb60s = document.getElementById("pb-60s");
+  const pb60sDate = document.getElementById("pb-60s-date");
+  const statsTotalTests = document.getElementById("stats-total-tests");
+  const statsTotalWords = document.getElementById("stats-total-words");
+  const statsTotalKeys = document.getElementById("stats-total-keys");
+  const statsTotalTime = document.getElementById("stats-total-time");
+  const statsHistoryTbody = document.getElementById("stats-history-tbody");
+
+  // Classic Test State
+  let testDuration = 30; // default 30s
+  let timeLeft = testDuration;
+  let timerInterval = null;
+  let isTestActive = false;
+  let isTestFinished = false;
+  let testFinishedTime = 0;
+  let wordsList = [];
+  let currentWordIdx = 0;
+  let currentCharIdx = 0;
+  let wordStartTime = 0;
+  let lastWordEndTime = 0;
+  let hadBackspaceOnCurrentWord = false;
+
+  // Metrics
+  let correctKeystrokes = 0;
+  let incorrectKeystrokes = 0;
+  let extraCharsCount = 0;
+  let missedCharsCount = 0;
+  let rawKeystrokes = 0;
+  let totalFixedErrors = 0;
+  let currentSecondErrors = 0;
+  let currentSecondFixed = 0;
+  let lastSecCorrect = 0;
+  let lastSecRaw = 0;
+  let secondDeltas = []; // [{ correct, raw }]
+  let wpmHistory = [];   // [{ second, wpm, rawWpm, burstWpm, errors, fixed }]
+  let chartDataPoints = [];
+  let hoveredPointIndex = null;
+
+  // Flow RPG Game State
+  let gameState = StorageManager.getGameSave();
+  let flowStreak = 0;
+  let flowMomentum = 0; // 0% to 120% breathing reservoir (100-120% is Apex Cushion)
+  let visualMomentum = 0; // 0% to 120% smoothly lerped by physics ticker
+  let lastKeystrokeTime = 0;
+  let idleDecayTimer = null;
+  let physicsAnimFrame = null;
+  let eggChance = 0.0;
+  let consecutiveCleanWords = 0;
+  let rollingKeystrokeTimestamps = []; // for instantaneous WPM
+  let hatchingSlotIndex = -1; // -1 = normal typing, 0/1/2 = active hatch slot
+  let hatchTyped = ""; // "e", "eg", "egg"
+  let revealedSlots = {}; // { 0: "wordA", 1: "wordB" } freshly hatched words displayed in nest slots
+  let eggsHatchedInSession = false; // whether any eggs hatched during current nest visit
+  let lastTabPressTime = 0; // timestamp for Tab + Enter detection
+
+  // Sound Synth (Web Audio API)
+  let soundEnabled = localStorage.getItem("typeflow_sound_enabled") === "true";
+  let audioCtx = null;
+
+  function initAudio() {
+    if (!audioCtx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) {
+        audioCtx = new AudioContext();
+      }
+    }
+    if (audioCtx && audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+  }
+
+  // Melodic pitch scaling with flow streak (semitones: 2^(n/12))
+  function playKeySound(isSpace = false, streakStep = 0) {
+    if (!soundEnabled || !audioCtx) return;
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const baseFreq = isSpace ? 320 : 480;
+      const pitchSemitones = Math.min(18, streakStep);
+      const freq = (baseFreq + (Math.random() * 25 - 12)) * Math.pow(1.05946, pitchSemitones);
+
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (isSpace ? 0.05 : 0.035));
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.06);
+    } catch (e) {}
+  }
+
+  // Egg cracking fracture sound
+  function playFractureSound() {
+    if (!soundEnabled || !audioCtx) return;
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(240, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.09);
+    } catch (e) {}
+  }
+
+  // Egg shatter & word reveal sound (sparkly ascending arpeggio)
+  function playHatchSound() {
+    if (!soundEnabled || !audioCtx) return;
+    try {
+      const now = audioCtx.currentTime;
+      [440, 554.37, 659.25, 880].forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+        gain.gain.setValueAtTime(0.12, now + idx * 0.06);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.22);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + idx * 0.06);
+        osc.stop(now + idx * 0.06 + 0.24);
+      });
+    } catch (e) {}
+  }
+
+  // Level-up celebration fanfare
+  function playLevelUpSound() {
+    if (!soundEnabled || !audioCtx) return;
+    try {
+      const now = audioCtx.currentTime;
+      [523.25, 659.25, 783.99, 1046.50, 1318.51].forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+        gain.gain.setValueAtTime(0.14, now + idx * 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.35);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + idx * 0.08);
+        osc.stop(now + idx * 0.08 + 0.38);
+      });
+    } catch (e) {}
+  }
+
+  // Cute pop chime when an egg is discovered during typing
+  function playEggDropSound() {
+    if (!soundEnabled || !audioCtx) return;
+    try {
+      const now = audioCtx.currentTime;
+      [587.33, 880].forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+        gain.gain.setValueAtTime(0.12, now + idx * 0.07);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.18);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + idx * 0.07);
+        osc.stop(now + idx * 0.07 + 0.2);
+      });
+    } catch (e) {}
+  }
+
+  // Update Header Level HUD Card
+  function updateLevelHud() {
+    const level = gameState.level || 1;
+    const currentXp = gameState.currentXp || 0;
+    const reqXp = StorageManager.getXpForLevel(level);
+    const title = StorageManager.getLevelTitle(level);
+
+    hudLevelBadge.textContent = `Lv. ${level}`;
+    hudLevelTitle.textContent = title;
+    hudXpRatio.textContent = `${currentXp}/${reqXp} XP`;
+
+    const pct = Math.min(100, Math.max(0, Math.round((currentXp / reqXp) * 100)));
+    hudLevelBarFill.style.width = `${pct}%`;
+  }
+
+  // Update In-Situ Egg Nest HUD
+  function updateEggBasketHud() {
+    renderNestSlots();
+  }
+
+  // Update Target WPM Controls (Slider & Number Input)
+  function updateTargetWpmPill() {
+    const currentTarget = gameState.targetWpm || 40;
+    if (diffSlider) {
+      diffSlider.value = Math.min(120, Math.max(15, currentTarget));
+    }
+    if (diffInput && document.activeElement !== diffInput) {
+      diffInput.value = currentTarget;
+    }
+    targetItems.forEach((item) => {
+      const t = parseInt(item.dataset.target, 10);
+      item.classList.toggle("active", t === currentTarget);
+    });
+  }
+
+  // Compute Instantaneous WPM from rolling window (last 3 seconds)
+  function getInstantaneousWpm() {
+    const now = performance.now();
+    rollingKeystrokeTimestamps = rollingKeystrokeTimestamps.filter(t => now - t <= 3000);
+    const count = rollingKeystrokeTimestamps.length;
+    if (count === 0) return 0;
+    const windowSeconds = Math.max(1, (now - rollingKeystrokeTimestamps[0]) / 1000);
+    const wpm = Math.round((count / 5) * (60 / windowSeconds));
+    return isNaN(wpm) ? 0 : wpm;
+  }
+
+  // Flow Multiplier Formula: 1.0x to 3.0x based on Momentum (0% to 120%)
+  function getFlowMultiplier(momentum = flowMomentum) {
+    if (momentum >= 100) return 3.0;
+    if (momentum >= 75) return 2.5;
+    if (momentum >= 50) return 2.0;
+    if (momentum >= 25) return 1.2;
+    return 1.0;
+  }
+
+  let lastRenderedMomentum = -1;
+  let lastRenderedMode = null;
+  let lastFocusOpacity = null;
+  let lastPortalAlpha = null;
+  let lastVignetteAlpha = null;
+
+  // Render Atmosphere on animation frame (smooth analog transitions, cached to prevent style thrashing)
+  function renderFlowAtmosphere(vMomentum) {
+    if (!flowVignetteOverlay) return;
+
+    if (currentMode !== "flow" || vMomentum <= 0) {
+      if (lastRenderedMomentum === 0 && lastRenderedMode === currentMode) {
+        return; // Already clean, avoid redundant DOM thrashing!
+      }
+      lastRenderedMomentum = 0;
+      lastRenderedMode = currentMode;
+      lastPortalAlpha = "0";
+      lastVignetteAlpha = "0";
+      flowVignetteOverlay.classList.remove("active", "breathing");
+      flowVignetteOverlay.style.setProperty("--portal-alpha", "0");
+      flowVignetteOverlay.style.setProperty("--vignette-alpha", "0");
+      if (lastFocusOpacity !== "1") {
+        lastFocusOpacity = "1";
+        document.documentElement.style.setProperty("--focus-opacity", "1");
+      }
+      if (caret) caret.classList.remove("caret-rainbow", "caret-flow-high");
+      if (flowMultiplierBadge) flowMultiplierBadge.classList.remove("rainbow-max", "cushion-active");
+      if (momentumBarFill) {
+        momentumBarFill.style.width = "0%";
+        momentumBarFill.classList.remove("rainbow");
+      }
+      return;
+    }
+
+    if (Math.abs(vMomentum - lastRenderedMomentum) < 0.12 && lastRenderedMode === currentMode) {
+      return;
+    }
+    lastRenderedMomentum = vMomentum;
+    lastRenderedMode = currentMode;
+
+    const displayPct = Math.min(100.0, Math.max(0.0, vMomentum));
+    const isMaxFlow = vMomentum >= 100.0;
+    const isCushion = vMomentum > 100.0;
+
+    // Portal alpha: begins waking at 10% momentum, reaches full radiance at 100%
+    const portalAlpha = (Math.max(0, (displayPct - 10) / 90) * 0.75).toFixed(3);
+    // Vignette alpha: breathing glow reaches up to 0.55 at peak flow
+    const vignetteAlpha = (Math.max(0, (displayPct - 15) / 85) * 0.55).toFixed(3);
+
+    if (portalAlpha !== lastPortalAlpha) {
+      lastPortalAlpha = portalAlpha;
+      flowVignetteOverlay.style.setProperty("--portal-alpha", portalAlpha);
+    }
+    if (vignetteAlpha !== lastVignetteAlpha) {
+      lastVignetteAlpha = vignetteAlpha;
+      flowVignetteOverlay.style.setProperty("--vignette-alpha", vignetteAlpha);
+    }
+
+    if (vMomentum >= 15) {
+      flowVignetteOverlay.classList.add("active");
+    } else {
+      flowVignetteOverlay.classList.remove("active");
+    }
+
+    // Deep flow pulse: calm breathing sine animation at 70%+
+    if (vMomentum >= 70) {
+      flowVignetteOverlay.classList.add("breathing");
+    } else {
+      flowVignetteOverlay.classList.remove("breathing");
+    }
+
+    // Continuous Focus Mode: Dim peripheral UI smoothly from 100% down to 32%
+    const focusOpacity = (1.0 - (displayPct / 100) * 0.68).toFixed(3);
+    if (focusOpacity !== lastFocusOpacity) {
+      lastFocusOpacity = focusOpacity;
+      document.documentElement.style.setProperty("--focus-opacity", focusOpacity);
+    }
+
+    // Caret transitions: chromatic bloom entering 85%, full rainbow at 100%
+    if (caret) {
+      if (isMaxFlow) {
+        caret.classList.remove("caret-flow-high");
+        caret.classList.add("caret-rainbow");
+      } else if (vMomentum >= 85) {
+        caret.classList.add("caret-flow-high");
+        caret.classList.remove("caret-rainbow");
+      } else {
+        caret.classList.remove("caret-flow-high", "caret-rainbow");
+      }
+    }
+
+    // Multiplier Badge Rainbow & Cushion Overdrive Glow
+    if (flowMultiplierBadge) {
+      flowMultiplierBadge.classList.toggle("rainbow-max", isMaxFlow);
+      flowMultiplierBadge.classList.toggle("cushion-active", isCushion);
+    }
+
+    // Smooth Momentum Bar Fill
+    if (momentumBarFill) {
+      momentumBarFill.style.width = `${displayPct.toFixed(2)}%`;
+      momentumBarFill.classList.toggle("rainbow", isMaxFlow);
+    }
+  }
+
+  // Update Atmosphere Entry Point
+  function updateFlowAtmosphereUI(momentum) {
+    flowMomentum = Math.min(120.0, Math.max(0.0, momentum));
+    if (currentMode !== "flow" || flowMomentum <= 0) {
+      visualMomentum = 0;
+      renderFlowAtmosphere(0);
+    }
+  }
+
+  // 60fps / 120fps Damped Physics Ticker
+  function startPhysicsTicker() {
+    if (physicsAnimFrame) cancelAnimationFrame(physicsAnimFrame);
+
+    function tick() {
+      if (currentMode === "flow") {
+        const diff = flowMomentum - visualMomentum;
+        if (Math.abs(diff) > 0.05) {
+          visualMomentum += diff * 0.085; // Critically damped spring lerp
+          renderFlowAtmosphere(visualMomentum);
+        } else if (visualMomentum !== flowMomentum) {
+          visualMomentum = flowMomentum;
+          renderFlowAtmosphere(visualMomentum);
+        }
+      }
+      physicsAnimFrame = requestAnimationFrame(tick);
+    }
+    physicsAnimFrame = requestAnimationFrame(tick);
+  }
+
+  // Idle Decay Loop: Kinetic Rolling Inertia with Apex Grace Period
+  function startIdleDecayLoop() {
+    if (idleDecayTimer) clearInterval(idleDecayTimer);
+    idleDecayTimer = setInterval(() => {
+      if (currentMode !== "flow" || !isTestActive || flowMomentum <= 0) return;
+      if (hatchingSlotIndex !== -1 || (statsModal && statsModal.style.display !== "none")) return;
+
+      const now = performance.now();
+      // Grace period scales with momentum: top momentum gives 3.0s grace period!
+      const gracePeriod = flowMomentum >= 100 ? 3000 : (flowMomentum >= 50 ? 2200 : 1600);
+      const idleTime = now - lastKeystrokeTime;
+
+      if (idleTime > gracePeriod) {
+        const overSec = (idleTime - gracePeriod) / 1000;
+        // Non-linear convex decay: gentle bleed for first 2 seconds, ramping up on prolonged idle
+        const decayPerSec = overSec <= 2.0 ? 3.5 : 7.5;
+        flowMomentum = Math.max(0, flowMomentum - (decayPerSec * 0.20));
+        updateFlowGaugeUI(getInstantaneousWpm());
+      }
+    }, 200);
+  }
+
+  // Update Flow Gauge UI (Speedometer, Streak Multiplier, Egg Chance, Deck Size)
+  function updateFlowGaugeUI(liveWpm) {
+    if (currentMode !== "flow") return;
+
+    const target = gameState.targetWpm || 40;
+    const inFlow = liveWpm >= target;
+    const isMaxFlow = flowMomentum >= 100;
+    const isCushion = flowMomentum > 100;
+
+    // Speed status tag
+    if (isCushion) {
+      flowSpeedTag.className = "flow-speed-tag in-flow";
+      speedIndicatorText.textContent = `🌈 MAX FLOW (${liveWpm || target} WPM)`;
+    } else if (isMaxFlow) {
+      flowSpeedTag.className = "flow-speed-tag in-flow";
+      speedIndicatorText.textContent = `🌈 MAX FLOW (${liveWpm || target} WPM)`;
+    } else if (inFlow) {
+      flowSpeedTag.className = "flow-speed-tag in-flow";
+      speedIndicatorText.textContent = `🔥 Flow Active (${liveWpm} WPM)`;
+    } else if (liveWpm === 0) {
+      flowSpeedTag.className = "flow-speed-tag slow";
+      speedIndicatorText.textContent = `Target: ${target} WPM`;
+    } else {
+      flowSpeedTag.className = "flow-speed-tag slow";
+      speedIndicatorText.textContent = `⚡ Paced: ${liveWpm} / ${target} WPM`;
+    }
+
+    // Multiplier Badge
+    const mult = getFlowMultiplier(flowMomentum);
+    flowMultVal.textContent = `${mult.toFixed(1)}x Flow`;
+    if (mult > 1.0) {
+      flowMultiplierBadge.classList.add("active");
+    } else {
+      flowMultiplierBadge.classList.remove("active");
+    }
+
+    // Egg Drop Chance: scaled relative to 18% cap (if elements present)
+    if (eggChancePct) eggChancePct.textContent = `${eggChance.toFixed(1)}%`;
+    if (eggChanceBarFill) eggChanceBarFill.style.width = `${Math.min(100, Math.round((eggChance / 18.0) * 100))}%`;
+
+    // Deck Size (if elements present)
+    const deckCount = (gameState.unlockedRanks && gameState.unlockedRanks.length) || 1;
+    if (deckCountNum) deckCountNum.textContent = `${deckCount} word${deckCount === 1 ? "" : "s"}`;
+  }
+
+  // Spawn Floating XP Toast
+  function spawnXpToast(text, multiplier = 1.0, anchorEl = null, isBonus = false, isRainbow = false) {
+    if (!xpToastLayer) return;
+
+    const toast = document.createElement("div");
+    const rainbowClass = isRainbow || multiplier >= 3.0 ? " rainbow" : "";
+    toast.className = `xp-toast ${isBonus || multiplier > 1.5 ? "bonus" : ""}${rainbowClass}`;
+    toast.textContent = typeof text === "number" ? `+${text} XP` : text;
+
+    let left = 40;
+    let top = 40;
+
+    if (anchorEl) {
+      const boxRect = wordsBox.getBoundingClientRect();
+      const elRect = anchorEl.getBoundingClientRect();
+      left = elRect.left - boxRect.left + (elRect.width / 2) - 15;
+      top = elRect.top - boxRect.top - 10;
+    } else {
+      left = wordsBox.clientWidth / 2 - 25;
+      top = 20;
+    }
+
+    toast.style.left = `${Math.max(10, Math.min(wordsBox.clientWidth - 70, left))}px`;
+    toast.style.top = `${Math.max(5, top)}px`;
+
+    xpToastLayer.appendChild(toast);
+    setTimeout(() => {
+      toast.remove();
+    }, 1000);
+  }
+
+  // Generate words and populate DOM based on active mode
+  function generateWords(count = 70) {
+    if (currentMode === "flow") {
+      // Ground zero begins with 1 word ("the"); Flow-Aware SRS modulates challengeScale with flowMomentum!
+      wordsList = getSrsWeightedRandomWords(
+        gameState.unlockedRanks,
+        gameState.wordStats,
+        gameState.targetWpm,
+        count,
+        flowMomentum
+      );
+    } else {
+      wordsList = getRandomWords(count);
+    }
+
+    wordsWrapper.innerHTML = "";
+
+    wordsList.forEach((word, wIdx) => {
+      const wordEl = document.createElement("div");
+      wordEl.className = "word" + (wIdx === 0 ? " active" : "");
+      wordEl.dataset.word = word;
+
+      for (let i = 0; i < word.length; i++) {
+        const letterEl = document.createElement("span");
+        letterEl.className = "letter";
+        letterEl.textContent = word[i];
+        wordEl.appendChild(letterEl);
+      }
+      wordsWrapper.appendChild(wordEl);
+    });
+
+    scrollOffset = 0;
+    wordsWrapper.style.transform = "translateY(0px)";
+  }
+
+  // Caret & Scroll Calculation (Deterministic Offset Math & Hybrid Tracking)
+  let scrollOffset = 0;
+
+  // Handle multi-line viewport alignment
+  function checkLineScroll(activeWordEl) {
+    const firstWord = wordsWrapper.firstElementChild;
+    if (!firstWord) return;
+
+    const baseTop = firstWord.offsetTop;
+    const currentWordTop = activeWordEl.offsetTop;
+
+    // Detect exact rendered line height dynamically from DOM
+    const line2Word = Array.from(wordsWrapper.children).find(w => w.offsetTop > baseTop + 10);
+    const lineHeight = line2Word ? (line2Word.offsetTop - baseTop) : (activeWordEl.offsetHeight || 42);
+
+    // Line 1 & Line 2 do not scroll. Line 3+ scrolls so active line is always visually at Line 2
+    let newScrollOffset = 0;
+    if (currentWordTop > baseTop + lineHeight * 1.2) {
+      newScrollOffset = currentWordTop - (baseTop + lineHeight);
+    } else {
+      newScrollOffset = 0;
+    }
+
+    if (newScrollOffset !== scrollOffset) {
+      scrollOffset = newScrollOffset;
+      wordsWrapper.style.transform = `translateY(-${scrollOffset}px)`;
+    }
+  }
+
+  // Update Caret Position with subpixel horizontal tracking & synchronous vertical lock
+  function updateCaret() {
+    const wordElements = wordsWrapper.querySelectorAll(".word");
+    const currentWordEl = wordElements[currentWordIdx];
+    if (!currentWordEl) return;
+
+    checkLineScroll(currentWordEl);
+
+    const currentWordTop = currentWordEl.offsetTop;
+    const visualTop = currentWordTop - scrollOffset;
+    const targetTop = visualTop + 5;
+
+    const letterElements = currentWordEl.querySelectorAll(".letter");
+    const boxRect = wordsBox.getBoundingClientRect();
+    let targetLeft = 0;
+
+    if (currentCharIdx < letterElements.length) {
+      const activeLetter = letterElements[currentCharIdx];
+      const letterRect = activeLetter.getBoundingClientRect();
+      if (boxRect.width > 0 && letterRect.width > 0) {
+        targetLeft = letterRect.left - boxRect.left;
+      } else {
+        targetLeft = activeLetter.offsetLeft;
+      }
+    } else {
+      // Past end of word
+      if (letterElements.length > 0) {
+        const lastLetter = letterElements[letterElements.length - 1];
+        const lastRect = lastLetter.getBoundingClientRect();
+        if (boxRect.width > 0 && lastRect.width > 0) {
+          targetLeft = lastRect.right - boxRect.left;
+        } else {
+          targetLeft = lastLetter.offsetLeft + lastLetter.offsetWidth;
+        }
+      } else {
+        targetLeft = currentWordEl.offsetLeft;
+      }
+    }
+
+    caret.style.transform = `translate(${targetLeft}px, ${targetTop}px)`;
+  }
+
+  // Dynamic error underline removal check
+  function checkWordErrorState(wordEl) {
+    if (!wordEl) return;
+    const hasIncorrect = wordEl.querySelector(".incorrect, .extra");
+    if (hasIncorrect) {
+      wordEl.classList.add("error");
+    } else {
+      wordEl.classList.remove("error");
+    }
+  }
+
+  // Classic Timer
+  function startTimer() {
+    if (isTestActive) return;
+    isTestActive = true;
+    lastKeystrokeTime = performance.now();
+    lastSecCorrect = 0;
+    lastSecRaw = 0;
+    secondDeltas = [];
+    wpmHistory = [];
+    currentSecondErrors = 0;
+    currentSecondFixed = 0;
+
+    if (currentMode === "classic") {
+      liveStats.classList.add("visible");
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        timerEl.textContent = timeLeft;
+
+        const deltaCorrect = correctKeystrokes - lastSecCorrect;
+        const deltaRaw = rawKeystrokes - lastSecRaw;
+        lastSecCorrect = correctKeystrokes;
+        lastSecRaw = rawKeystrokes;
+        secondDeltas.push({ correct: deltaCorrect, raw: deltaRaw });
+
+        const elapsedSec = testDuration - timeLeft;
+        const currentCumulativeWpm = Math.round((correctKeystrokes / 5) / (elapsedSec / 60));
+        const currentCumulativeRawWpm = Math.round((rawKeystrokes / 5) / (elapsedSec / 60));
+
+        const recentWindow = secondDeltas.slice(-3);
+        const burstCorrectSum = recentWindow.reduce((a, b) => a + b.correct, 0);
+        const burstWindowSec = recentWindow.length;
+        const burstWpm = Math.round((burstCorrectSum / 5) / (burstWindowSec / 60));
+
+        wpmHistory.push({
+          second: elapsedSec,
+          wpm: currentCumulativeWpm,
+          rawWpm: currentCumulativeRawWpm,
+          burstWpm: burstWpm,
+          errors: currentSecondErrors,
+          fixed: currentSecondFixed
+        });
+
+        currentSecondErrors = 0;
+        currentSecondFixed = 0;
+
+        liveWpmEl.textContent = currentCumulativeWpm;
+        const totalAttempts = correctKeystrokes + incorrectKeystrokes;
+        const acc = totalAttempts > 0 ? Math.round((correctKeystrokes / totalAttempts) * 100) : 100;
+        liveAccEl.textContent = `${acc}%`;
+
+        if (timeLeft <= 0) {
+          finishClassicTest();
+        }
+      }, 1000);
+    }
+  }
+
+  // Finish Classic Test & Show Results
+  function finishClassicTest() {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    isTestActive = false;
+    isTestFinished = true;
+    testFinishedTime = Date.now();
+
+    testSection.style.display = "none";
+    resultsSection.classList.add("visible");
+
+    const totalAttempts = correctKeystrokes + incorrectKeystrokes;
+    const finalWpm = Math.round((correctKeystrokes / 5) / (testDuration / 60));
+    const finalRawWpm = Math.round((rawKeystrokes / 5) / (testDuration / 60));
+    const finalAcc = totalAttempts > 0 ? Math.round((correctKeystrokes / totalAttempts) * 100) : 100;
+
+    let consistency = 100;
+    if (wpmHistory.length > 2) {
+      const wpms = wpmHistory.map(h => h.wpm);
+      const mean = wpms.reduce((a, b) => a + b, 0) / wpms.length;
+      const variance = wpms.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / wpms.length;
+      const stdDev = Math.sqrt(variance);
+      consistency = Math.max(0, Math.min(100, Math.round(100 - (stdDev / (mean || 1)) * 100)));
+    }
+
+    resWpmEl.textContent = finalWpm;
+    resAccEl.textContent = `${finalAcc}%`;
+    resRawEl.textContent = finalRawWpm;
+    resCharsEl.textContent = `${correctKeystrokes}/${incorrectKeystrokes}/${extraCharsCount}/${missedCharsCount}`;
+    resFixedEl.textContent = totalFixedErrors;
+    resFixedDetailEl.textContent = totalFixedErrors === 1 ? "1 error fixed" : `${totalFixedErrors} errors fixed`;
+    resConsistencyEl.textContent = `${consistency}%`;
+    resTimeEl.textContent = `${testDuration}s`;
+    resTimeDetailEl.textContent = "standard mode";
+
+    // Save to persistent storage!
+    StorageManager.recordClassicTest(
+      testDuration,
+      finalWpm,
+      finalRawWpm,
+      finalAcc,
+      consistency,
+      rawKeystrokes,
+      Math.round(correctKeystrokes / 5)
+    );
+
+    renderChart();
+
+    nextTestBtn.blur();
+    setTimeout(() => {
+      nextTestBtn.focus();
+    }, 450);
+  }
+
+  // Render Canvas Chart for Results
+  function renderChart(hoverIndex = null) {
+    if (!chartCanvas || wpmHistory.length === 0) return;
+    const ctx = chartCanvas.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+
+    const width = chartCanvas.parentElement.clientWidth;
+    const height = 180;
+    chartCanvas.width = width * dpr;
+    chartCanvas.height = height * dpr;
+    chartCanvas.style.width = `${width}px`;
+    chartCanvas.style.height = `${height}px`;
+    ctx.scale(dpr, dpr);
+
+    ctx.clearRect(0, 0, width, height);
+
+    const padding = { top: 20, right: 30, bottom: 30, left: 40 };
+    const chartW = width - padding.left - padding.right;
+    const chartH = height - padding.top - padding.bottom;
+
+    const allValues = wpmHistory.flatMap(h => [h.wpm, h.rawWpm, h.burstWpm || h.wpm]);
+    const maxVal = Math.max(40, ...allValues) + 10;
+    const minVal = 0;
+
+    // Grid lines
+    ctx.strokeStyle = "#1a2332";
+    ctx.lineWidth = 1;
+    ctx.fillStyle = "#526071";
+    ctx.font = "11px Inter, sans-serif";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+
+    const ySteps = 4;
+    for (let i = 0; i <= ySteps; i++) {
+      const val = Math.round(minVal + (maxVal - minVal) * (i / ySteps));
+      const y = padding.top + chartH - (i / ySteps) * chartH;
+      ctx.beginPath();
+      ctx.moveTo(padding.left, y);
+      ctx.lineTo(width - padding.right, y);
+      ctx.stroke();
+      ctx.fillText(`${val}`, padding.left - 8, y);
+    }
+
+    const n = wpmHistory.length;
+    const getX = (idx) => padding.left + (idx / Math.max(1, n - 1)) * chartW;
+    const getY = (val) => padding.top + chartH - ((val - minVal) / (maxVal - minVal)) * chartH;
+
+    // Time ticks
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    const xStep = Math.max(1, Math.floor(n / 6));
+    for (let i = 0; i < n; i += xStep) {
+      const x = getX(i);
+      ctx.fillText(`${wpmHistory[i].second}s`, x, height - padding.bottom + 8);
+    }
+
+    // 1. Raw WPM line (dashed)
+    ctx.save();
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = "#64748b";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    wpmHistory.forEach((pt, i) => {
+      const x = getX(i);
+      const y = getY(pt.rawWpm);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    ctx.restore();
+
+    // 2. Rolling 3s Pace line (mint teal)
+    ctx.save();
+    ctx.strokeStyle = "#2dd4bf";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    wpmHistory.forEach((pt, i) => {
+      const x = getX(i);
+      const y = getY(pt.burstWpm || pt.wpm);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    ctx.restore();
+
+    // 3. Cumulative Avg WPM line (cyan with area gradient)
+    ctx.save();
+    const grad = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartH);
+    grad.addColorStop(0, "rgba(56, 189, 248, 0.25)");
+    grad.addColorStop(1, "rgba(56, 189, 248, 0.0)");
+
+    ctx.beginPath();
+    wpmHistory.forEach((pt, i) => {
+      const x = getX(i);
+      const y = getY(pt.wpm);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.lineTo(getX(n - 1), padding.top + chartH);
+    ctx.lineTo(getX(0), padding.top + chartH);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    ctx.strokeStyle = "#38bdf8";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    wpmHistory.forEach((pt, i) => {
+      const x = getX(i);
+      const y = getY(pt.wpm);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    ctx.restore();
+
+    // Store points for hover detection
+    chartDataPoints = [];
+    wpmHistory.forEach((pt, i) => {
+      const x = getX(i);
+      const y = getY(pt.wpm);
+      chartDataPoints.push({ x, y, item: pt, index: i });
+
+      // Error markers
+      if (pt.errors > 0) {
+        const isFixed = (pt.fixed >= pt.errors) || (pt.fixed > 0);
+        ctx.save();
+        ctx.fillStyle = isFixed ? "#34d399" : "#f87171";
+        ctx.beginPath();
+        ctx.arc(x, getY(pt.rawWpm), 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    });
+
+    // Hover crosshair and highlighted point
+    if (hoverIndex !== null && chartDataPoints[hoverIndex]) {
+      const target = chartDataPoints[hoverIndex];
+      ctx.save();
+      ctx.strokeStyle = "rgba(56, 189, 248, 0.4)";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(target.x, padding.top);
+      ctx.lineTo(target.x, padding.top + chartH);
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.save();
+      ctx.fillStyle = "#38bdf8";
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(target.x, target.y, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  // Interactive Chart Tooltip
+  function handleChartInteraction(e) {
+    if (chartDataPoints.length === 0) return;
+    const rect = chartCanvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const mouseX = clientX - rect.left;
+
+    let closestIdx = 0;
+    let minDiff = Infinity;
+    chartDataPoints.forEach((pt, i) => {
+      const diff = Math.abs(pt.x - mouseX);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestIdx = i;
+      }
+    });
+
+    if (minDiff < 45) {
+      hoveredPointIndex = closestIdx;
+      const pt = chartDataPoints[closestIdx];
+      renderChart(hoveredPointIndex);
+
+      if (chartTooltip) {
+        tooltipTime.textContent = `${pt.item.second}s`;
+        tooltipWpm.textContent = `${pt.item.wpm} WPM`;
+        if (tooltipPace) tooltipPace.textContent = `${pt.item.burstWpm || pt.item.wpm} WPM`;
+        tooltipRaw.textContent = `${pt.item.rawWpm} WPM`;
+
+        if (tooltipErrRow) {
+          if (pt.item.errors > 0) {
+            const isFixed = (pt.item.fixed >= pt.item.errors) || (pt.item.fixed > 0);
+            if (isFixed) {
+              tooltipErrRow.innerHTML = `<span class="dot-indicator dot-fixed"></span> Errors: <strong>${pt.item.errors}</strong> <span class="badge-fixed">(Fixed ✓)</span>`;
+            } else {
+              tooltipErrRow.innerHTML = `<span class="dot-indicator dot-err"></span> Errors: <strong>${pt.item.errors}</strong> <span class="badge-unfixed">(Unfixed ✗)</span>`;
+            }
+          } else {
+            tooltipErrRow.innerHTML = `<span class="dot-indicator dot-fixed"></span> Errors: <strong>0</strong>`;
+          }
+        }
+
+        chartTooltip.style.left = `${pt.x + 20}px`;
+        chartTooltip.style.top = `${pt.y + 16}px`;
+        chartTooltip.classList.add("visible");
+      }
+
+      if (chartHoverStats) {
+        const isFixed = (pt.item.fixed >= pt.item.errors) || (pt.item.fixed > 0);
+        const errBadge = pt.item.errors > 0
+          ? (isFixed
+              ? `<span class="badge-fixed">${pt.item.errors} error (fixed ✓)</span>`
+              : `<span class="badge-unfixed">${pt.item.errors} error (unfixed)</span>`)
+          : `<span style="color: var(--sub-color);">0 errors</span>`;
+
+        chartHoverStats.innerHTML = `${pt.item.second}s &bull; <strong style="color: var(--main-color);">${pt.item.wpm} Avg WPM</strong> &bull; <strong style="color: #2dd4bf;">${pt.item.burstWpm || pt.item.wpm} Pace (3s)</strong> &bull; ${errBadge}`;
+      }
+    } else {
+      clearChartHover();
+    }
+  }
+
+  function clearChartHover() {
+    if (hoveredPointIndex !== null) {
+      hoveredPointIndex = null;
+      renderChart(null);
+      if (chartTooltip) chartTooltip.classList.remove("visible");
+      if (chartHoverStats) chartHoverStats.textContent = "Hover or tap points for details";
+    }
+  }
+
+  // Reset or Start New Session
+  function resetTest() {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    isTestActive = false;
+    isTestFinished = false;
+    timeLeft = testDuration;
+    currentWordIdx = 0;
+    currentCharIdx = 0;
+    wordStartTime = 0;
+    lastWordEndTime = 0;
+    hadBackspaceOnCurrentWord = false;
+    if (typeof resetRecentHistory === "function") resetRecentHistory();
+    scrollOffset = 0;
+    correctKeystrokes = 0;
+    incorrectKeystrokes = 0;
+    extraCharsCount = 0;
+    missedCharsCount = 0;
+    rawKeystrokes = 0;
+    totalFixedErrors = 0;
+    currentSecondErrors = 0;
+    currentSecondFixed = 0;
+    lastSecCorrect = 0;
+    lastSecRaw = 0;
+    secondDeltas = [];
+    wpmHistory = [];
+    chartDataPoints = [];
+    hoveredPointIndex = null;
+    rollingKeystrokeTimestamps = [];
+    flowStreak = 0;
+    flowMomentum = 0;
+    visualMomentum = 0;
+    lastKeystrokeTime = 0;
+    eggChance = 0.0;
+    consecutiveCleanWords = 0;
+    hatchingSlotIndex = -1;
+    hatchTyped = "";
+    revealedSlots = {};
+    eggsHatchedInSession = false;
+    lastRenderedMomentum = -1;
+
+    // Reset pace visual & flow atmosphere
+    wordsBox.classList.remove("pace-paused");
+    renderFlowAtmosphere(0);
+
+    // Switch view sections
+    resultsSection.classList.remove("visible");
+    testSection.style.display = "flex";
+
+    // Synchronize mode tabs
+    tabClassic.classList.toggle("active", currentMode === "classic");
+    tabFlow.classList.toggle("active", currentMode === "flow");
+
+    // Dismiss focus overlay
+    focusOverlay.classList.remove("visible");
+
+    if (currentMode === "classic") {
+      timerEl.style.display = "block";
+      flowGauge.style.display = "none";
+      classicDurationPill.style.display = "flex";
+      flowTargetPill.style.display = "none";
+      if (eggBasketBtn) eggBasketBtn.style.display = "none";
+      levelHudCard.style.display = "none";
+      timerEl.textContent = testDuration;
+      restartBtnLabel.textContent = "restart test";
+      liveStats.classList.remove("visible");
+      liveWpmEl.textContent = "0";
+      liveAccEl.textContent = "100%";
+    } else {
+      // Flow RPG Mode
+      timerEl.style.display = "none";
+      flowGauge.style.display = "flex";
+      classicDurationPill.style.display = "none";
+      flowTargetPill.style.display = "flex";
+      if (eggBasketBtn) eggBasketBtn.style.display = "none";
+      levelHudCard.style.display = "flex";
+      restartBtnLabel.textContent = "restart flow";
+      updateTargetWpmPill();
+      updateLevelHud();
+      updateEggBasketHud();
+      updateFlowGaugeUI(0);
+    }
+
+    if (chartTooltip) chartTooltip.classList.remove("visible");
+    if (chartHoverStats) chartHoverStats.textContent = "Hover or tap points for details";
+
+    // Rebuild words
+    generateWords(70);
+
+    updateCaret();
+    focusInput();
+  }
+
+  function focusInput() {
+    if (hatchingSlotIndex !== -1 || (statsModal && statsModal.style.display !== "none")) {
+      return;
+    }
+    focusOverlay.classList.remove("visible");
+    typingInput.value = "";
+    try {
+      typingInput.focus();
+    } catch (e) {
+      // Ignore if browser restricts programmatic focus before gesture
+    }
+  }
+
+  // Word Completion (Space Key)
+  function handleSpace() {
+    if (currentCharIdx === 0) return; // Prevent skipping without typing anything
+
+    initAudio();
+    playKeySound(true, currentMode === "flow" ? flowStreak : 0);
+
+    if (!isTestActive) startTimer();
+
+    const wordElements = wordsWrapper.querySelectorAll(".word");
+    const currentWordEl = wordElements[currentWordIdx];
+    if (!currentWordEl) return;
+    const letterElements = currentWordEl.querySelectorAll(".letter:not(.extra)");
+
+    // Check if word was left incomplete
+    if (currentCharIdx < letterElements.length) {
+      currentWordEl.classList.add("error");
+      for (let i = currentCharIdx; i < letterElements.length; i++) {
+        letterElements[i].classList.add("incorrect");
+        missedCharsCount++;
+        currentSecondErrors++;
+      }
+    }
+
+    // Check errors
+    const hasErrors = !!currentWordEl.querySelector(".incorrect, .extra");
+    if (hasErrors) {
+      currentWordEl.classList.add("error");
+    } else {
+      currentWordEl.classList.remove("error");
+    }
+
+    // Flow Game Mode: Paced Streak, XP Multiplier, SRS Tracking & Egg Rolls
+    if (currentMode === "flow") {
+      const now = performance.now();
+      lastKeystrokeTime = now;
+      // Cadence calculation: elapsed time from previous word completion (lastWordEndTime)
+      // or wordStartTime if this is the first word in the test/session.
+      const baseTime = lastWordEndTime || wordStartTime || (now - 600);
+      const elapsedWordSec = Math.max(0.20, (now - baseTime) / 1000);
+      lastWordEndTime = now;
+      const wordLength = (currentWordEl.dataset.word || "").length + 1;
+      const wordCadenceWpm = Math.round((wordLength / 5) * (60 / elapsedWordSec));
+      const instantaneousWpm = getInstantaneousWpm();
+      // Calibrated Live WPM: blends cycle cadence and rolling key stream
+      const liveWpm = Math.round(0.5 * wordCadenceWpm + 0.5 * instantaneousWpm);
+
+      const target = gameState.targetWpm || 40;
+      const wordText = currentWordEl.dataset.word;
+      const rankIdx = RANKED_WORDS.indexOf(wordText);
+      const rank = rankIdx !== -1 ? rankIdx + 1 : 1;
+      const wordObj = (typeof DICTIONARY !== "undefined" && DICTIONARY[rank - 1]) || classifyWord(wordText, rank - 1);
+      const isHadBackspace = hadBackspaceOnCurrentWord;
+      hadBackspaceOnCurrentWord = false;
+
+      // Fluid Pending Clear: If hatched words were displayed in nest slots,
+      // free up the slots back to [ · ] now that the player has completed their first board word!
+      if (Object.keys(revealedSlots).length > 0) {
+        revealedSlots = {};
+        renderNestSlots();
+      }
+
+      if (hasErrors) {
+        // Severe Mistake Penalty:
+        // Uncorrected typo on Space wipes 120% apex cushion to 0, subtracts -25% momentum,
+        // breaks streaks to 0, resets consecutive clean words, and zeroes egg chance!
+        wordsBox.classList.add("pace-paused");
+
+        // Wipe cushion (anything > 100) and subtract 25% momentum
+        flowMomentum = Math.max(0, Math.min(100.0, flowMomentum) - 25.0);
+        flowStreak = 0;
+        consecutiveCleanWords = 0;
+        eggChance = 0.0;
+
+        const mult = getFlowMultiplier(flowMomentum);
+        const baseXp = getWordBaseXp(rank);
+        const earnedXp = Math.max(1, Math.round(baseXp * mult * 0.25));
+
+        const xpRes = StorageManager.addXp(earnedXp);
+        gameState = xpRes.save;
+        updateLevelHud();
+
+        // Spawn XP toast without flow glow
+        spawnXpToast(earnedXp, mult, currentWordEl, false, false);
+
+        StorageManager.updateWordStat(rank, true, isHadBackspace, liveWpm, target);
+        if (typeof updatePatternHeat === "function") {
+          updatePatternHeat(wordObj, false, true);
+        }
+        updateFlowGaugeUI(liveWpm);
+      } else if (liveWpm >= target) {
+        // Paced Clean Hit! Inhale into flow momentum reservoir
+        wordsBox.classList.remove("pace-paused");
+        flowStreak++;
+        consecutiveCleanWords++;
+        if (flowStreak > (gameState.highStreak || 0)) {
+          gameState.highStreak = flowStreak;
+        }
+
+        // Weighted Flywheel Inhale: takes ~10 words to reach 100%, builds cushion up to 120%
+        const speedBonus = Math.min(5.0, Math.max(0, ((liveWpm - target) / target) * 8.0));
+        const deltaBase = 6.0 + (Math.min(100.0, flowMomentum) / 100.0) * 10.0;
+        flowMomentum = Math.min(120.0, flowMomentum + deltaBase + speedBonus);
+
+        const mult = getFlowMultiplier(flowMomentum);
+
+        // Calculate XP
+        const baseXp = getWordBaseXp(rank);
+        const earnedXp = Math.max(1, Math.round(baseXp * mult));
+
+        // Add XP and check Level-Up
+        const xpRes = StorageManager.addXp(earnedXp);
+        gameState = xpRes.save;
+        updateLevelHud();
+
+        // Spawn floating XP toast (rainbow when at 100% flow!)
+        spawnXpToast(earnedXp, mult, currentWordEl, false, flowMomentum >= 100);
+
+        // Level-Up Fanfare & Guaranteed Bonus Egg (if basket < 3)
+        if (xpRes.leveledUp) {
+          playLevelUpSound();
+          if ((gameState.eggBasket || []).length < 3) {
+            const bonusEgg = rollNewEgg(gameState.unlockedRanks, flowStreak, xpRes.bonusEggRarity, gameState.wordStats, gameState.targetWpm);
+            StorageManager.addEgg(bonusEgg);
+            gameState = StorageManager.getGameSave();
+            renderNestSlots();
+            spawnXpToast(`LVL UP! 🎁 ${bonusEgg.name}`, 1.0, currentWordEl, true);
+          } else {
+            spawnXpToast(`LVL UP! 🎁 Max Eggs`, 1.0, currentWordEl, true);
+          }
+        }
+
+        // Mastery-Gated Egg Drop Roll:
+        // Out of flow (< 100 momentum): chance is 0.0%!
+        // In flow (>= 100 momentum): starts at 0.5% after 3 consecutive clean words,
+        // scaling +0.1% per clean word up to 3.5% max (averaging 1 egg per ~35-45 clean words).
+        // Nest hard cap strictly at 3 eggs.
+        const basket = gameState.eggBasket || [];
+        if (flowMomentum >= 100 && basket.length < 3 && consecutiveCleanWords >= 3) {
+          eggChance = Math.min(3.5, 0.5 + (consecutiveCleanWords - 3) * 0.1);
+          const roll = Math.random() * 100;
+          if (roll < eggChance) {
+            const droppedEgg = rollNewEgg(gameState.unlockedRanks, flowStreak, null, gameState.wordStats, gameState.targetWpm);
+            StorageManager.addEgg(droppedEgg);
+            gameState = StorageManager.getGameSave();
+            playEggDropSound();
+            renderNestSlots();
+            consecutiveCleanWords = 0;
+            eggChance = 0.0;
+            spawnXpToast(`🥚 ${droppedEgg.name}!`, 1.0, currentWordEl, true);
+          }
+        } else {
+          eggChance = 0.0;
+        }
+
+        // Update Spaced Repetition stats and session pattern heat
+        StorageManager.updateWordStat(rank, false, isHadBackspace, liveWpm, target);
+        if (typeof updatePatternHeat === "function") {
+          updatePatternHeat(wordObj, !isHadBackspace, isHadBackspace);
+        }
+        updateFlowGaugeUI(liveWpm);
+      } else {
+        // Clean word, but below target pace: Gentle Exhale
+        // Flywheel Apex Cushion dampens stumbles when at top speed!
+        wordsBox.classList.add("pace-paused");
+        const exhaleAmount = flowMomentum >= 100 ? 8.0 : 12.0;
+        flowMomentum = Math.max(0, flowMomentum - exhaleAmount);
+        flowStreak = Math.max(0, flowStreak - 2);
+        consecutiveCleanWords = 0;
+        eggChance = 0.0;
+
+        const mult = getFlowMultiplier(flowMomentum);
+        const baseXp = getWordBaseXp(rank);
+        const earnedXp = Math.max(1, Math.round(baseXp * mult * 0.8));
+
+        const xpRes = StorageManager.addXp(earnedXp);
+        gameState = xpRes.save;
+        updateLevelHud();
+
+        // Spawn XP toast
+        spawnXpToast(earnedXp, mult, currentWordEl, false, flowMomentum >= 100);
+
+        StorageManager.updateWordStat(rank, false, isHadBackspace, liveWpm, target);
+        if (typeof updatePatternHeat === "function") {
+          updatePatternHeat(wordObj, false, isHadBackspace);
+        }
+        updateFlowGaugeUI(liveWpm);
+      }
+    }
+
+    // Move to next word
+    currentWordEl.classList.remove("active");
+    currentWordIdx++;
+    wordStartTime = 0;
+
+    // Dynamically append more words as user approaches end
+    if (currentWordIdx >= wordElements.length - 10) {
+      const moreWords = currentMode === "flow"
+        ? getSrsWeightedRandomWords(gameState.unlockedRanks, gameState.wordStats, gameState.targetWpm, 30, flowMomentum)
+        : getRandomWords(30);
+
+      moreWords.forEach((word) => {
+        const wEl = document.createElement("div");
+        wEl.className = "word";
+        wEl.dataset.word = word;
+        for (let i = 0; i < word.length; i++) {
+          const lEl = document.createElement("span");
+          lEl.className = "letter";
+          lEl.textContent = word[i];
+          wEl.appendChild(lEl);
+        }
+        wordsWrapper.appendChild(wEl);
+      });
+    }
+
+    const nextWordEl = wordsWrapper.querySelectorAll(".word")[currentWordIdx];
+    if (nextWordEl) {
+      nextWordEl.classList.add("active");
+    }
+    currentCharIdx = 0;
+    updateCaret();
+  }
+
+  // Backspace Handling with Error Fix Detection
+  function handleBackspace() {
+    initAudio();
+    lastKeystrokeTime = performance.now();
+    hadBackspaceOnCurrentWord = true;
+    playKeySound(false, currentMode === "flow" ? flowStreak : 0);
+
+    const wordElements = wordsWrapper.querySelectorAll(".word");
+    const currentWordEl = wordElements[currentWordIdx];
+    if (!currentWordEl) return;
+    const letterElements = currentWordEl.querySelectorAll(".letter:not(.extra)");
+
+    if (currentCharIdx > 0) {
+      const extraLetters = currentWordEl.querySelectorAll(".letter.extra");
+      if (extraLetters.length > 0) {
+        const lastExtra = extraLetters[extraLetters.length - 1];
+        lastExtra.remove();
+        currentCharIdx--;
+        if (extraCharsCount > 0) extraCharsCount--;
+        currentSecondFixed++;
+        totalFixedErrors++;
+      } else {
+        currentCharIdx--;
+        const letter = letterElements[currentCharIdx];
+        if (letter) {
+          if (letter.classList.contains("incorrect")) {
+            currentSecondFixed++;
+            totalFixedErrors++;
+          }
+          letter.className = "letter";
+        }
+      }
+      checkWordErrorState(currentWordEl);
+      updateCaret();
+    } else if (currentCharIdx === 0 && currentWordIdx > 0) {
+      const prevWordEl = wordElements[currentWordIdx - 1];
+      if (prevWordEl && prevWordEl.classList.contains("error")) {
+        currentWordEl.classList.remove("active");
+        prevWordEl.classList.add("active");
+        currentWordIdx--;
+        const allLetters = prevWordEl.querySelectorAll(".letter");
+        currentCharIdx = allLetters.length;
+        updateCaret();
+      }
+    }
+  }
+
+  function revertLastKeystrokes(count) {
+    const wordElements = wordsWrapper.querySelectorAll(".word");
+    const currentWordEl = wordElements[currentWordIdx];
+    if (!currentWordEl) return;
+    for (let c = 0; c < count; c++) {
+      if (currentCharIdx > 0) {
+        currentCharIdx--;
+        const extraLetters = currentWordEl.querySelectorAll(".letter.extra");
+        if (extraLetters.length > 0) {
+          extraLetters[extraLetters.length - 1].remove();
+          extraCharsCount = Math.max(0, extraCharsCount - 1);
+        } else {
+          const letterElements = currentWordEl.querySelectorAll(".letter:not(.extra)");
+          if (letterElements[currentCharIdx]) {
+            letterElements[currentCharIdx].classList.remove("correct", "incorrect");
+          }
+        }
+      }
+    }
+    checkWordErrorState(currentWordEl);
+    updateCaret();
+  }
+
+  // Single Character Input Handling
+  function handleChar(char) {
+    if (char === " " || char === "Spacebar") {
+      handleSpace();
+      return;
+    }
+
+    // Direct Egg Crack Shortcut: If user has eggs in nest and types "egg" anywhere
+    if (currentMode === "flow" && (gameState.eggBasket || []).length > 0) {
+      if (char.toLowerCase() === "e") {
+        directEggBuffer = "e";
+      } else if (directEggBuffer === "e" && char.toLowerCase() === "g") {
+        directEggBuffer = "eg";
+      } else if (directEggBuffer === "eg" && char.toLowerCase() === "g") {
+        directEggBuffer = "";
+        // Revert any erroneous 'e' and 'g' letters applied to the active word
+        revertLastKeystrokes(2);
+        completeHatchAction(0);
+        return;
+      } else {
+        directEggBuffer = "";
+      }
+    } else {
+      directEggBuffer = "";
+    }
+
+    initAudio();
+    playKeySound(false, currentMode === "flow" ? flowStreak : 0);
+
+    if (!isTestActive) {
+      startTimer();
+    }
+
+    rawKeystrokes++;
+    const now = performance.now();
+    lastKeystrokeTime = now;
+    if (currentCharIdx === 0) {
+      wordStartTime = now;
+    }
+    rollingKeystrokeTimestamps.push(now);
+
+    const wordElements = wordsWrapper.querySelectorAll(".word");
+    const currentWordEl = wordElements[currentWordIdx];
+    if (!currentWordEl) return;
+
+    const letterElements = currentWordEl.querySelectorAll(".letter:not(.extra)");
+    const targetWord = currentWordEl.dataset.word;
+
+    if (currentCharIdx < letterElements.length) {
+      const letter = letterElements[currentCharIdx];
+      const targetChar = targetWord[currentCharIdx];
+
+      if (char === targetChar) {
+        letter.classList.add("correct");
+        correctKeystrokes++;
+      } else {
+        letter.classList.add("incorrect");
+        incorrectKeystrokes++;
+        currentSecondErrors++;
+      }
+      currentCharIdx++;
+    } else {
+      if (currentCharIdx < letterElements.length + 15) {
+        const extraLetter = document.createElement("span");
+        extraLetter.className = "letter extra incorrect";
+        extraLetter.textContent = char;
+        currentWordEl.appendChild(extraLetter);
+        currentCharIdx++;
+        extraCharsCount++;
+        incorrectKeystrokes++;
+        currentSecondErrors++;
+      }
+    }
+
+    if (currentMode === "flow") {
+      updateFlowGaugeUI(getInstantaneousWpm());
+    }
+
+    checkWordErrorState(currentWordEl);
+    updateCaret();
+  }
+
+  let lastKeyHandled = false;
+
+  // Handle Keyboard Events
+  function handleKeyDown(e) {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      lastTabPressTime = Date.now();
+
+      // If in Hatch Mode: Tab exits hatch mode, returns to typing & refreshes words!
+      if (hatchingSlotIndex !== -1) {
+        exitHatchMode();
+        return;
+      }
+
+      // If in Flow mode and eggs are available in the nest: Tab enters Hatch Mode!
+      if (currentMode === "flow") {
+        const basket = gameState.eggBasket || [];
+        if (basket.length > 0) {
+          enterHatchMode();
+          return;
+        }
+      }
+
+      // If no eggs in nest, or in Classic mode: Tab restarts test!
+      resetTest();
+      return;
+    }
+
+    if (e.key === "Enter") {
+      // Tab + Enter restarts test in both modes regardless of nest state!
+      if (Date.now() - lastTabPressTime < 1500) {
+        e.preventDefault();
+        if (hatchingSlotIndex !== -1) {
+          exitHatchMode();
+        }
+        resetTest();
+        return;
+      }
+    }
+
+    if (e.key === "Escape") {
+      e.preventDefault();
+      if (hatchingSlotIndex !== -1) {
+        exitHatchMode();
+        return;
+      }
+      if (statsModal && statsModal.style.display !== "none") {
+        closeStats();
+        return;
+      }
+      resetTest();
+      return;
+    }
+
+    // Hatching active controls: type 'e' 'g' 'g' to crack active egg
+    if (hatchingSlotIndex !== -1) {
+      if (e.key === "Backspace") {
+        e.preventDefault();
+        if (hatchTyped.length > 0) {
+          hatchTyped = hatchTyped.slice(0, -1);
+          updateCrackPromptUI(hatchingSlotIndex);
+        }
+        return;
+      }
+      if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        e.preventDefault();
+        handleHatchKeystroke(e.key);
+        return;
+      }
+      return;
+    }
+
+    // Results screen controls
+    if (isTestFinished) {
+      if (e.key === " " || e.key === "Spacebar" || e.code === "Space") {
+        e.preventDefault();
+        return; // Prevent accidental spacebar restart!
+      }
+      if (Date.now() - testFinishedTime < 500) {
+        return;
+      }
+      if (e.key === "Enter") {
+        e.preventDefault();
+        resetTest();
+      }
+      return;
+    }
+
+    if (e.key === " " || e.key === "Spacebar" || e.code === "Space") {
+      e.preventDefault();
+      lastKeyHandled = true;
+      handleSpace();
+      return;
+    }
+
+    if (e.key === "Backspace") {
+      e.preventDefault();
+      lastKeyHandled = true;
+      handleBackspace();
+      return;
+    }
+
+    if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      e.preventDefault();
+      lastKeyHandled = true;
+      handleChar(e.key);
+      return;
+    }
+  }
+
+  // Mobile virtual keyboard (IME / beforeinput)
+  typingInput.addEventListener("beforeinput", (e) => {
+    if (isTestFinished || hatchingSlotIndex !== -1 || (statsModal && statsModal.style.display !== "none")) return;
+    if (lastKeyHandled) {
+      lastKeyHandled = false;
+      return;
+    }
+
+    if (e.inputType === "deleteContentBackward") {
+      e.preventDefault();
+      handleBackspace();
+    } else if (e.inputType === "insertText" && e.data) {
+      e.preventDefault();
+      for (const ch of e.data) {
+        if (ch === " ") {
+          handleSpace();
+        } else {
+          handleChar(ch);
+        }
+      }
+    }
+    typingInput.value = "";
+  });
+
+  // Global Keydown Listener
+  window.addEventListener("keydown", (e) => {
+    if (statsModal && statsModal.style.display !== "none") {
+      if (e.key === "Escape") {
+        closeStats();
+        return;
+      }
+      return;
+    }
+
+    // Isolate difficulty input so typing numbers, space, or backspace doesn't trigger board actions
+    if (diffInput && document.activeElement === diffInput) {
+      return;
+    }
+
+    if (hatchingSlotIndex !== -1) {
+      handleKeyDown(e);
+      return;
+    }
+
+    if (document.activeElement !== typingInput && !isTestFinished) {
+      if (e.key.length === 1 || e.key === "Backspace" || e.key === " ") {
+        focusInput();
+      }
+    }
+    handleKeyDown(e);
+  });
+
+  // 3-Slot In-Situ Egg Nest Logic (Keyboard Native, Zero Modals)
+  function renderNestSlots() {
+    if (!eggNest) return;
+    gameState = StorageManager.getGameSave();
+    const basket = gameState.eggBasket || [];
+
+    let eggBasketIdx = 0;
+    for (let i = 0; i < 3; i++) {
+      const slotEl = nestSlots[i];
+      if (!slotEl) continue;
+
+      slotEl.className = "nest-slot";
+      slotEl.removeAttribute("style");
+
+      if (revealedSlots[i]) {
+        // Slot displays the freshly hatched word!
+        slotEl.classList.add("revealed-word");
+        slotEl.innerHTML = `<span class="revealed-word-text">✨ ${revealedSlots[i]}</span>`;
+        slotEl.title = `Hatched: ${revealedSlots[i]} • Clears on your next completed word`;
+      } else if (eggBasketIdx < basket.length) {
+        const egg = basket[eggBasketIdx];
+        const currentEggIdx = eggBasketIdx;
+        eggBasketIdx++;
+
+        slotEl.classList.add("has-egg");
+        slotEl.style.setProperty("--slot-egg-color", egg.color || "#38bdf8");
+
+        const isFocused = (hatchingSlotIndex === i);
+        if (isFocused) {
+          slotEl.classList.add("hatch-focused");
+        }
+
+        const eClass = (isFocused && hatchTyped.length >= 1) ? "typed" : "untyped";
+        const g1Class = (isFocused && hatchTyped.length >= 2) ? "typed" : "untyped";
+        const g2Class = (isFocused && hatchTyped.length >= 3) ? "typed" : "untyped";
+
+        slotEl.innerHTML = `
+          <span class="egg-glyph">🥚</span>
+          <div class="nest-crack-prompt" id="crack-prompt-${i}">
+            <span class="p-e ${eClass}">e</span>
+            <span class="p-g1 ${g1Class}">g</span>
+            <span class="p-g2 ${g2Class}">g</span>
+          </div>
+        `;
+        slotEl.title = `${egg.name} (${egg.rarity || "Egg"}) • Type 'egg' to hatch`;
+        slotEl.dataset.eggIndex = currentEggIdx;
+      } else {
+        // Empty slot
+        slotEl.innerHTML = `<span class="slot-dot">·</span>`;
+        slotEl.title = "Empty Nest Slot (Max 3)";
+      }
+    }
+
+    if (nestHint) {
+      if (hatchingSlotIndex !== -1) {
+        nestHint.classList.add("visible");
+        nestHint.textContent = "type 'egg' (tab: back)";
+      } else if (basket.length > 0) {
+        nestHint.classList.add("visible");
+        nestHint.textContent = "tab: hatch";
+      } else {
+        nestHint.classList.remove("visible");
+      }
+    }
+  }
+
+  function enterHatchMode(slotIdx = -1) {
+    initAudio();
+    gameState = StorageManager.getGameSave();
+    const basket = gameState.eggBasket || [];
+    if (basket.length === 0) return;
+
+    let targetIdx = slotIdx;
+    if (targetIdx < 0 || targetIdx >= 3 || revealedSlots[targetIdx]) {
+      // Find first unrevealed slot that has an egg
+      targetIdx = -1;
+      let count = 0;
+      for (let i = 0; i < 3; i++) {
+        if (!revealedSlots[i]) {
+          if (count < basket.length) {
+            targetIdx = i;
+            break;
+          }
+          count++;
+        }
+      }
+    }
+    if (targetIdx === -1) return;
+
+    hatchingSlotIndex = targetIdx;
+    hatchTyped = "";
+    renderNestSlots();
+  }
+
+  function exitHatchMode() {
+    hatchingSlotIndex = -1;
+    hatchTyped = "";
+    if (eggsHatchedInSession) {
+      eggsHatchedInSession = false;
+      gameState = StorageManager.getGameSave();
+      generateWords(70);
+      currentWordIdx = 0;
+      currentCharIdx = 0;
+      wordStartTime = 0;
+      lastWordEndTime = 0;
+      scrollOffset = 0;
+      wordsWrapper.style.transform = "translateY(0px)";
+      updateCaret();
+      spawnXpToast("✨ Deck updated with new words!", 1.0, null, true);
+    }
+    renderNestSlots();
+    focusInput();
+  }
+
+  function updateCrackPromptUI(slotIdx) {
+    const slotEl = nestSlots[slotIdx];
+    if (!slotEl) return;
+    const promptEl = slotEl.querySelector(".nest-crack-prompt");
+    if (!promptEl) return;
+
+    const eClass = hatchTyped.length >= 1 ? "typed" : "untyped";
+    const g1Class = hatchTyped.length >= 2 ? "typed" : "untyped";
+    const g2Class = hatchTyped.length >= 3 ? "typed" : "untyped";
+
+    promptEl.innerHTML = `
+      <span class="p-e ${eClass}">e</span>
+      <span class="p-g1 ${g1Class}">g</span>
+      <span class="p-g2 ${g2Class}">g</span>
+    `;
+  }
+
+  function handleHatchKeystroke(key) {
+    initAudio();
+    const targetWord = "egg";
+    const expectedChar = targetWord[hatchTyped.length];
+    const slotEl = nestSlots[hatchingSlotIndex];
+
+    if (key.toLowerCase() === expectedChar) {
+      hatchTyped += key.toLowerCase();
+      updateCrackPromptUI(hatchingSlotIndex);
+
+      if (hatchTyped === "e") {
+        playFractureSound();
+        if (slotEl) {
+          slotEl.classList.remove("wobble-1", "wobble-2");
+          void slotEl.offsetWidth;
+          slotEl.classList.add("wobble-1");
+        }
+      } else if (hatchTyped === "eg") {
+        playFractureSound();
+        if (slotEl) {
+          slotEl.classList.remove("wobble-1", "wobble-2");
+          void slotEl.offsetWidth;
+          slotEl.classList.add("wobble-2");
+        }
+      } else if (hatchTyped === "egg") {
+        completeHatchAction(hatchingSlotIndex);
+      }
+    } else if (key.toLowerCase() === "e") {
+      hatchTyped = "e";
+      updateCrackPromptUI(hatchingSlotIndex);
+      playFractureSound();
+      if (slotEl) {
+        slotEl.classList.remove("wobble-1", "wobble-2");
+        void slotEl.offsetWidth;
+        slotEl.classList.add("wobble-1");
+      }
+    } else {
+      if (slotEl) {
+        slotEl.classList.add("wobble-1");
+        setTimeout(() => slotEl.classList.remove("wobble-1"), 200);
+      }
+    }
+  }
+
+  function completeHatchAction(slotIdx) {
+    playHatchSound();
+    // In our sequential egg assignment, the focused egg is always the first unhatched egg in basket (index 0)
+    const res = StorageManager.hatchEgg(0);
+    if (res.success) {
+      gameState = res.save;
+      revealedSlots[slotIdx] = res.egg.word;
+      eggsHatchedInSession = true;
+
+      spawnXpToast(`✨ ${res.egg.word} Unlocked!`, 1.0, null, true);
+
+      const remainingBasket = gameState.eggBasket || [];
+      if (remainingBasket.length > 0) {
+        // Find next slot that has an egg to hatch
+        let nextSlot = -1;
+        for (let i = 0; i < 3; i++) {
+          if (i !== slotIdx && !revealedSlots[i]) {
+            nextSlot = i;
+            break;
+          }
+        }
+        if (nextSlot !== -1) {
+          hatchingSlotIndex = nextSlot;
+          hatchTyped = "";
+          renderNestSlots();
+          return;
+        }
+      }
+
+      // All eggs in nest have now been hatched!
+      hatchingSlotIndex = -1;
+      hatchTyped = "";
+      renderNestSlots();
+      setTimeout(() => {
+        exitHatchMode();
+      }, 550);
+    } else {
+      exitHatchMode();
+    }
+  }
+
+  let activeDeckFilter = "all";
+
+  function renderDeckExplorer(filter = "all") {
+    if (!deckWordsScroll) return;
+    activeDeckFilter = filter;
+    deckWordsScroll.innerHTML = "";
+
+    const unlocked = gameState.unlockedRanks || [1];
+    let filteredRanks = unlocked;
+
+    if (filter !== "all") {
+      filteredRanks = unlocked.filter(rank => {
+        const meta = getWordMetadata(rank);
+        return meta.bucketId === filter;
+      });
+    }
+
+    if (filteredRanks.length === 0) {
+      deckWordsScroll.innerHTML = `<span style="color: var(--sub-color); font-size: 12px; padding: 10px;">No words unlocked in this motor pattern yet.</span>`;
+      return;
+    }
+
+    filteredRanks.forEach(rank => {
+      const meta = getWordMetadata(rank);
+      const st = (gameState.wordStats && gameState.wordStats[rank]) || {};
+      const errors = (st.unfixedErr || 0) + (st.fixedErr || 0) || (st.errorCount || 0);
+      const wpm = Math.round(st.avgWpm ?? st.lastWpm ?? 0);
+      const cleanHits = st.streak ?? st.cleanHits ?? 0;
+      
+      let srsBadge = "🌱";
+      let srsTitle = "New Discovery";
+      if (errors > 0 || (wpm > 0 && wpm < (gameState.targetWpm || 40))) {
+        srsBadge = "⚠️";
+        srsTitle = "Practicing (Needs Rhythm)";
+      } else if (cleanHits >= 4) {
+        srsBadge = "⭐";
+        srsTitle = "Mastered";
+      } else if (cleanHits >= 1) {
+        srsBadge = "⚡";
+        srsTitle = "In Flow";
+      }
+
+      const chip = document.createElement("div");
+      chip.className = "deck-word-chip";
+      chip.style.borderColor = meta.bucketColor || "var(--border-color)";
+      chip.title = `${meta.bucketName} • ${srsTitle} • Clean hits: ${cleanHits} • Avg: ${wpm} WPM`;
+      chip.innerHTML = `
+        <span class="deck-chip-srs">${srsBadge}</span>
+        <strong style="color: var(--text-color);">${meta.word}</strong>
+        <span style="font-size: 10px; color: ${meta.tierColor}; text-transform: uppercase;">${meta.tierName}</span>
+      `;
+      deckWordsScroll.appendChild(chip);
+    });
+  }
+
+  function switchStatsTab(tabName) {
+    if (!tabStatsFlow || !tabStatsClassic) return;
+    if (tabName === "flow") {
+      tabStatsFlow.classList.add("active");
+      tabStatsClassic.classList.remove("active");
+      if (paneStatsFlow) paneStatsFlow.style.display = "flex";
+      if (paneStatsClassic) paneStatsClassic.style.display = "none";
+    } else {
+      tabStatsClassic.classList.add("active");
+      tabStatsFlow.classList.remove("active");
+      if (paneStatsClassic) paneStatsClassic.style.display = "flex";
+      if (paneStatsFlow) paneStatsFlow.style.display = "none";
+    }
+  }
+
+  // Lifetime Stats Modal Logic
+  function openStats(defaultTab = null) {
+    statsModal.style.display = "flex";
+
+    // Reset the board on entering the menu so cursor does not linger
+    resetTest();
+    typingInput.blur();
+
+    const targetTab = defaultTab || (currentMode === "flow" ? "flow" : "classic");
+    switchStatsTab(targetTab);
+
+    // Populate Flow RPG Overview & Keybr Motor Mastery
+    if (statsRpgLevel) {
+      statsRpgLevel.textContent = `Lv. ${gameState.level}`;
+      statsRpgTitle.textContent = StorageManager.getLevelTitle(gameState.level);
+      const reqXp = StorageManager.getXpForLevel(gameState.level);
+      statsRpgXp.textContent = `${gameState.currentXp} / ${reqXp} XP`;
+      const pct = Math.min(100, Math.round((gameState.currentXp / reqXp) * 100));
+      if (statsRpgXpBar) statsRpgXpBar.style.width = `${pct}%`;
+
+      const unlockedCount = (gameState.unlockedRanks || [1]).length;
+      if (statsRpgWordsCount) statsRpgWordsCount.textContent = `${unlockedCount} / 1,000 (${((unlockedCount / 1000) * 100).toFixed(1)}%)`;
+      if (deckUnlockedCount) deckUnlockedCount.textContent = unlockedCount;
+      if (statsRpgEggsCount) statsRpgEggsCount.textContent = Math.max(0, unlockedCount - 1);
+      if (statsRpgHighStreak) statsRpgHighStreak.textContent = `${gameState.highStreak || 0} words`;
+
+      // Populate Keybr Motor Patterns Grid
+      const bucketStats = StorageManager.getBucketStats(gameState);
+      if (motorGrid) {
+        motorGrid.innerHTML = "";
+        Object.values(bucketStats).forEach(b => {
+          const card = document.createElement("div");
+          card.className = `motor-card ${b.isProficient ? "proficient" : ""} ${!b.isDiscovered ? "locked" : ""}`;
+          card.style.borderColor = b.isDiscovered ? b.bucketColor : "var(--border-color)";
+
+          let statusText = "🔒 Undiscovered";
+          let statusClass = "locked";
+          if (b.isDiscovered) {
+            if (b.isProficient) {
+              statusText = "⚡ Flowing";
+              statusClass = "proficient";
+            } else {
+              statusText = "🌱 Developing";
+              statusClass = "developing";
+            }
+          }
+
+          card.innerHTML = `
+            <div class="motor-card-header">
+              <span class="motor-badge" style="color: ${b.bucketColor};">${b.bucketTag}</span>
+              <span class="motor-status-pill ${statusClass}">${statusText}</span>
+            </div>
+            <div class="motor-desc">${b.description}</div>
+            <div class="motor-metrics-row">
+              <div class="motor-metric">
+                <span class="motor-metric-label">Words</span>
+                <span class="motor-metric-val">${b.count}</span>
+              </div>
+              <div class="motor-metric">
+                <span class="motor-metric-label">Avg Pace</span>
+                <span class="motor-metric-val" style="color: ${b.avgWpm >= (gameState.targetWpm || 40) ? '#34d399' : 'var(--text-color)'};">${b.avgWpm} WPM</span>
+              </div>
+              <div class="motor-metric">
+                <span class="motor-metric-label">Clean Hits</span>
+                <span class="motor-metric-val">${b.avgHits}</span>
+              </div>
+            </div>
+          `;
+          motorGrid.appendChild(card);
+        });
+      }
+
+      renderDeckExplorer(activeDeckFilter);
+    }
+
+    // Populate Classic Stats
+    const stats = StorageManager.getClassicStats();
+    if (stats.personalBests["15"] && stats.personalBests["15"].wpm > 0) {
+      pb15s.textContent = `${stats.personalBests["15"].wpm} WPM`;
+      pb15sDate.textContent = `${stats.personalBests["15"].acc}% acc`;
+    } else {
+      pb15s.textContent = "--";
+      pb15sDate.textContent = "No runs yet";
+    }
+
+    if (stats.personalBests["30"] && stats.personalBests["30"].wpm > 0) {
+      pb30s.textContent = `${stats.personalBests["30"].wpm} WPM`;
+      pb30sDate.textContent = `${stats.personalBests["30"].acc}% acc`;
+    } else {
+      pb30s.textContent = "--";
+      pb30sDate.textContent = "No runs yet";
+    }
+
+    if (stats.personalBests["60"] && stats.personalBests["60"].wpm > 0) {
+      pb60s.textContent = `${stats.personalBests["60"].wpm} WPM`;
+      pb60sDate.textContent = `${stats.personalBests["60"].acc}% acc`;
+    } else {
+      pb60s.textContent = "--";
+      pb60sDate.textContent = "No runs yet";
+    }
+
+    statsTotalTests.textContent = stats.totalTests;
+    statsTotalWords.textContent = stats.totalWords;
+    statsTotalKeys.textContent = stats.totalKeystrokes;
+    statsTotalTime.textContent = `${Math.round(stats.totalTimeSeconds / 60)}m`;
+
+    statsHistoryTbody.innerHTML = "";
+    if (stats.recentHistory && stats.recentHistory.length > 0) {
+      stats.recentHistory.forEach((item) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${item.date}</td>
+          <td>${item.duration}s</td>
+          <td><strong style="color: var(--main-color);">${item.wpm}</strong></td>
+          <td>${item.rawWpm}</td>
+          <td>${item.acc}%</td>
+        `;
+        statsHistoryTbody.appendChild(row);
+      });
+    } else {
+      statsHistoryTbody.innerHTML = `<tr><td colspan="5" style="color: var(--sub-color); text-align: center;">No tests recorded yet. Complete a test to see records!</td></tr>`;
+    }
+
+  }
+
+  function closeStats() {
+    statsModal.style.display = "none";
+    resetTest();
+    focusInput();
+  }
+
+  // Reset Flow RPG back to Ground Zero
+  function handleResetFlowRpg() {
+    const confirmed = window.confirm(
+      "Reset Flow RPG progress back to Ground Zero?\n\nThis will reset:\n• Level back to 1 (0 XP)\n• Deck back to 1 word ('the')\n• Empty your egg basket\n• Clear SRS trouble tracking"
+    );
+    if (!confirmed) return;
+
+    gameState = StorageManager.resetGameSave();
+    flowStreak = 0;
+    flowMomentum = 0;
+    visualMomentum = 0;
+    lastKeystrokeTime = 0;
+    consecutiveCleanWords = 0;
+    eggChance = 0.0;
+    hatchingSlotIndex = -1;
+    hatchTyped = "";
+    revealedSlots = {};
+    eggsHatchedInSession = false;
+
+    updateLevelHud();
+    updateEggBasketHud();
+    updateFlowGaugeUI(0);
+    updateTargetWpmPill();
+
+    // Immediately regenerate stage words back to 1 word ("the")
+    resetTest();
+    spawnXpToast("RPG Reset to Ground Zero!", 1.0, null, true);
+  }
+
+  // Clear Classic Records & History
+  function handleResetClassicStats() {
+    const confirmed = window.confirm(
+      "Clear all Classic Mode Personal Bests and recorded test history?"
+    );
+    if (!confirmed) return;
+
+    StorageManager.resetClassicStats();
+    openStats();
+    spawnXpToast("Classic Records Cleared", 1.0, null, false);
+  }
+
+  // Mode Switcher Helper & Listeners
+  function switchMode(newMode) {
+    if (newMode !== "classic" && newMode !== "flow") return;
+    currentMode = newMode;
+    if (typeof StorageManager !== "undefined" && StorageManager.setActiveMode) {
+      StorageManager.setActiveMode(newMode);
+    }
+    tabClassic.classList.toggle("active", currentMode === "classic");
+    tabFlow.classList.toggle("active", currentMode === "flow");
+    resetTest();
+  }
+
+  tabClassic.addEventListener("click", () => {
+    tabClassic.blur();
+    if (currentMode === "classic") {
+      focusInput();
+      return;
+    }
+    switchMode("classic");
+  });
+
+  tabFlow.addEventListener("click", () => {
+    tabFlow.blur();
+    if (currentMode === "flow") {
+      focusInput();
+      return;
+    }
+    switchMode("flow");
+  });
+
+  // Set and persist target difficulty (WPM)
+  function setTargetDifficulty(val) {
+    let target = parseInt(val, 10);
+    if (isNaN(target) || target < 10) target = 10;
+    if (target > 300) target = 300;
+    gameState = StorageManager.setTargetWpm(target);
+    if (diffSlider) {
+      diffSlider.value = Math.min(120, Math.max(15, target));
+    }
+    if (diffInput && document.activeElement !== diffInput) {
+      diffInput.value = target;
+    }
+    targetItems.forEach((item) => {
+      const t = parseInt(item.dataset.target, 10);
+      item.classList.toggle("active", t === target);
+    });
+    updateFlowGaugeUI(0);
+  }
+
+  if (diffSlider) {
+    diffSlider.addEventListener("input", (e) => {
+      setTargetDifficulty(e.target.value);
+    });
+    diffSlider.addEventListener("change", () => {
+      focusInput();
+    });
+  }
+
+  if (diffInput) {
+    diffInput.addEventListener("input", (e) => {
+      const val = parseInt(e.target.value, 10);
+      if (!isNaN(val) && val >= 10) {
+        setTargetDifficulty(val);
+      }
+    });
+    diffInput.addEventListener("keydown", (e) => {
+      e.stopPropagation();
+      if (e.key === "Enter") {
+        diffInput.blur();
+        focusInput();
+      }
+    });
+    diffInput.addEventListener("blur", () => {
+      // Re-normalize value on blur if left empty or out of range
+      const val = parseInt(diffInput.value, 10);
+      setTargetDifficulty(isNaN(val) ? 40 : val);
+    });
+  }
+
+  // Target WPM Selector Listeners (fallback / legacy buttons)
+  targetItems.forEach((item) => {
+    item.addEventListener("click", () => {
+      targetItems.forEach(i => i.classList.remove("active"));
+      item.classList.add("active");
+      const target = parseInt(item.dataset.target, 10);
+      setTargetDifficulty(target);
+      focusInput();
+    });
+  });
+
+  // Nest Slot Click Listeners
+  nestSlots.forEach((slot, slotIdx) => {
+    if (!slot) return;
+    slot.addEventListener("click", () => {
+      if (revealedSlots[slotIdx]) return;
+      if (slot.classList.contains("has-egg")) {
+        if (hatchingSlotIndex === slotIdx) {
+          exitHatchMode();
+        } else {
+          enterHatchMode(slotIdx);
+        }
+      }
+    });
+  });
+
+  // Stats and Control Listeners
+  if (eggBasketBtn) eggBasketBtn.addEventListener("click", () => enterHatchMode(0));
+  if (statsBtn) statsBtn.addEventListener("click", () => openStats());
+  if (closeStatsBtn) closeStatsBtn.addEventListener("click", closeStats);
+  if (closeStatsFooterBtn) closeStatsFooterBtn.addEventListener("click", closeStats);
+  if (resetRpgStatsBtn) resetRpgStatsBtn.addEventListener("click", handleResetFlowRpg);
+  if (resetClassicStatsBtn) resetClassicStatsBtn.addEventListener("click", handleResetClassicStats);
+  
+  if (openDeckMasteryBtn) {
+    openDeckMasteryBtn.addEventListener("click", () => {
+      openStats("flow");
+    });
+  }
+
+  if (tabStatsFlow) {
+    tabStatsFlow.addEventListener("click", () => switchStatsTab("flow"));
+  }
+  if (tabStatsClassic) {
+    tabStatsClassic.addEventListener("click", () => switchStatsTab("classic"));
+  }
+
+  if (deckFilters) {
+    deckFilters.querySelectorAll(".deck-filter-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        deckFilters.querySelectorAll(".deck-filter-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        renderDeckExplorer(btn.dataset.filter);
+      });
+    });
+  }
+
+  // Keep input focused
+  wordsBox.addEventListener("click", () => {
+    if (hatchingSlotIndex !== -1) {
+      exitHatchMode();
+    }
+    focusInput();
+  });
+  focusOverlay.addEventListener("click", () => {
+    if (hatchingSlotIndex !== -1) {
+      exitHatchMode();
+    }
+    focusInput();
+  });
+
+  typingInput.addEventListener("blur", () => {
+    if (isTestActive && !isTestFinished && hatchingSlotIndex === -1 && (!statsModal || statsModal.style.display === "none")) {
+      focusOverlay.classList.add("visible");
+    }
+  });
+
+  typingInput.addEventListener("focus", () => {
+    focusOverlay.classList.remove("visible");
+  });
+
+  restartBtn.addEventListener("click", resetTest);
+  brandLogo.addEventListener("click", resetTest);
+
+  nextTestBtn.addEventListener("click", () => {
+    if (Date.now() - testFinishedTime < 350) return;
+    resetTest();
+  });
+  nextTestBtn.addEventListener("keydown", (e) => {
+    if (e.key === " ") {
+      e.preventDefault();
+    }
+  });
+
+  // Classic duration selector
+  configItems.forEach((item) => {
+    item.addEventListener("click", () => {
+      configItems.forEach(i => i.classList.remove("active"));
+      item.classList.add("active");
+      testDuration = parseInt(item.dataset.time, 10);
+      resetTest();
+    });
+  });
+
+  // Initialize Sound UI state based on saved preference
+  if (soundEnabled) {
+    soundIconOn.style.display = "block";
+    soundIconOff.style.display = "none";
+    soundBtn.classList.add("active");
+  } else {
+    soundIconOn.style.display = "none";
+    soundIconOff.style.display = "block";
+    soundBtn.classList.remove("active");
+  }
+
+  // Sound toggle
+  soundBtn.addEventListener("click", () => {
+    initAudio();
+    soundEnabled = !soundEnabled;
+    localStorage.setItem("typeflow_sound_enabled", soundEnabled ? "true" : "false");
+    soundIconOn.style.display = soundEnabled ? "block" : "none";
+    soundIconOff.style.display = soundEnabled ? "none" : "block";
+    soundBtn.classList.toggle("active", soundEnabled);
+  });
+
+  // Chart hover & touch listeners
+  chartCanvas.addEventListener("mousemove", handleChartInteraction);
+  chartCanvas.addEventListener("mouseleave", clearChartHover);
+  chartCanvas.addEventListener("touchstart", (e) => { handleChartInteraction(e); }, { passive: true });
+  chartCanvas.addEventListener("touchmove", (e) => { handleChartInteraction(e); }, { passive: true });
+  chartCanvas.addEventListener("touchend", clearChartHover);
+
+  // Window resize
+  window.addEventListener("resize", () => {
+    if (!isTestFinished) {
+      updateCaret();
+    } else {
+      renderChart(hoveredPointIndex);
+    }
+  });
+
+  // Font readiness & load synchronization
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => {
+      if (!isTestActive) {
+        updateCaret();
+      }
+    });
+  }
+
+  window.addEventListener("load", () => {
+    if (!isTestActive) {
+      updateCaret();
+      focusInput();
+    }
+  });
+
+  // Initialize on page load
+  startIdleDecayLoop();
+  startPhysicsTicker();
+  resetTest();
+})();
+
+  </script>
+</body>
+</html>
