@@ -1,5 +1,8 @@
 # TypeFlow ⚡ (OLED Edition & Flow Roguelike)
 
+> 🚀 **Play Live in Browser:** [https://nowitstime.github.io/typeflow/](https://nowitstime.github.io/typeflow/)  
+> 📦 **GitHub Repository:** [https://github.com/nowitstime/typeflow](https://github.com/nowitstime/typeflow)
+
 A clean, minimalist typing trainer and incremental roguelike game inspired by Monkeytype with a pure OLED Black & Electric Light Blue aesthetic.
 
 ## ✨ Game Modes & Core Features
