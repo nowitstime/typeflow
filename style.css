@@ -523,37 +523,6 @@ main {
   gap: 16px;
 }
 
-.egg-chance-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 130px;
-}
-
-.egg-chance-label {
-  font-size: 11px;
-  color: var(--sub-color);
-}
-
-.egg-chance-label strong {
-  color: #38bdf8;
-}
-
-.egg-chance-bar-bg {
-  width: 100%;
-  height: 5px;
-  background: var(--sub-alt-color);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.egg-chance-bar-fill {
-  height: 100%;
-  width: 5%;
-  background: linear-gradient(90deg, #38bdf8, #c084fc);
-  border-radius: 3px;
-  transition: width 0.3s ease-out;
-}
 
 .deck-size-tag {
   background: var(--bg-secondary);
@@ -1865,6 +1834,64 @@ footer,
   border: 1px solid var(--border-color);
   padding: 4px 10px;
   border-radius: 12px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.egg-nest.charging {
+  border-color: rgba(56, 189, 248, 0.45);
+  box-shadow: 0 0 calc(var(--nest-glow, 0.2) * 16px) rgba(56, 189, 248, calc(var(--nest-glow, 0.2) * 0.5));
+}
+
+.egg-nest.high-combo {
+  border-color: rgba(56, 189, 248, 0.75);
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.6), 0 0 28px rgba(45, 212, 191, 0.3);
+  animation: nestComboPulse 1.2s ease-in-out infinite alternate;
+}
+
+.egg-nest.nest-full {
+  border-color: var(--border-color);
+  box-shadow: none;
+}
+
+.egg-nest.nest-full .nest-incubation-track {
+  opacity: 0.15;
+}
+
+.egg-nest.materialize {
+  animation: nestEggMaterialize 0.6s cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+@keyframes nestComboPulse {
+  0% { box-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
+  100% { box-shadow: 0 0 20px rgba(56, 189, 248, 0.8), 0 0 30px rgba(52, 211, 153, 0.4); }
+}
+
+@keyframes nestEggMaterialize {
+  0% { transform: scale(1); filter: brightness(1); }
+  35% { transform: scale(1.05); filter: brightness(1.7) drop-shadow(0 0 16px #38bdf8); border-color: #38bdf8; }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+/* Incubation Under-Track */
+.nest-incubation-track {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.nest-incubation-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #38bdf8 0%, #2dd4bf 70%, #34d399 100%);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.7);
+  transition: width 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .nest-slot {

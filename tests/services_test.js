@@ -144,6 +144,19 @@ it('hatches egg, unlocks progression rank, and removes from basket', () => {
   assert.ok(hatchRes.save.unlockedRanks.includes(42));
 });
 
+it('persists and updates deterministic eggCharge progress', () => {
+  const mock = new LocalStorageMock();
+  const service = new StorageService(mock);
+
+  assert.strictEqual(service.getGameSave().eggCharge, 0);
+  service.updateEggCharge(72.5);
+  assert.strictEqual(service.getGameSave().eggCharge, 72.5);
+
+  // Leveling up preserves active eggCharge
+  service.addXp(500);
+  assert.strictEqual(service.getGameSave().eggCharge, 72.5);
+});
+
 it('updates and decays SRS word telemetry', () => {
   const mock = new LocalStorageMock();
   const service = new StorageService(mock);

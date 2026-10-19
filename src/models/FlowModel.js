@@ -29,17 +29,21 @@ class FlowModel extends _EventEmitter {
     this.flowStreak = 0;
     this.highStreak = options.highStreak || 0;
     this.consecutiveCleanWords = 0;
-    this.eggChance = 0.0;
+    this.eggCharge = Number(options.eggCharge) || 0.0; // 0.0 to 100.0
+    this.eggChance = 0.0; // legacy alias
     this.lastKeystrokeTime = 0;
   }
 
-  reset() {
+  reset(preserveEggCharge = true) {
     this.momentum = 0.0;
     this.flowStreak = 0;
     this.consecutiveCleanWords = 0;
+    if (!preserveEggCharge) {
+      this.eggCharge = 0.0;
+    }
     this.eggChance = 0.0;
     this.lastKeystrokeTime = 0;
-    this.emit('reset', { momentum: 0.0 });
+    this.emit('reset', { momentum: 0.0, eggCharge: this.eggCharge });
   }
 
   setTargetWpm(wpm) {
@@ -73,13 +77,21 @@ class FlowModel extends _EventEmitter {
     return 'idle';
   }
 
+  getComboTier() {
+    if (this.consecutiveCleanWords >= 15) return 'transcendence';
+    if (this.consecutiveCleanWords >= 10) return 'overdrive';
+    if (this.consecutiveCleanWords >= 5) return 'heated';
+    return 'baseline';
+  }
+
   /**
-   * Evaluates word completion and modulates momentum flywheel.
+   * Evaluates word completion and modulates momentum flywheel and egg incubation.
    * @param {boolean} hasErrors - Whether word was submitted with uncorrected errors
    * @param {number} liveWpm - Current calculated WPM for the word
    * @param {boolean} hadBackspace - Whether user used backspace on this word
    * @param {number} basketCount - Number of eggs currently in basket
-   * @returns {Object} result metadata (earnedMultiplier, leveledUp, droppedEggRoll)
+   * @param {number} baseXp - Base XP reward for the word
+   * @returns {Object} result metadata
    */
   evaluateWord(hasErrors, liveWpm, hadBackspace = false, basketCount = 0, baseXp = 10) {
     const prevMomentum = this.momentum;
@@ -87,15 +99,17 @@ class FlowModel extends _EventEmitter {
     let eggRollSuccess = false;
 
     if (hasErrors) {
-      // Severe Mistake Penalty: Wipes cushion (>100) and subtracts -25% momentum
+      // Severe Mistake Penalty: Wipes cushion (>100), subtracts -25% momentum, -12% egg charge
       this.momentum = Math.max(0, Math.min(100.0, this.momentum) - 25.0);
       this.flowStreak = 0;
       this.consecutiveCleanWords = 0;
+      this.eggCharge = Math.max(0.0, Math.round((this.eggCharge - 12.0) * 10) / 10);
       this.eggChance = 0.0;
 
       this.emit('stumble', {
         penalty: 25.0,
         momentum: this.momentum,
+        eggCharge: this.eggCharge,
         hasErrors: true
       });
     } else if (liveWpm >= this.targetWpm) {
@@ -110,24 +124,46 @@ class FlowModel extends _EventEmitter {
       const deltaBase = 6.0 + (Math.min(100.0, this.momentum) / 100.0) * 10.0;
       this.momentum = Math.min(120.0, this.momentum + deltaBase + speedBonus);
 
-      // Egg drop check in Flow (>= 100 momentum, basket < 3, consecutive clean >= 3)
-      if (this.momentum >= 100 && basketCount < 3 && this.consecutiveCleanWords >= 3) {
-        this.eggChance = Math.min(3.5, 0.5 + (this.consecutiveCleanWords - 3) * 0.1);
-        const roll = Math.random() * 100;
-        if (roll < this.eggChance) {
-          eggRollSuccess = true;
-          this.consecutiveCleanWords = 0;
-          this.eggChance = 0.0;
+      // Deterministic Egg Incubation (Roadmap 1.1):
+      // Only charges when in Flow (momentum >= 100) and basket < 3
+      if (this.momentum >= 100 && basketCount < 3) {
+        let chargeGain = 3.0; // Base gain (~33 words)
+
+        // Streak combo bonus
+        if (this.consecutiveCleanWords >= 15) {
+          chargeGain += 3.5;
+        } else if (this.consecutiveCleanWords >= 10) {
+          chargeGain += 2.0;
+        } else if (this.consecutiveCleanWords >= 5) {
+          chargeGain += 1.0;
         }
-      } else {
-        this.eggChance = 0.0;
+
+        // Apex cushion overspin bonus
+        if (this.momentum > 100.0) {
+          chargeGain += 1.0;
+        }
+
+        // Velocity surge bonus (>= 25% above target)
+        if (liveWpm >= this.targetWpm * 1.25) {
+          chargeGain += 1.0;
+        }
+
+        this.eggCharge = Math.min(100.0, Math.round((this.eggCharge + chargeGain) * 10) / 10);
+
+        if (this.eggCharge >= 100.0) {
+          eggRollSuccess = true;
+          this.eggCharge = 0.0;
+        }
+      } else if (basketCount >= 3) {
+        this.eggCharge = 0.0; // Paused/dormant when nest is full
       }
 
       this.emit('cleanHit', {
         momentum: this.momentum,
         flowStreak: this.flowStreak,
         liveWpm,
-        speedBonus
+        speedBonus,
+        eggCharge: this.eggCharge
       });
     } else {
       // Clean word, but below target pace: Gentle Exhale
@@ -136,11 +172,13 @@ class FlowModel extends _EventEmitter {
       this.momentum = Math.max(0, this.momentum - exhaleAmount);
       this.flowStreak = Math.max(0, this.flowStreak - 2);
       this.consecutiveCleanWords = 0;
+      this.eggCharge = Math.max(0.0, Math.round((this.eggCharge - 3.0) * 10) / 10);
       this.eggChance = 0.0;
 
       this.emit('slowClean', {
         exhaleAmount,
         momentum: this.momentum,
+        eggCharge: this.eggCharge,
         liveWpm
       });
     }
@@ -158,7 +196,9 @@ class FlowModel extends _EventEmitter {
       delta: this.momentum - prevMomentum,
       multiplier,
       tier: currentTier,
+      eggCharge: this.eggCharge,
       eggChance: this.eggChance,
+      comboTier: this.getComboTier(),
       streak: this.flowStreak,
       earnedXp
     });
@@ -169,7 +209,9 @@ class FlowModel extends _EventEmitter {
       flowStreak: this.flowStreak,
       highStreak: this.highStreak,
       eggRollSuccess,
+      eggCharge: this.eggCharge,
       eggChance: this.eggChance,
+      comboTier: this.getComboTier(),
       earnedXp
     };
   }
@@ -192,18 +234,26 @@ class FlowModel extends _EventEmitter {
       const prevMomentum = this.momentum;
       this.momentum = Math.max(0, this.momentum - decayAmount);
 
+      if (this.eggCharge > 0) {
+        const chargeDecay = 2.5 * dtSeconds;
+        this.eggCharge = Math.max(0.0, Math.round((this.eggCharge - chargeDecay) * 10) / 10);
+      }
+
       if (this.momentum !== prevMomentum) {
         this.emit('decay', {
           momentum: this.momentum,
           decayAmount,
-          idleTime
+          idleTime,
+          eggCharge: this.eggCharge
         });
         this.emit('momentumChanged', {
           momentum: this.momentum,
           delta: -decayAmount,
           multiplier: this.getMultiplier(),
           tier: this.getTier(),
+          eggCharge: this.eggCharge,
           eggChance: this.eggChance,
+          comboTier: this.getComboTier(),
           streak: this.flowStreak
         });
       }

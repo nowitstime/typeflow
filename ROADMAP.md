@@ -9,11 +9,10 @@ Every feature in this roadmap must preserve TypeFlow's core identity: **zero-dep
 
 ### 1.1 Deterministic Egg Incubation (Replacing Pure RNG)
 Currently, egg drops rely on a hidden dice roll inside Apex Flow, leaving players unsure why or when an egg will appear. Moving to a charge-based incubation system makes progression tangible while keeping the reward tied to sustained Flow.
-- [ ] **Flow-Driven Charge (`eggCharge`):** Accumulate egg progress (`0–100%`) as the player completes clean, on-pace words in Flow State. Higher Flow tiers and streaks accelerate charge rate.
-- [ ] **Visual Indicator Exploration (TBD):** Explore subtle, zero-clutter ways to show egg progress without adding a new progress bar to the HUD:
-  - *Option A (In-Slot Pulse/Fill):* Subtle ambient glow or rising fill inside the next empty nest slot.
-  - *Option B (Egg Shell Formation):* A faint wireframe or dotted egg outline in the nest slot that gradually solidifies as charge approaches 100%.
-  - *Option C (Caret/Multiplier Aura):* A visual cue attached to the Flow badge or caret when an egg is close to dropping.
+- [x] **Flow-Driven Charge (`eggCharge`):** Accumulate egg progress (`0–100%`) as the player completes clean, on-pace words in Flow State ($\text{Momentum} \ge 100\%$). Base gain ($+3.0\%$) scales with streak combo tiers ($+4.0\%$, $+5.0\%$, $+6.5\%$), Apex cushion ($+1.0\%$), and speed surge ($+1.0\%$) up to $+8.5\%$ per word (~12 clean words per egg in peak flow). Mistake penalties ($-12\%$ on typo, $-3\%$ on sub-pace) and idle decay ($-2.5\%/\text{sec}$) balance the curve.
+- [x] **Visual Indicator (Hybrid Under-Track & Dynamic Aura):** 
+  - *Primary Indicator:* An ultra-minimalist 2.5px cyan/mint under-track integrated along the bottom edge of the `#egg-nest` container.
+  - *Ambient Aura:* Dynamic cyan glow and high-combo pulse (`--nest-glow`) on the egg nest container that scales in intensity with charge and flashes on egg birth.
 
 ### 1.2 Post-Hatch Flow & Transition Behavior (Open Design Question)
 Evaluating how hatching an egg (`Tab` → `"egg"`) interacts with the active typing session and Flow state:

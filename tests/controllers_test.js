@@ -288,6 +288,29 @@ it('refreshes playfield when exiting egg hatch mode', () => {
   assert.ok(stageView.wordsWrapper.children.length > 0);
 });
 
+it('incubates egg deterministically in Flow mode, spawns egg into basket, and triggers materialize', () => {
+  const { controller, flowModel, sessionModel, storageService, eggNestModel } = createTestHarness();
+  controller.init();
+
+  // Bring flowModel to nominal flow (100) and 98% egg charge
+  flowModel.momentum = 100.0;
+  flowModel.eggCharge = 98.0;
+
+  // Type a clean word on pace
+  const word = sessionModel.words[sessionModel.currentWordIdx] || 'the';
+  for (const c of word) {
+    controller.handleChar(c);
+  }
+  controller.handleSpace();
+
+  // Egg must be spawned into basket, eggNestModel synced, eggCharge reset to 0
+  const save = storageService.getGameSave();
+  assert.strictEqual(save.eggBasket.length, 1);
+  assert.strictEqual(eggNestModel.basket.length, 1);
+  assert.strictEqual(flowModel.eggCharge, 0.0);
+  assert.strictEqual(save.eggCharge, 0.0);
+});
+
 it('classic mode chooses words across 1,000 common words with frequency weighting', () => {
   const { controller, wordsModel } = createTestHarness();
   controller.init();

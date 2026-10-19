@@ -170,12 +170,82 @@ it('wipes cushion and applies -25% penalty on uncorrected error', () => {
 it('applies idle decay when user pauses past the grace period', () => {
   const flow = new FlowModel({ targetWpm: 40 });
   flow.momentum = 100.0;
+  flow.eggCharge = 50.0;
   const t0 = 10000;
   flow.recordKeystroke(t0);
   // Grace period at 100 momentum is 3000ms. Check at t0 + 4000ms (1000ms over grace)
   const decayAmount = flow.applyIdleDecay(t0 + 4000, 0.20);
   assert.ok(decayAmount > 0);
   assert.ok(flow.momentum < 100.0);
+  assert.ok(flow.eggCharge < 50.0);
+});
+
+it('accumulates eggCharge when in Flow (momentum >= 100) and applies combo bonuses', () => {
+  const flow = new FlowModel({ targetWpm: 40 });
+  flow.momentum = 100.0;
+  assert.strictEqual(flow.eggCharge, 0.0);
+
+  // Word 1: Clean and on-pace (40 WPM, momentum reaches cushion > 100)
+  // Base (3.0) + Apex cushion (1.0) = 4.0
+  let res = flow.evaluateWord(false, 40, false, 0);
+  assert.strictEqual(res.eggCharge, 4.0);
+  assert.strictEqual(res.comboTier, 'baseline');
+
+  // Push streak to 5 clean words in Apex cushion (>100 momentum, >=50 WPM for speed surge)
+  // Base (3.0) + heated combo (1.0) + apex (1.0) + speed (1.0) = 6.0
+  flow.consecutiveCleanWords = 4; // next will be word 5
+  flow.momentum = 105.0; // in cushion
+  res = flow.evaluateWord(false, 55, false, 0); // 55 >= 40 * 1.25 (50)
+  assert.strictEqual(res.comboTier, 'heated');
+  // 4.0 (old) + 6.0 = 10.0
+  assert.strictEqual(res.eggCharge, 10.0);
+
+  // Peak rate test: streak >= 15 (transcendence: 3.5), cushion (1.0), speed surge (1.0), base (3.0) = 8.5
+  flow.consecutiveCleanWords = 14;
+  flow.momentum = 110.0;
+  res = flow.evaluateWord(false, 60, false, 0);
+  assert.strictEqual(res.comboTier, 'transcendence');
+  assert.strictEqual(Math.round((res.eggCharge - 10.0) * 10) / 10, 8.5);
+});
+
+it('triggers eggRollSuccess at 100% charge and resets eggCharge to 0', () => {
+  const flow = new FlowModel({ targetWpm: 40 });
+  flow.momentum = 100.0;
+  flow.eggCharge = 98.0;
+
+  // Clean hit adds at least 3.0 -> reaches >= 100
+  const res = flow.evaluateWord(false, 45, false, 0);
+  assert.strictEqual(res.eggRollSuccess, true);
+  assert.strictEqual(res.eggCharge, 0.0);
+});
+
+it('freezes eggCharge at 0 when egg basket is full (3/3)', () => {
+  const flow = new FlowModel({ targetWpm: 40 });
+  flow.momentum = 100.0;
+  flow.eggCharge = 40.0;
+
+  // When basketCount is 3, charge is frozen/dormant at 0
+  const res = flow.evaluateWord(false, 50, false, 3);
+  assert.strictEqual(res.eggCharge, 0.0);
+  assert.strictEqual(res.eggRollSuccess, false);
+});
+
+it('applies -12% penalty on typo and -3% on below-pace word with 0% floor', () => {
+  const flow = new FlowModel({ targetWpm: 40 });
+  flow.momentum = 100.0;
+  flow.eggCharge = 20.0;
+
+  // Below pace word: -3.0
+  let res = flow.evaluateWord(false, 30, false, 0);
+  assert.strictEqual(res.eggCharge, 17.0);
+
+  // Typo: -12.0
+  res = flow.evaluateWord(true, 45, false, 0);
+  assert.strictEqual(res.eggCharge, 5.0);
+
+  // Another typo: drops to floor 0.0
+  res = flow.evaluateWord(true, 45, false, 0);
+  assert.strictEqual(res.eggCharge, 0.0);
 });
 
 // 5. SessionModel Tests

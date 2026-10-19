@@ -187,6 +187,9 @@ def build():
                 </div>
               </div>
               <span class="nest-hint" id="nest-hint">tab: hatch</span>
+              <div class="nest-incubation-track" id="nest-incubation-track" title="Incubation Progress">
+                <div class="nest-incubation-fill" id="nest-incubation-fill"></div>
+              </div>
             </div>
           </div>
 

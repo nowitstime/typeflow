@@ -15,6 +15,8 @@ class NestView {
       document.getElementById('nest-slot-2')
     ] : []);
     this.nestHint = elements.nestHint || (typeof document !== 'undefined' ? document.getElementById('nest-hint') : null);
+    this.incubationTrack = elements.incubationTrack || (typeof document !== 'undefined' ? document.getElementById('nest-incubation-track') : null);
+    this.incubationFill = elements.incubationFill || (typeof document !== 'undefined' ? document.getElementById('nest-incubation-fill') : null);
   }
 
   /**
@@ -134,6 +136,41 @@ class NestView {
     } else {
       this.nestHint.classList.remove('visible');
     }
+  }
+
+  /**
+   * Updates deterministic egg incubation under-track progress and ambient aura glow.
+   * @param {number} chargePct - Incubation progress (0.0 to 100.0)
+   * @param {string} comboTier - Active combo streak tier ('baseline', 'heated', 'overdrive', 'transcendence')
+   * @param {boolean} isFull - Whether all 3 egg slots are currently occupied
+   */
+  updateIncubation(chargePct = 0, comboTier = 'baseline', isFull = false) {
+    if (this.incubationFill) {
+      const pct = isFull ? 0 : Math.min(100.0, Math.max(0.0, Number(chargePct) || 0));
+      this.incubationFill.style.width = `${pct}%`;
+    }
+    if (this.eggNest) {
+      this.eggNest.classList.toggle('nest-full', Boolean(isFull));
+      const isCharging = !isFull && chargePct > 0;
+      this.eggNest.classList.toggle('charging', isCharging);
+      const isHighCombo = isCharging && (comboTier === 'overdrive' || comboTier === 'transcendence');
+      this.eggNest.classList.toggle('high-combo', isHighCombo);
+      const glowIntensity = Math.min(1.0, Math.max(0.1, (chargePct / 100.0))).toFixed(2);
+      this.eggNest.style.setProperty('--nest-glow', glowIntensity);
+    }
+  }
+
+  /**
+   * Triggers the celebratory materialize animation when an egg finishes incubating.
+   */
+  triggerMaterialize() {
+    if (!this.eggNest) return;
+    this.eggNest.classList.remove('materialize');
+    void this.eggNest.offsetWidth; // force CSS reflow
+    this.eggNest.classList.add('materialize');
+    setTimeout(() => {
+      if (this.eggNest) this.eggNest.classList.remove('materialize');
+    }, 600);
   }
 }
 

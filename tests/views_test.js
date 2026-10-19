@@ -144,6 +144,44 @@ it('updates crack prompt UI as player types "e", "g", "g"', () => {
   assert.ok(dom.window.document.querySelector('.p-g2').classList.contains('typed'));
 });
 
+it('updates incubation under-track width and ambient aura classes cleanly', () => {
+  const dom = new JSDOM(`
+    <div id="egg-nest">
+      <div id="nest-incubation-track">
+        <div id="nest-incubation-fill" style="width: 0%;"></div>
+      </div>
+    </div>
+  `);
+  const nestEl = dom.window.document.getElementById('egg-nest');
+  const fillEl = dom.window.document.getElementById('nest-incubation-fill');
+  const nestView = new NestView({
+    eggNest: nestEl,
+    incubationFill: fillEl
+  });
+
+  // 1. Partial charge (45%) in baseline combo
+  nestView.updateIncubation(45.0, 'baseline', false);
+  assert.strictEqual(fillEl.style.width, '45%');
+  assert.ok(nestEl.classList.contains('charging'));
+  assert.ok(!nestEl.classList.contains('high-combo'));
+  assert.ok(!nestEl.classList.contains('nest-full'));
+
+  // 2. High combo in overdrive
+  nestView.updateIncubation(80.0, 'overdrive', false);
+  assert.strictEqual(fillEl.style.width, '80%');
+  assert.ok(nestEl.classList.contains('high-combo'));
+
+  // 3. When nest is full (3 eggs occupied)
+  nestView.updateIncubation(0.0, 'baseline', true);
+  assert.strictEqual(fillEl.style.width, '0%');
+  assert.ok(nestEl.classList.contains('nest-full'));
+  assert.ok(!nestEl.classList.contains('charging'));
+
+  // 4. Trigger materialize animation
+  nestView.triggerMaterialize();
+  assert.ok(nestEl.classList.contains('materialize'));
+});
+
 // 3. HUDView Tests
 console.log('\n--- 3. HUDView ---');
 

@@ -29,6 +29,7 @@ const DEFAULT_GAME_SAVE = {
   targetWpm: 40,
   unlockedRanks: [1], // Starts with literally 1 word: "the" (Rank 1)!
   eggBasket: [],      // Array of unhatched eggs [{ id, rarity, wordRank, tierName, tierColor }]
+  eggCharge: 0,       // Deterministic incubation progress (0-100)
   wordStats: {},      // SRS telemetry: { [rank]: { seen, unfixedErr, fixedErr, avgWpm, streak } }
   lifetimeWords: 0,
   highStreak: 0
@@ -235,6 +236,13 @@ class StorageService {
   setTargetWpm(wpm) {
     const save = this.getGameSave();
     save.targetWpm = wpm;
+    this.saveGameSave(save);
+    return save;
+  }
+
+  updateEggCharge(charge) {
+    const save = this.getGameSave();
+    save.eggCharge = Math.max(0.0, Math.min(100.0, Number(charge) || 0));
     this.saveGameSave(save);
     return save;
   }

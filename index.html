@@ -533,37 +533,6 @@ main {
   gap: 16px;
 }
 
-.egg-chance-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 130px;
-}
-
-.egg-chance-label {
-  font-size: 11px;
-  color: var(--sub-color);
-}
-
-.egg-chance-label strong {
-  color: #38bdf8;
-}
-
-.egg-chance-bar-bg {
-  width: 100%;
-  height: 5px;
-  background: var(--sub-alt-color);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.egg-chance-bar-fill {
-  height: 100%;
-  width: 5%;
-  background: linear-gradient(90deg, #38bdf8, #c084fc);
-  border-radius: 3px;
-  transition: width 0.3s ease-out;
-}
 
 .deck-size-tag {
   background: var(--bg-secondary);
@@ -1875,6 +1844,64 @@ footer,
   border: 1px solid var(--border-color);
   padding: 4px 10px;
   border-radius: 12px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.egg-nest.charging {
+  border-color: rgba(56, 189, 248, 0.45);
+  box-shadow: 0 0 calc(var(--nest-glow, 0.2) * 16px) rgba(56, 189, 248, calc(var(--nest-glow, 0.2) * 0.5));
+}
+
+.egg-nest.high-combo {
+  border-color: rgba(56, 189, 248, 0.75);
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.6), 0 0 28px rgba(45, 212, 191, 0.3);
+  animation: nestComboPulse 1.2s ease-in-out infinite alternate;
+}
+
+.egg-nest.nest-full {
+  border-color: var(--border-color);
+  box-shadow: none;
+}
+
+.egg-nest.nest-full .nest-incubation-track {
+  opacity: 0.15;
+}
+
+.egg-nest.materialize {
+  animation: nestEggMaterialize 0.6s cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+@keyframes nestComboPulse {
+  0% { box-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
+  100% { box-shadow: 0 0 20px rgba(56, 189, 248, 0.8), 0 0 30px rgba(52, 211, 153, 0.4); }
+}
+
+@keyframes nestEggMaterialize {
+  0% { transform: scale(1); filter: brightness(1); }
+  35% { transform: scale(1.05); filter: brightness(1.7) drop-shadow(0 0 16px #38bdf8); border-color: #38bdf8; }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+/* Incubation Under-Track */
+.nest-incubation-track {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.nest-incubation-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #38bdf8 0%, #2dd4bf 70%, #34d399 100%);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.7);
+  transition: width 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .nest-slot {
@@ -2159,6 +2186,9 @@ footer,
                 </div>
               </div>
               <span class="nest-hint" id="nest-hint">tab: hatch</span>
+              <div class="nest-incubation-track" id="nest-incubation-track" title="Incubation Progress">
+                <div class="nest-incubation-fill" id="nest-incubation-fill"></div>
+              </div>
             </div>
           </div>
 
@@ -3377,17 +3407,21 @@ class FlowModel extends _EventEmitter {
     this.flowStreak = 0;
     this.highStreak = options.highStreak || 0;
     this.consecutiveCleanWords = 0;
-    this.eggChance = 0.0;
+    this.eggCharge = Number(options.eggCharge) || 0.0; // 0.0 to 100.0
+    this.eggChance = 0.0; // legacy alias
     this.lastKeystrokeTime = 0;
   }
 
-  reset() {
+  reset(preserveEggCharge = true) {
     this.momentum = 0.0;
     this.flowStreak = 0;
     this.consecutiveCleanWords = 0;
+    if (!preserveEggCharge) {
+      this.eggCharge = 0.0;
+    }
     this.eggChance = 0.0;
     this.lastKeystrokeTime = 0;
-    this.emit('reset', { momentum: 0.0 });
+    this.emit('reset', { momentum: 0.0, eggCharge: this.eggCharge });
   }
 
   setTargetWpm(wpm) {
@@ -3421,13 +3455,21 @@ class FlowModel extends _EventEmitter {
     return 'idle';
   }
 
+  getComboTier() {
+    if (this.consecutiveCleanWords >= 15) return 'transcendence';
+    if (this.consecutiveCleanWords >= 10) return 'overdrive';
+    if (this.consecutiveCleanWords >= 5) return 'heated';
+    return 'baseline';
+  }
+
   /**
-   * Evaluates word completion and modulates momentum flywheel.
+   * Evaluates word completion and modulates momentum flywheel and egg incubation.
    * @param {boolean} hasErrors - Whether word was submitted with uncorrected errors
    * @param {number} liveWpm - Current calculated WPM for the word
    * @param {boolean} hadBackspace - Whether user used backspace on this word
    * @param {number} basketCount - Number of eggs currently in basket
-   * @returns {Object} result metadata (earnedMultiplier, leveledUp, droppedEggRoll)
+   * @param {number} baseXp - Base XP reward for the word
+   * @returns {Object} result metadata
    */
   evaluateWord(hasErrors, liveWpm, hadBackspace = false, basketCount = 0, baseXp = 10) {
     const prevMomentum = this.momentum;
@@ -3435,15 +3477,17 @@ class FlowModel extends _EventEmitter {
     let eggRollSuccess = false;
 
     if (hasErrors) {
-      // Severe Mistake Penalty: Wipes cushion (>100) and subtracts -25% momentum
+      // Severe Mistake Penalty: Wipes cushion (>100), subtracts -25% momentum, -12% egg charge
       this.momentum = Math.max(0, Math.min(100.0, this.momentum) - 25.0);
       this.flowStreak = 0;
       this.consecutiveCleanWords = 0;
+      this.eggCharge = Math.max(0.0, Math.round((this.eggCharge - 12.0) * 10) / 10);
       this.eggChance = 0.0;
 
       this.emit('stumble', {
         penalty: 25.0,
         momentum: this.momentum,
+        eggCharge: this.eggCharge,
         hasErrors: true
       });
     } else if (liveWpm >= this.targetWpm) {
@@ -3458,24 +3502,46 @@ class FlowModel extends _EventEmitter {
       const deltaBase = 6.0 + (Math.min(100.0, this.momentum) / 100.0) * 10.0;
       this.momentum = Math.min(120.0, this.momentum + deltaBase + speedBonus);
 
-      // Egg drop check in Flow (>= 100 momentum, basket < 3, consecutive clean >= 3)
-      if (this.momentum >= 100 && basketCount < 3 && this.consecutiveCleanWords >= 3) {
-        this.eggChance = Math.min(3.5, 0.5 + (this.consecutiveCleanWords - 3) * 0.1);
-        const roll = Math.random() * 100;
-        if (roll < this.eggChance) {
-          eggRollSuccess = true;
-          this.consecutiveCleanWords = 0;
-          this.eggChance = 0.0;
+      // Deterministic Egg Incubation (Roadmap 1.1):
+      // Only charges when in Flow (momentum >= 100) and basket < 3
+      if (this.momentum >= 100 && basketCount < 3) {
+        let chargeGain = 3.0; // Base gain (~33 words)
+
+        // Streak combo bonus
+        if (this.consecutiveCleanWords >= 15) {
+          chargeGain += 3.5;
+        } else if (this.consecutiveCleanWords >= 10) {
+          chargeGain += 2.0;
+        } else if (this.consecutiveCleanWords >= 5) {
+          chargeGain += 1.0;
         }
-      } else {
-        this.eggChance = 0.0;
+
+        // Apex cushion overspin bonus
+        if (this.momentum > 100.0) {
+          chargeGain += 1.0;
+        }
+
+        // Velocity surge bonus (>= 25% above target)
+        if (liveWpm >= this.targetWpm * 1.25) {
+          chargeGain += 1.0;
+        }
+
+        this.eggCharge = Math.min(100.0, Math.round((this.eggCharge + chargeGain) * 10) / 10);
+
+        if (this.eggCharge >= 100.0) {
+          eggRollSuccess = true;
+          this.eggCharge = 0.0;
+        }
+      } else if (basketCount >= 3) {
+        this.eggCharge = 0.0; // Paused/dormant when nest is full
       }
 
       this.emit('cleanHit', {
         momentum: this.momentum,
         flowStreak: this.flowStreak,
         liveWpm,
-        speedBonus
+        speedBonus,
+        eggCharge: this.eggCharge
       });
     } else {
       // Clean word, but below target pace: Gentle Exhale
@@ -3484,11 +3550,13 @@ class FlowModel extends _EventEmitter {
       this.momentum = Math.max(0, this.momentum - exhaleAmount);
       this.flowStreak = Math.max(0, this.flowStreak - 2);
       this.consecutiveCleanWords = 0;
+      this.eggCharge = Math.max(0.0, Math.round((this.eggCharge - 3.0) * 10) / 10);
       this.eggChance = 0.0;
 
       this.emit('slowClean', {
         exhaleAmount,
         momentum: this.momentum,
+        eggCharge: this.eggCharge,
         liveWpm
       });
     }
@@ -3506,7 +3574,9 @@ class FlowModel extends _EventEmitter {
       delta: this.momentum - prevMomentum,
       multiplier,
       tier: currentTier,
+      eggCharge: this.eggCharge,
       eggChance: this.eggChance,
+      comboTier: this.getComboTier(),
       streak: this.flowStreak,
       earnedXp
     });
@@ -3517,7 +3587,9 @@ class FlowModel extends _EventEmitter {
       flowStreak: this.flowStreak,
       highStreak: this.highStreak,
       eggRollSuccess,
+      eggCharge: this.eggCharge,
       eggChance: this.eggChance,
+      comboTier: this.getComboTier(),
       earnedXp
     };
   }
@@ -3540,18 +3612,26 @@ class FlowModel extends _EventEmitter {
       const prevMomentum = this.momentum;
       this.momentum = Math.max(0, this.momentum - decayAmount);
 
+      if (this.eggCharge > 0) {
+        const chargeDecay = 2.5 * dtSeconds;
+        this.eggCharge = Math.max(0.0, Math.round((this.eggCharge - chargeDecay) * 10) / 10);
+      }
+
       if (this.momentum !== prevMomentum) {
         this.emit('decay', {
           momentum: this.momentum,
           decayAmount,
-          idleTime
+          idleTime,
+          eggCharge: this.eggCharge
         });
         this.emit('momentumChanged', {
           momentum: this.momentum,
           delta: -decayAmount,
           multiplier: this.getMultiplier(),
           tier: this.getTier(),
+          eggCharge: this.eggCharge,
           eggChance: this.eggChance,
+          comboTier: this.getComboTier(),
           streak: this.flowStreak
         });
       }
@@ -4478,6 +4558,7 @@ const DEFAULT_GAME_SAVE = {
   targetWpm: 40,
   unlockedRanks: [1], // Starts with literally 1 word: "the" (Rank 1)!
   eggBasket: [],      // Array of unhatched eggs [{ id, rarity, wordRank, tierName, tierColor }]
+  eggCharge: 0,       // Deterministic incubation progress (0-100)
   wordStats: {},      // SRS telemetry: { [rank]: { seen, unfixedErr, fixedErr, avgWpm, streak } }
   lifetimeWords: 0,
   highStreak: 0
@@ -4684,6 +4765,13 @@ class StorageService {
   setTargetWpm(wpm) {
     const save = this.getGameSave();
     save.targetWpm = wpm;
+    this.saveGameSave(save);
+    return save;
+  }
+
+  updateEggCharge(charge) {
+    const save = this.getGameSave();
+    save.eggCharge = Math.max(0.0, Math.min(100.0, Number(charge) || 0));
     this.saveGameSave(save);
     return save;
   }
@@ -5468,6 +5556,8 @@ class NestView {
       document.getElementById('nest-slot-2')
     ] : []);
     this.nestHint = elements.nestHint || (typeof document !== 'undefined' ? document.getElementById('nest-hint') : null);
+    this.incubationTrack = elements.incubationTrack || (typeof document !== 'undefined' ? document.getElementById('nest-incubation-track') : null);
+    this.incubationFill = elements.incubationFill || (typeof document !== 'undefined' ? document.getElementById('nest-incubation-fill') : null);
   }
 
   /**
@@ -5588,6 +5678,41 @@ class NestView {
       this.nestHint.classList.remove('visible');
     }
   }
+
+  /**
+   * Updates deterministic egg incubation under-track progress and ambient aura glow.
+   * @param {number} chargePct - Incubation progress (0.0 to 100.0)
+   * @param {string} comboTier - Active combo streak tier ('baseline', 'heated', 'overdrive', 'transcendence')
+   * @param {boolean} isFull - Whether all 3 egg slots are currently occupied
+   */
+  updateIncubation(chargePct = 0, comboTier = 'baseline', isFull = false) {
+    if (this.incubationFill) {
+      const pct = isFull ? 0 : Math.min(100.0, Math.max(0.0, Number(chargePct) || 0));
+      this.incubationFill.style.width = `${pct}%`;
+    }
+    if (this.eggNest) {
+      this.eggNest.classList.toggle('nest-full', Boolean(isFull));
+      const isCharging = !isFull && chargePct > 0;
+      this.eggNest.classList.toggle('charging', isCharging);
+      const isHighCombo = isCharging && (comboTier === 'overdrive' || comboTier === 'transcendence');
+      this.eggNest.classList.toggle('high-combo', isHighCombo);
+      const glowIntensity = Math.min(1.0, Math.max(0.1, (chargePct / 100.0))).toFixed(2);
+      this.eggNest.style.setProperty('--nest-glow', glowIntensity);
+    }
+  }
+
+  /**
+   * Triggers the celebratory materialize animation when an egg finishes incubating.
+   */
+  triggerMaterialize() {
+    if (!this.eggNest) return;
+    this.eggNest.classList.remove('materialize');
+    void this.eggNest.offsetWidth; // force CSS reflow
+    this.eggNest.classList.add('materialize');
+    setTimeout(() => {
+      if (this.eggNest) this.eggNest.classList.remove('materialize');
+    }, 600);
+  }
 }
 
 if (typeof window !== 'undefined') {
@@ -5648,8 +5773,6 @@ class HUDView {
     this.flowMultVal = elements.flowMultVal || (typeof document !== 'undefined' ? document.getElementById('flow-mult-val') : null);
     this.momentumBarFill = elements.momentumBarFill || (typeof document !== 'undefined' ? document.getElementById('momentum-bar-fill') : null);
     this.flowVignetteOverlay = elements.flowVignetteOverlay || (typeof document !== 'undefined' ? document.getElementById('flow-vignette-overlay') : null);
-    this.eggChancePct = elements.eggChancePct || (typeof document !== 'undefined' ? document.getElementById('egg-chance-pct') : null);
-    this.eggChanceBarFill = elements.eggChanceBarFill || (typeof document !== 'undefined' ? document.getElementById('egg-chance-bar-fill') : null);
     this.deckCountNum = elements.deckCountNum || (typeof document !== 'undefined' ? document.getElementById('deck-count-num') : null);
     this.xpToastLayer = elements.xpToastLayer || (typeof document !== 'undefined' ? document.getElementById('xp-toast-layer') : null);
 
@@ -5807,14 +5930,6 @@ class HUDView {
       this.flowMultiplierBadge.classList.toggle('active', multiplier > 1.0);
       this.flowMultiplierBadge.classList.toggle('rainbow-max', isMaxFlow);
       this.flowMultiplierBadge.classList.toggle('cushion-active', isCushion);
-    }
-
-    if (this.eggChancePct) {
-      this.eggChancePct.textContent = `${eggChance.toFixed(1)}%`;
-    }
-    if (this.eggChanceBarFill) {
-      const pct = Math.min(100, Math.round((eggChance / 18.0) * 100));
-      this.eggChanceBarFill.style.width = `${pct}%`;
     }
 
     if (this.deckCountNum) {
@@ -6870,6 +6985,7 @@ class GameController {
     const gameState = this.storageService.getGameSave();
     this.flowModel.setTargetWpm(gameState.targetWpm || 40);
     this.flowModel.highStreak = gameState.highStreak || 0;
+    this.flowModel.eggCharge = gameState.eggCharge || 0.0;
     this.eggNestModel.syncBasket(gameState.eggBasket || []);
 
     // 2. Initialize HUD & Views
@@ -6877,6 +6993,11 @@ class GameController {
     this.hudView.syncTargetWpm(gameState.targetWpm || 40);
     this.updateLevelHud();
     this.nestView.render(this.eggNestModel);
+    this.nestView.updateIncubation(
+      this.flowModel.eggCharge,
+      this.flowModel.getComboTier(),
+      (gameState.eggBasket || []).length >= 3
+    );
     this.hudView.updateSoundState(this.audioService.isEnabled());
 
     // 3. Attach keyboard controller
@@ -7042,6 +7163,11 @@ class GameController {
     this.hudView.renderAtmosphere(0, this.currentMode === 'flow');
     this.updateLevelHud();
     this.nestView.render(this.eggNestModel);
+    this.nestView.updateIncubation(
+      this.flowModel.eggCharge,
+      this.flowModel.getComboTier(),
+      (gameState.eggBasket || []).length >= 3
+    );
     this.stageView.focusInput();
   }
 
@@ -7188,7 +7314,7 @@ class GameController {
         }
       }
 
-      // Egg Drop Roll
+      // Deterministic Egg Incubation Spawn
       if (evalRes.eggRollSuccess && basketCount < 3) {
         const droppedEgg = this.wordsModel.rollEgg(
           gameState.unlockedRanks,
@@ -7200,9 +7326,19 @@ class GameController {
         this.storageService.addEgg(droppedEgg);
         this.eggNestModel.syncBasket(this.storageService.getGameSave().eggBasket);
         this.nestView.render(this.eggNestModel);
+        this.nestView.triggerMaterialize();
         this.audioService.playEggDrop();
         this.hudView.spawnXpToast(`🥚 ${droppedEgg.name}!`, 1.0, wordEl, true);
       }
+
+      // Persist eggCharge and update under-track & ambient aura
+      this.storageService.updateEggCharge(evalRes.eggCharge);
+      const updatedBasket = (this.storageService.getGameSave().eggBasket || []).length;
+      this.nestView.updateIncubation(
+        evalRes.eggCharge,
+        evalRes.comboTier,
+        updatedBasket >= 3
+      );
 
       // Update SRS telemetry
       this.storageService.updateWordStat(wordMeta.rank, hasUncorrectedErrors, isHadBackspace, liveWpm, this.flowModel.targetWpm);
@@ -7360,12 +7496,19 @@ class GameController {
 
       const decay = this.flowModel.applyIdleDecay(Date.now(), 0.20);
       if (decay > 0) {
+        this.storageService.updateEggCharge(this.flowModel.eggCharge);
+        const basketCount = (this.storageService.getGameSave().eggBasket || []).length;
+        this.nestView.updateIncubation(
+          this.flowModel.eggCharge,
+          this.flowModel.getComboTier(),
+          basketCount >= 3
+        );
         this.hudView.updateFlowGauge(
           this.sessionModel.getInstantaneousWpm(),
           this.flowModel.targetWpm,
           this.flowModel.momentum,
           this.flowModel.getMultiplier(),
-          this.flowModel.eggChance,
+          0.0,
           (this.storageService.getGameSave().unlockedRanks || [1]).length
         );
       }

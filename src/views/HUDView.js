@@ -46,8 +46,6 @@ class HUDView {
     this.flowMultVal = elements.flowMultVal || (typeof document !== 'undefined' ? document.getElementById('flow-mult-val') : null);
     this.momentumBarFill = elements.momentumBarFill || (typeof document !== 'undefined' ? document.getElementById('momentum-bar-fill') : null);
     this.flowVignetteOverlay = elements.flowVignetteOverlay || (typeof document !== 'undefined' ? document.getElementById('flow-vignette-overlay') : null);
-    this.eggChancePct = elements.eggChancePct || (typeof document !== 'undefined' ? document.getElementById('egg-chance-pct') : null);
-    this.eggChanceBarFill = elements.eggChanceBarFill || (typeof document !== 'undefined' ? document.getElementById('egg-chance-bar-fill') : null);
     this.deckCountNum = elements.deckCountNum || (typeof document !== 'undefined' ? document.getElementById('deck-count-num') : null);
     this.xpToastLayer = elements.xpToastLayer || (typeof document !== 'undefined' ? document.getElementById('xp-toast-layer') : null);
 
@@ -205,14 +203,6 @@ class HUDView {
       this.flowMultiplierBadge.classList.toggle('active', multiplier > 1.0);
       this.flowMultiplierBadge.classList.toggle('rainbow-max', isMaxFlow);
       this.flowMultiplierBadge.classList.toggle('cushion-active', isCushion);
-    }
-
-    if (this.eggChancePct) {
-      this.eggChancePct.textContent = `${eggChance.toFixed(1)}%`;
-    }
-    if (this.eggChanceBarFill) {
-      const pct = Math.min(100, Math.round((eggChance / 18.0) * 100));
-      this.eggChanceBarFill.style.width = `${pct}%`;
     }
 
     if (this.deckCountNum) {

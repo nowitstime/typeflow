@@ -78,6 +78,7 @@ class GameController {
     const gameState = this.storageService.getGameSave();
     this.flowModel.setTargetWpm(gameState.targetWpm || 40);
     this.flowModel.highStreak = gameState.highStreak || 0;
+    this.flowModel.eggCharge = gameState.eggCharge || 0.0;
     this.eggNestModel.syncBasket(gameState.eggBasket || []);
 
     // 2. Initialize HUD & Views
@@ -85,6 +86,11 @@ class GameController {
     this.hudView.syncTargetWpm(gameState.targetWpm || 40);
     this.updateLevelHud();
     this.nestView.render(this.eggNestModel);
+    this.nestView.updateIncubation(
+      this.flowModel.eggCharge,
+      this.flowModel.getComboTier(),
+      (gameState.eggBasket || []).length >= 3
+    );
     this.hudView.updateSoundState(this.audioService.isEnabled());
 
     // 3. Attach keyboard controller
@@ -250,6 +256,11 @@ class GameController {
     this.hudView.renderAtmosphere(0, this.currentMode === 'flow');
     this.updateLevelHud();
     this.nestView.render(this.eggNestModel);
+    this.nestView.updateIncubation(
+      this.flowModel.eggCharge,
+      this.flowModel.getComboTier(),
+      (gameState.eggBasket || []).length >= 3
+    );
     this.stageView.focusInput();
   }
 
@@ -396,7 +407,7 @@ class GameController {
         }
       }
 
-      // Egg Drop Roll
+      // Deterministic Egg Incubation Spawn
       if (evalRes.eggRollSuccess && basketCount < 3) {
         const droppedEgg = this.wordsModel.rollEgg(
           gameState.unlockedRanks,
@@ -408,9 +419,19 @@ class GameController {
         this.storageService.addEgg(droppedEgg);
         this.eggNestModel.syncBasket(this.storageService.getGameSave().eggBasket);
         this.nestView.render(this.eggNestModel);
+        this.nestView.triggerMaterialize();
         this.audioService.playEggDrop();
         this.hudView.spawnXpToast(`🥚 ${droppedEgg.name}!`, 1.0, wordEl, true);
       }
+
+      // Persist eggCharge and update under-track & ambient aura
+      this.storageService.updateEggCharge(evalRes.eggCharge);
+      const updatedBasket = (this.storageService.getGameSave().eggBasket || []).length;
+      this.nestView.updateIncubation(
+        evalRes.eggCharge,
+        evalRes.comboTier,
+        updatedBasket >= 3
+      );
 
       // Update SRS telemetry
       this.storageService.updateWordStat(wordMeta.rank, hasUncorrectedErrors, isHadBackspace, liveWpm, this.flowModel.targetWpm);
@@ -568,12 +589,19 @@ class GameController {
 
       const decay = this.flowModel.applyIdleDecay(Date.now(), 0.20);
       if (decay > 0) {
+        this.storageService.updateEggCharge(this.flowModel.eggCharge);
+        const basketCount = (this.storageService.getGameSave().eggBasket || []).length;
+        this.nestView.updateIncubation(
+          this.flowModel.eggCharge,
+          this.flowModel.getComboTier(),
+          basketCount >= 3
+        );
         this.hudView.updateFlowGauge(
           this.sessionModel.getInstantaneousWpm(),
           this.flowModel.targetWpm,
           this.flowModel.momentum,
           this.flowModel.getMultiplier(),
-          this.flowModel.eggChance,
+          0.0,
           (this.storageService.getGameSave().unlockedRanks || [1]).length
         );
       }
