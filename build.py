@@ -11,30 +11,47 @@ import sys
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def build():
-    print("[TypeFlow] Starting build...")
+    print("[TypeFlow] Starting build with Observable MVC modules...")
 
     css_path = os.path.join(BASE_DIR, "style.css")
-    words_path = os.path.join(BASE_DIR, "words.js")
-    storage_path = os.path.join(BASE_DIR, "storage.js")
-    app_path = os.path.join(BASE_DIR, "app.js")
     output_path = os.path.join(BASE_DIR, "index.html")
 
-    for p in (css_path, words_path, storage_path, app_path):
-        if not os.path.exists(p):
-            print(f"Error: Missing required file {p}")
-            sys.exit(1)
+    if not os.path.exists(css_path):
+        print(f"Error: Missing required file {css_path}")
+        sys.exit(1)
 
     with open(css_path, "r", encoding="utf-8") as f:
         css_content = f.read()
 
-    with open(words_path, "r", encoding="utf-8") as f:
-        words_content = f.read()
+    mvc_modules = [
+        "src/core/Constants.js",
+        "src/core/EventEmitter.js",
+        "src/models/WordsModel.js",
+        "src/models/FlowModel.js",
+        "src/models/SessionModel.js",
+        "src/models/EggNestModel.js",
+        "src/services/StorageService.js",
+        "src/services/AudioService.js",
+        "src/views/StageView.js",
+        "src/views/NestView.js",
+        "src/views/HUDView.js",
+        "src/views/ChartView.js",
+        "src/views/ModalView.js",
+        "src/controllers/KeyboardController.js",
+        "src/controllers/GameController.js",
+        "src/bootstrap.js"
+    ]
 
-    with open(storage_path, "r", encoding="utf-8") as f:
-        storage_content = f.read()
+    bundled_js_parts = []
+    for mod_rel in mvc_modules:
+        mod_path = os.path.join(BASE_DIR, mod_rel)
+        if not os.path.exists(mod_path):
+            print(f"Error: Missing required module {mod_path}")
+            sys.exit(1)
+        with open(mod_path, "r", encoding="utf-8") as f:
+            bundled_js_parts.append(f"// --- {mod_rel} ---\n" + f.read())
 
-    with open(app_path, "r", encoding="utf-8") as f:
-        app_content = f.read()
+    bundled_js = "\n\n".join(bundled_js_parts)
 
     html_template = f"""<!DOCTYPE html>
 <html lang="en">
@@ -448,17 +465,13 @@ def build():
         <span><span class="shortcut-badge">esc</span> - pause / hatchery</span>
       </div>
       <div class="footer-right">
-        <span>TypeFlow v2.0 • Flow RPG Edition</span>
+        <span>TypeFlow v3.0 • Flow RPG Edition</span>
       </div>
     </footer>
   </div>
 
   <script>
-{words_content}
-
-{storage_content}
-
-{app_content}
+{bundled_js}
   </script>
 </body>
 </html>
