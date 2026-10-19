@@ -91,7 +91,7 @@ it('generates 10,000 words with zero adjacent repeats and proper frequency gradi
   assert.ok(rankCounts.top100 > rankCounts.mid101_350, `top100 (${rankCounts.top100}) should exceed mid (${rankCounts.mid101_350})`);
   assert.ok(rankCounts.mid101_350 > rankCounts.rare351_700, `mid (${rankCounts.mid101_350}) should exceed rare (${rankCounts.rare351_700})`);
   assert.ok(rankCounts.rare351_700 > rankCounts.epic701_1000, `rare (${rankCounts.rare351_700}) should exceed epic (${rankCounts.epic701_1000})`);
-  assert.ok(rankCounts.epic701_1000 > 500, `epic tier must have significant presence, got ${rankCounts.epic701_1000}`);
+  assert.ok(rankCounts.epic701_1000 >= 200, `epic tier must have presence (~3% under Option A), got ${rankCounts.epic701_1000}`);
 });
 
 // -------------------------------------------------------------

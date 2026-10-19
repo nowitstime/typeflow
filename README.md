@@ -13,7 +13,7 @@ TypeFlow pairs high-precision typing ergonomics with a rhythmic, incremental rog
 ## ✨ Game Modes & Core Features
 
 ### 1. ⏱️ Classic Mode (15s / 30s / 60s)
-- **Natural Frequency Power-Law Sampling**: Draws words from the top 1,000 common English vocabulary using a calibrated power distribution ($P(r) \propto 1 / (r + 5)^{0.75}$), guaranteeing a rich, natural distribution rather than skewing solely to the first few words.
+- **Tier-Weighted Macro Sampling**: Calibrated distribution across the top 1,000 common English words (60% Common, 25% Uncommon, 12% Rare, 3% Epic) with a 20-word anti-clumping buffer, delivering a high-frequency, natural typing cadence while avoiding repetitive clumping on ranks 1–5.
 - **Full Word Revert & Dynamic Error Clearance**:
   - Hit <kbd>Backspace</kbd> at the start of a word to navigate back across word boundaries into previously submitted words.
   - Fix typos or missed characters in previous words; upon re-submitting, the red error underline dynamically clears!
