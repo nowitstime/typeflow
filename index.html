@@ -4908,13 +4908,13 @@ class StageView {
     }
     const activeLetters = activeWordEl.querySelectorAll('.letter');
     const wordLen = activeLetters.length;
-    const isFirstWord = (currentWordIdx === 0);
+    const isAtStart = (currentWordIdx === 0 && currentCharIdx === 0);
     for (let i = 0; i < wordLen; i++) {
       const letter = activeLetters[i];
       if (i < currentCharIdx) {
         letter.classList.add('hd-past');
         letter.style.opacity = '0';
-      } else if (isFirstWord) {
+      } else if (isAtStart) {
         letter.classList.remove('hd-past');
         letter.style.opacity = '';
       } else {

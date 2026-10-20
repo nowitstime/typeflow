@@ -121,14 +121,14 @@ it('toggles hiddenMode on wordsBox and applies character fade horizon', () => {
   // Letter 2 ('i'): d=6 >= 6 -> full opacity
   assert.strictEqual(word1.children[2].style.opacity, '');
 
-  // Advance cursor to letter 1 ('h') in first word
+  // Advance cursor to letter 1 ('h') in first word: typing has started, smooth lookahead fading applies
   stage.updateHiddenHorizon(0, 1, 6, false);
   // letter 0 ('t') is now in the past: has hd-past and opacity: '0' (fully transparent)
   assert.strictEqual(word0.children[0].classList.contains('hd-past'), true);
   assert.strictEqual(word0.children[0].style.opacity, '0');
-  // Untyped letters in first word remain fully visible
-  assert.strictEqual(word0.children[1].style.opacity, '');
-  assert.strictEqual(word0.children[2].style.opacity, '');
+  // Untyped letters at distance <= 2 hit 0% opacity smoothly (no 100% right next to 0%)
+  assert.strictEqual(word0.children[1].style.opacity, '0');
+  assert.strictEqual(word0.children[2].style.opacity, '0');
   // Next word start ('q' in 'quick'): d = (3 - 1) + 1 = 3 -> opacity: '0.25'
   assert.strictEqual(word1.children[0].style.opacity, '0.25');
   assert.strictEqual(word1.children[1].style.opacity, '0.5');

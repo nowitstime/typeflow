@@ -597,9 +597,9 @@ it('typing keystrokes in Hidden Mode updates stage horizon and safety brake trig
   // Past typed character is fully transparent behind cursor
   assert.strictEqual(word0.children[0].classList.contains('hd-past'), true);
   assert.strictEqual(word0.children[0].style.opacity, '0');
-  // Untyped characters in first word remain fully visible
-  assert.strictEqual(word0.children[1].style.opacity, '');
-  assert.strictEqual(word0.children[2].style.opacity, '');
+  // Untyped characters in first word follow smooth lookahead horizon (d <= 2 -> 0, no 100% next to 0%)
+  assert.strictEqual(word0.children[1].style.opacity, '0');
+  assert.strictEqual(word0.children[2].style.opacity, '0');
 
   // Type typo 'z' instead of 'h'
   controller.handleChar('z');
@@ -610,9 +610,9 @@ it('typing keystrokes in Hidden Mode updates stage horizon and safety brake trig
   // Backspace cleans error
   controller.handleBackspace();
   assert.strictEqual(word0.children[1].classList.contains('incorrect'), false);
-  // Untyped char is visible again in first word, typed char remains transparent
+  // Returns to lookahead fade
   assert.strictEqual(word0.children[0].style.opacity, '0');
-  assert.strictEqual(word0.children[1].style.opacity, '');
+  assert.strictEqual(word0.children[1].style.opacity, '0');
 
   // Finish word 0 and enter word 1 to verify normal hidden mode fading kicks in
   controller.handleChar('h');
