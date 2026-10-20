@@ -246,10 +246,12 @@ class GameController {
     this.resetTest();
   }
 
+  getHiddenZeroDist() {
+    return this.sessionModel ? this.sessionModel.getHiddenZeroDist() : 0;
+  }
+
   getHiddenFadeDepth() {
-    const baseHorizon = 6.0;
-    const streak = this.sessionModel ? (this.sessionModel.wordStreak || 0) : 0;
-    return baseHorizon + (streak * 0.25);
+    return this.sessionModel ? this.sessionModel.getHiddenFadeDepth() : 4.0;
   }
 
   toggleHiddenMode() {
@@ -262,12 +264,14 @@ class GameController {
     if (this.hudView.updateHiddenModeState) {
       this.hudView.updateHiddenModeState(next);
     }
+    const zeroDist = this.getHiddenZeroDist();
     const fadeDepth = this.getHiddenFadeDepth();
     this.stageView.updateHiddenHorizon(
       this.sessionModel.currentWordIdx,
       this.sessionModel.currentCharIdx,
       fadeDepth,
-      this.sessionModel.hasErrorInCurrentWord()
+      this.sessionModel.hasErrorInCurrentWord(),
+      zeroDist
     );
     return next;
   }
@@ -414,9 +418,10 @@ class GameController {
     this.stageView.updateLetter(this.sessionModel.currentWordIdx, charIdx, isCorrect, isExtra, char);
     this.stageView.updateCaret(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
 
+    const zeroDist = this.getHiddenZeroDist();
     const fadeDepth = this.getHiddenFadeDepth();
     const hasErr = isExtra || !isCorrect || this.sessionModel.hasErrorInCurrentWord();
-    this.stageView.updateHiddenHorizon(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx, fadeDepth, hasErr);
+    this.stageView.updateHiddenHorizon(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx, fadeDepth, hasErr, zeroDist);
 
     this.audioService.playKey(false, this.currentMode === 'flow' ? this.flowModel.flowStreak : 0);
   }
@@ -451,12 +456,14 @@ class GameController {
     }
     this.flowModel.recordKeystroke();
     this.stageView.updateCaret(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
+    const zeroDist = this.getHiddenZeroDist();
     const fadeDepth = this.getHiddenFadeDepth();
     this.stageView.updateHiddenHorizon(
       this.sessionModel.currentWordIdx,
       this.sessionModel.currentCharIdx,
       fadeDepth,
-      this.sessionModel.hasErrorInCurrentWord()
+      this.sessionModel.hasErrorInCurrentWord(),
+      zeroDist
     );
   }
 
@@ -608,8 +615,9 @@ class GameController {
     const nextIdx = this.sessionModel.currentWordIdx;
     this.stageView.advanceWord(prevIdx, nextIdx, hasUncorrectedErrors);
     this.stageView.updateCaret(nextIdx, 0);
+    const zeroDist = this.getHiddenZeroDist();
     const fadeDepth = this.getHiddenFadeDepth();
-    this.stageView.updateHiddenHorizon(nextIdx, 0, fadeDepth, false);
+    this.stageView.updateHiddenHorizon(nextIdx, 0, fadeDepth, false, zeroDist);
 
     // Dynamic infinite stream appending
     if (nextIdx >= this.stageView.wordElements.length - 10) {

@@ -650,29 +650,66 @@ it('SessionModel.insertWordsAt dynamically splices words into upcoming stream', 
 console.log('\n--- 9. Hidden (HD) Look-Ahead Logic & Geometry ---');
 
 it('calculates fade opacity across distances and horizons accurately', () => {
+  // When zeroDist <= 0 (zero character fade at start of combo): all distances are fully visible (100%)
+  assert.strictEqual(StageView.calculateOpacity(0, 4, 0), 1);
+  assert.strictEqual(StageView.calculateOpacity(1, 4, 0), 1);
+  assert.strictEqual(StageView.calculateOpacity(2, 4, 0), 1);
+  assert.strictEqual(StageView.calculateOpacity(5, 4, 0), 1);
+
   // At or within zeroDist = 2 characters from cursor: vanished (0% capacity)
-  assert.strictEqual(StageView.calculateOpacity(0, 6), 0);
-  assert.strictEqual(StageView.calculateOpacity(1, 6), 0);
-  assert.strictEqual(StageView.calculateOpacity(2, 6), 0);
+  assert.strictEqual(StageView.calculateOpacity(0, 6, 2), 0);
+  assert.strictEqual(StageView.calculateOpacity(1, 6, 2), 0);
+  assert.strictEqual(StageView.calculateOpacity(2, 6, 2), 0);
 
-  // Ahead of cursor in Classic Mode (N = 6): gradual 25% increments
+  // Ahead of cursor when zeroDist = 2, N = 6: gradual 25% increments
   // d=3: (3 - 2) / 4 = 0.25
-  assert.strictEqual(StageView.calculateOpacity(3, 6), 0.25);
+  assert.strictEqual(StageView.calculateOpacity(3, 6, 2), 0.25);
   // d=4: (4 - 2) / 4 = 0.50
-  assert.strictEqual(StageView.calculateOpacity(4, 6), 0.50);
+  assert.strictEqual(StageView.calculateOpacity(4, 6, 2), 0.50);
   // d=5: (5 - 2) / 4 = 0.75
-  assert.strictEqual(StageView.calculateOpacity(5, 6), 0.75);
+  assert.strictEqual(StageView.calculateOpacity(5, 6, 2), 0.75);
   // d>=N: full opacity
-  assert.strictEqual(StageView.calculateOpacity(6, 6), 1);
-  assert.strictEqual(StageView.calculateOpacity(7, 6), 1);
+  assert.strictEqual(StageView.calculateOpacity(6, 6, 2), 1);
+  assert.strictEqual(StageView.calculateOpacity(7, 6, 2), 1);
 
-  // Scaled horizon after 4 words in a row (N = 7, span = 5)
-  assert.strictEqual(StageView.calculateOpacity(2, 7), 0);
-  assert.strictEqual(StageView.calculateOpacity(3, 7), 0.20);
-  assert.strictEqual(StageView.calculateOpacity(4, 7), 0.40);
-  assert.strictEqual(StageView.calculateOpacity(5, 7), 0.60);
-  assert.strictEqual(StageView.calculateOpacity(6, 7), 0.80);
-  assert.strictEqual(StageView.calculateOpacity(7, 7), 1);
+  // When zeroDist = 1, N = 5:
+  assert.strictEqual(StageView.calculateOpacity(1, 5, 1), 0);
+  assert.strictEqual(StageView.calculateOpacity(2, 5, 1), 0.25);
+  assert.strictEqual(StageView.calculateOpacity(3, 5, 1), 0.50);
+  assert.strictEqual(StageView.calculateOpacity(4, 5, 1), 0.75);
+  assert.strictEqual(StageView.calculateOpacity(5, 5, 1), 1);
+});
+
+it('SessionModel scales Hidden zeroDist and fadeDepth: 0 at start, 1..5, and 0.5/word after word 6', () => {
+  // Streak 0 (start of combo): 0 character fade
+  assert.strictEqual(SessionModel.calculateHiddenZeroDist(0), 0);
+  assert.strictEqual(SessionModel.calculateHiddenFadeDepth(0), 4.0);
+
+  // Words 1 to 5: 1, 2, 3, 4, 5
+  assert.strictEqual(SessionModel.calculateHiddenZeroDist(1), 1);
+  assert.strictEqual(SessionModel.calculateHiddenFadeDepth(1), 5.0);
+
+  assert.strictEqual(SessionModel.calculateHiddenZeroDist(2), 2);
+  assert.strictEqual(SessionModel.calculateHiddenFadeDepth(2), 6.0);
+
+  assert.strictEqual(SessionModel.calculateHiddenZeroDist(3), 3);
+  assert.strictEqual(SessionModel.calculateHiddenFadeDepth(3), 7.0);
+
+  assert.strictEqual(SessionModel.calculateHiddenZeroDist(4), 4);
+  assert.strictEqual(SessionModel.calculateHiddenFadeDepth(4), 8.0);
+
+  assert.strictEqual(SessionModel.calculateHiddenZeroDist(5), 5);
+  assert.strictEqual(SessionModel.calculateHiddenFadeDepth(5), 9.0);
+
+  // Word 6+: scales by half a character per word (+0.5)
+  assert.strictEqual(SessionModel.calculateHiddenZeroDist(6), 5.5);
+  assert.strictEqual(SessionModel.calculateHiddenFadeDepth(6), 9.5);
+
+  assert.strictEqual(SessionModel.calculateHiddenZeroDist(7), 6.0);
+  assert.strictEqual(SessionModel.calculateHiddenFadeDepth(7), 10.0);
+
+  assert.strictEqual(SessionModel.calculateHiddenZeroDist(8), 6.5);
+  assert.strictEqual(SessionModel.calculateHiddenFadeDepth(8), 10.5);
 });
 
 it('SessionModel.wordStreak increments on clean words and resets on error', () => {

@@ -39,6 +39,7 @@ class StageView {
   }
 
   static calculateOpacity(d, fadeDepth = 6, zeroDist = 2) {
+    if (zeroDist <= 0) return 1;
     if (d <= zeroDist) return 0;
     if (d >= fadeDepth) return 1;
     const span = Math.max(0.1, fadeDepth - zeroDist);
@@ -385,14 +386,17 @@ class StageView {
    * @param {number} currentCharIdx - Index of caret within active word
    * @param {number} fadeDepth - Horizon depth in characters ahead (default: 6)
    * @param {boolean} hasError - Safety brake: if true, immediately restores active word visibility
+   * @param {number|null} zeroDist - Blind distance where characters hit 0% opacity (starts at 0, scales with streak)
    */
-  updateHiddenHorizon(currentWordIdx, currentCharIdx, fadeDepth = 6, hasError = false) {
+  updateHiddenHorizon(currentWordIdx, currentCharIdx, fadeDepth = 6, hasError = false, zeroDist = null) {
     if (!this.hiddenMode || !this.wordElements || this.wordElements.length === 0) return;
     const activeWordEl = this.wordElements[currentWordIdx];
     if (!activeWordEl) return;
 
-    const zeroDist = 2;
-    const N = Math.max(zeroDist + 0.1, fadeDepth);
+    const actualZeroDist = (zeroDist !== null && typeof zeroDist === 'number')
+      ? zeroDist
+      : Math.max(0, fadeDepth - 4);
+    const N = Math.max(actualZeroDist + 0.1, fadeDepth);
 
     // Safety brake: if error exists, immediately restore visibility of all letters in active word
     if (hasError) {
@@ -406,7 +410,6 @@ class StageView {
     // 1. Process active word
     const activeLetters = activeWordEl.querySelectorAll('.letter');
     const wordLen = activeLetters.length;
-    const isAtStart = (currentWordIdx === 0 && currentCharIdx === 0);
 
     for (let i = 0; i < wordLen; i++) {
       const letter = activeLetters[i];
@@ -414,20 +417,19 @@ class StageView {
         // Behind cursor: fully transparent once typed
         letter.classList.add('hd-past');
         letter.style.opacity = '0';
-      } else if (isAtStart) {
-        // First word onboarding before typing starts: fully visible so the typist can see and type to start
-        letter.classList.remove('hd-past');
-        letter.style.opacity = '';
       } else {
         letter.classList.remove('hd-past');
         const d = i - currentCharIdx;
-        if (d <= zeroDist) {
-          // Hits 0% opacity within zeroDist (about 2 characters)
+        if (actualZeroDist <= 0) {
+          // Zero character fade: all untyped letters remain fully visible
+          letter.style.opacity = '';
+        } else if (d <= actualZeroDist) {
+          // Hits 0% opacity within zeroDist
           letter.style.opacity = '0';
         } else if (d >= N) {
           letter.style.opacity = '';
         } else {
-          const alpha = StageView.calculateOpacity(d, N, zeroDist);
+          const alpha = StageView.calculateOpacity(d, N, actualZeroDist);
           letter.style.opacity = String(alpha);
         }
       }
@@ -442,7 +444,7 @@ class StageView {
       if (!nextWordEl) break;
       const nextLetters = nextWordEl.querySelectorAll('.letter');
 
-      if (dCumulative >= N) {
+      if (actualZeroDist > 0 && dCumulative >= N) {
         // Word is past horizon: clear inline opacity so CSS renders at full visibility
         for (let j = 0; j < nextLetters.length; j++) {
           nextLetters[j].classList.remove('hd-past');
@@ -464,12 +466,14 @@ class StageView {
         const letter = nextLetters[j];
         letter.classList.remove('hd-past');
         const d = dCumulative + j;
-        if (d <= zeroDist) {
+        if (actualZeroDist <= 0) {
+          letter.style.opacity = '';
+        } else if (d <= actualZeroDist) {
           letter.style.opacity = '0';
         } else if (d >= N) {
           letter.style.opacity = '';
         } else {
-          const alpha = StageView.calculateOpacity(d, N, zeroDist);
+          const alpha = StageView.calculateOpacity(d, N, actualZeroDist);
           letter.style.opacity = String(alpha);
         }
       }

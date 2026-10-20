@@ -585,21 +585,22 @@ it('typing keystrokes in Hidden Mode updates stage horizon and safety brake trig
   const word0 = controller.stageView.wordElements[0];
   const word1 = controller.stageView.wordElements[1];
 
-  // Initial state on word 0: first word onboarding makes untyped characters fully visible
+  // Initial state on word 0 (streak 0): zero character fade (all untyped characters fully visible)
+  assert.strictEqual(controller.getHiddenZeroDist(), 0);
+  assert.strictEqual(controller.getHiddenFadeDepth(), 4.0);
   assert.strictEqual(word0.children[0].style.opacity, '');
   assert.strictEqual(word0.children[1].style.opacity, '');
   assert.strictEqual(word0.children[2].style.opacity, '');
-  // Next word starts at distance 4 -> gradual 50% visibility
-  assert.strictEqual(word1.children[0].style.opacity, '0.5');
+  assert.strictEqual(word1.children[0].style.opacity, '');
 
   // Type correct 't'
   controller.handleChar('t');
   // Past typed character is fully transparent behind cursor
   assert.strictEqual(word0.children[0].classList.contains('hd-past'), true);
   assert.strictEqual(word0.children[0].style.opacity, '0');
-  // Untyped characters in first word follow smooth lookahead horizon (d <= 2 -> 0, no 100% next to 0%)
-  assert.strictEqual(word0.children[1].style.opacity, '0');
-  assert.strictEqual(word0.children[2].style.opacity, '0');
+  // Untyped characters ahead remain visible with zero character fade
+  assert.strictEqual(word0.children[1].style.opacity, '');
+  assert.strictEqual(word0.children[2].style.opacity, '');
 
   // Type typo 'z' instead of 'h'
   controller.handleChar('z');
@@ -610,54 +611,78 @@ it('typing keystrokes in Hidden Mode updates stage horizon and safety brake trig
   // Backspace cleans error
   controller.handleBackspace();
   assert.strictEqual(word0.children[1].classList.contains('incorrect'), false);
-  // Returns to lookahead fade
+  // Returns to zero character fade visibility
   assert.strictEqual(word0.children[0].style.opacity, '0');
-  assert.strictEqual(word0.children[1].style.opacity, '0');
+  assert.strictEqual(word0.children[1].style.opacity, '');
 
-  // Finish word 0 and enter word 1 to verify normal hidden mode fading kicks in
+  // Finish word 0 cleanly ('h', 'e', ' ') to complete first word and enter word 1
   controller.handleChar('h');
   controller.handleChar('e');
   controller.handleSpace();
 
+  // After 1 clean word, streak = 1 -> 1 character fade (zeroDist = 1)
   assert.strictEqual(controller.sessionModel.currentWordIdx, 1);
-  // Word 1 is no longer first word, so within 2 chars it hits 0% opacity
+  assert.strictEqual(controller.sessionModel.wordStreak, 1);
+  assert.strictEqual(controller.getHiddenZeroDist(), 1);
+  assert.strictEqual(controller.getHiddenFadeDepth(), 5.0);
+
+  // Word 1 now exhibits 1 character fade (letters within 1 char hit 0% opacity)
   assert.strictEqual(word1.children[0].style.opacity, '0');
   assert.strictEqual(word1.children[1].style.opacity, '0');
 });
 
-it('Hidden Mode horizon scales infinitely at a quarter character per word in a row', () => {
+it('Hidden Mode horizon scales: zero at start, 1..5, and 0.5 per word after word 6', () => {
   const { controller } = createTestHarness();
   controller.init();
 
-  // Base Classic Mode horizon: 6 characters
-  assert.strictEqual(controller.getHiddenFadeDepth(), 6.0);
+  // Streak 0 (start of combo): zero character fade
+  assert.strictEqual(controller.getHiddenZeroDist(), 0);
+  assert.strictEqual(controller.getHiddenFadeDepth(), 4.0);
 
-  // Type 1 clean word
+  // Type 1 clean word -> 1 character fade
   controller.handleChar('t');
   controller.handleChar('h');
   controller.handleChar('e');
   controller.handleSpace();
 
   assert.strictEqual(controller.sessionModel.wordStreak, 1);
-  assert.strictEqual(controller.getHiddenFadeDepth(), 6.25);
+  assert.strictEqual(controller.getHiddenZeroDist(), 1);
+  assert.strictEqual(controller.getHiddenFadeDepth(), 5.0);
 
-  // Type 3 more clean words (total 4 words in a row)
-  for (let w = 0; w < 3; w++) {
-    const cur = controller.sessionModel.getCurrentWordText();
-    for (let c of cur) controller.handleChar(c);
-    controller.handleSpace();
-  }
-  assert.strictEqual(controller.sessionModel.wordStreak, 4);
-  assert.strictEqual(controller.getHiddenFadeDepth(), 7.0);
-
-  // Type 4 more clean words (total 8 words in a row)
+  // Type words 2 to 5 (total 5 words in a row)
   for (let w = 0; w < 4; w++) {
     const cur = controller.sessionModel.getCurrentWordText();
     for (let c of cur) controller.handleChar(c);
     controller.handleSpace();
   }
-  assert.strictEqual(controller.sessionModel.wordStreak, 8);
-  assert.strictEqual(controller.getHiddenFadeDepth(), 8.0);
+  assert.strictEqual(controller.sessionModel.wordStreak, 5);
+  assert.strictEqual(controller.getHiddenZeroDist(), 5);
+  assert.strictEqual(controller.getHiddenFadeDepth(), 9.0);
+
+  // Word 6: scales by half a character (+0.5)
+  const cur6 = controller.sessionModel.getCurrentWordText();
+  for (let c of cur6) controller.handleChar(c);
+  controller.handleSpace();
+
+  assert.strictEqual(controller.sessionModel.wordStreak, 6);
+  assert.strictEqual(controller.getHiddenZeroDist(), 5.5);
+  assert.strictEqual(controller.getHiddenFadeDepth(), 9.5);
+
+  // Word 7: scales to 6.0
+  const cur7 = controller.sessionModel.getCurrentWordText();
+  for (let c of cur7) controller.handleChar(c);
+  controller.handleSpace();
+
+  assert.strictEqual(controller.sessionModel.wordStreak, 7);
+  assert.strictEqual(controller.getHiddenZeroDist(), 6.0);
+  assert.strictEqual(controller.getHiddenFadeDepth(), 10.0);
+
+  // Word with error drops combo back to zero
+  controller.handleChar('x'); // wrong char
+  controller.handleSpace();
+  assert.strictEqual(controller.sessionModel.wordStreak, 0);
+  assert.strictEqual(controller.getHiddenZeroDist(), 0);
+  assert.strictEqual(controller.getHiddenFadeDepth(), 4.0);
 });
 
 it('completing words in Hidden Mode awards +15% bonus XP', () => {

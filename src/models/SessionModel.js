@@ -623,6 +623,39 @@ class SessionModel extends _EventEmitter {
       wpmHistory: this.wpmHistory
     };
   }
+
+  /**
+   * Calculates zero-capacity blind distance based on word streak.
+   * Starts with zero character fade (at streak 0 / start of combo).
+   * Scales: word 1 -> 1, word 2 -> 2, word 3 -> 3, word 4 -> 4, word 5 -> 5,
+   * and word 6+ -> +0.5 character per word (5.5, 6.0, 6.5...).
+   * @param {number} streak - Consecutive clean words typed
+   * @returns {number} Distance in characters where text hits 0% opacity
+   */
+  static calculateHiddenZeroDist(streak) {
+    if (!streak || streak <= 0) return 0;
+    if (streak <= 5) return streak;
+    return 5.0 + (streak - 5) * 0.5;
+  }
+
+  /**
+   * Calculates total horizon depth (zeroDist + rampWidth).
+   * @param {number} streak - Consecutive clean words typed
+   * @param {number} rampWidth - Gradual ramp width in characters (default: 4.0)
+   * @returns {number} Distance in characters where text reaches full visibility (1.0)
+   */
+  static calculateHiddenFadeDepth(streak, rampWidth = 4.0) {
+    const zeroDist = SessionModel.calculateHiddenZeroDist(streak);
+    return zeroDist + rampWidth;
+  }
+
+  getHiddenZeroDist() {
+    return SessionModel.calculateHiddenZeroDist(this.wordStreak);
+  }
+
+  getHiddenFadeDepth(rampWidth = 4.0) {
+    return SessionModel.calculateHiddenFadeDepth(this.wordStreak, rampWidth);
+  }
 }
 
 if (typeof window !== 'undefined') {
