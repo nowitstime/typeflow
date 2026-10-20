@@ -31,6 +31,7 @@ const DEFAULT_GAME_SAVE = {
   eggBasket: [],      // Array of unhatched eggs [{ id, rarity, wordRank, tierName, tierColor }]
   eggCharge: 0,       // Deterministic incubation progress (0-100)
   wordStats: {},      // SRS telemetry: { [rank]: { seen, unfixedErr, fixedErr, avgWpm, streak } }
+  bigramLedger: {},   // Rolling EMA bigram mastery ledger: { [bg]: mastery }
   lifetimeWords: 0,
   highStreak: 0
 };
@@ -159,6 +160,9 @@ class StorageService {
       if (state.eggBasket && state.eggBasket.length > 3) {
         state.eggBasket = state.eggBasket.slice(0, 3);
       }
+      if (!state.bigramLedger || typeof state.bigramLedger !== 'object') {
+        state.bigramLedger = {};
+      }
       return state;
     } catch (e) {
       return JSON.parse(JSON.stringify(DEFAULT_GAME_SAVE));
@@ -177,6 +181,20 @@ class StorageService {
       console.error('[StorageService] Failed to save game state:', e);
       return false;
     }
+  }
+
+  // Get Bigram Mastery Ledger
+  getBigramLedger() {
+    const save = this.getGameSave();
+    return (save && save.bigramLedger) ? save.bigramLedger : {};
+  }
+
+  // Persist Bigram Mastery Ledger
+  saveBigramLedger(ledgerData) {
+    if (!ledgerData || typeof ledgerData !== 'object') return false;
+    const save = this.getGameSave();
+    save.bigramLedger = ledgerData;
+    return this.saveGameSave(save);
   }
 
   // Update high streak if current streak exceeds personal record

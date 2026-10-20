@@ -98,6 +98,36 @@ class StageView {
   }
 
   /**
+   * Inserts words dynamically at a specific index in the stage.
+   */
+  insertWordsAt(insertIdx, wordsToInsert) {
+    if (!this.wordsWrapper || !Array.isArray(wordsToInsert) || wordsToInsert.length === 0) return;
+    const doc = this._getDoc();
+    if (!doc) return;
+
+    const idx = Math.max(0, Math.min(this.wordElements.length, insertIdx));
+    const refNode = this.wordElements[idx] || null;
+
+    const newEls = [];
+    for (let i = 0; i < wordsToInsert.length; i++) {
+      const word = wordsToInsert[i];
+      const wordEl = doc.createElement('div');
+      wordEl.className = 'word';
+      wordEl.dataset.word = word;
+
+      for (let j = 0; j < word.length; j++) {
+        const letterEl = doc.createElement('span');
+        letterEl.className = 'letter';
+        letterEl.textContent = word[j];
+        wordEl.appendChild(letterEl);
+      }
+      this.wordsWrapper.insertBefore(wordEl, refNode);
+      newEls.push(wordEl);
+    }
+    this.wordElements.splice(idx, 0, ...newEls);
+  }
+
+  /**
    * Updates state styling of an individual letter span (correct, incorrect, extra).
    */
   updateLetter(wordIdx, charIdx, isCorrect, isExtra = false, typedChar = '') {

@@ -3,12 +3,13 @@
  */
 
 const CONSTANTS = {
-  // Rarity Tiers & Progression
+  // Rarity Tiers & Progression (Asymmetric Rarity Pyramid)
   RARITY_TIERS: {
-    COMMON:   { id: 'COMMON',   maxRank: 100,  name: 'Common',   color: '#38bdf8', xp: 10 },
-    UNCOMMON: { id: 'UNCOMMON', maxRank: 350,  name: 'Uncommon', color: '#34d399', xp: 25 },
-    RARE:     { id: 'RARE',     maxRank: 700,  name: 'Rare',     color: '#c084fc', xp: 60 },
-    EPIC:     { id: 'EPIC',     maxRank: 1000, name: 'Epic',     color: '#fbbf24', xp: 150 }
+    STARTER:  { id: 'STARTER',  maxRank: 40,   name: 'Starter',  color: '#38bdf8', xp: 8 },
+    COMMON:   { id: 'COMMON',   maxRank: 300,  name: 'Common',   color: '#2dd4bf', xp: 15 },
+    UNCOMMON: { id: 'UNCOMMON', maxRank: 600,  name: 'Uncommon', color: '#34d399', xp: 35 },
+    RARE:     { id: 'RARE',     maxRank: 850,  name: 'Rare',     color: '#c084fc', xp: 80 },
+    EPIC:     { id: 'EPIC',     maxRank: 1000, name: 'Epic',     color: '#fbbf24', xp: 180 }
   },
 
   // Neuromuscular Pattern Costs (Biomechanical Friction)

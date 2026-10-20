@@ -223,6 +223,20 @@ it('updates and persists high streak record', () => {
   assert.strictEqual(service.getGameSave().highStreak, 25);
 });
 
+it('persists and retrieves Bigram Mastery Ledger', () => {
+  const mock = new LocalStorageMock();
+  const service = new StorageService(mock);
+
+  assert.deepStrictEqual(service.getBigramLedger(), {});
+  service.saveBigramLedger({ th: 0.95, he: 0.88, er: 0.35 });
+
+  assert.deepStrictEqual(service.getBigramLedger(), { th: 0.95, he: 0.88, er: 0.35 });
+
+  // Re-instantiate with same storage to verify persistence
+  const reloaded = new StorageService(mock);
+  assert.deepStrictEqual(reloaded.getBigramLedger(), { th: 0.95, he: 0.88, er: 0.35 });
+});
+
 // 2. AudioService Tests
 console.log('\n--- 2. AudioService ---');
 

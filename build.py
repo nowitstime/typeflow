@@ -48,6 +48,7 @@ def build():
     mvc_modules = [
         "src/core/Constants.js",
         "src/core/EventEmitter.js",
+        "src/models/BigramLedger.js",
         "src/models/WordsModel.js",
         "src/models/FlowModel.js",
         "src/models/SessionModel.js",

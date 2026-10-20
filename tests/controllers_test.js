@@ -471,6 +471,85 @@ it('destroys and cleans up intervals and event listeners without leaks', () => {
   assert.strictEqual(controller.physicsAnimFrame, null);
 });
 
+it('typing words records bigram transitions into BigramLedger and persists on space', () => {
+  const { controller } = createTestHarness();
+  controller.init();
+
+  assert.ok(controller.bigramLedger);
+  assert.strictEqual(controller.bigramLedger.getMastery('th'), null);
+
+  // Type "the"
+  controller.handleChar('t');
+  controller.handleChar('h');
+  controller.handleChar('e');
+
+  assert.ok(controller.bigramLedger.getMastery('th') !== null);
+  assert.ok(controller.bigramLedger.getMastery('he') !== null);
+
+  // Hit space to complete word
+  controller.handleSpace();
+
+  const persisted = controller.storageService.getBigramLedger();
+  assert.ok(persisted.th !== undefined);
+  assert.ok(persisted.he !== undefined);
+});
+
+it('Sandwiched Induction Rule applies on egg hatch: stage words launch with [Anchor1, NewWord, Anchor2]', () => {
+  const { controller } = createTestHarness();
+  controller.init();
+
+  // Add an egg to basket
+  const egg = controller.wordsModel.rollEgg([1], 0, 'starter');
+  controller.storageService.addEgg(egg);
+  controller.eggNestModel.syncBasket(controller.storageService.getGameSave().eggBasket);
+
+  // Enter hatch mode and crack egg
+  controller.enterHatchMode(0);
+  controller.handleHatchChar('e');
+  controller.handleHatchChar('g');
+  controller.handleHatchChar('g');
+
+  // Verify pending hatched word queued
+  assert.strictEqual(controller.pendingHatchedWords.length, 1);
+  assert.strictEqual(controller.pendingHatchedWords[0].word, egg.word);
+
+  // Exit hatch mode -> applies Sandwiched Induction
+  controller.exitHatchMode();
+
+  // The very first 3 words in sessionModel are [Anchor1, HatchedWord, Anchor2]
+  assert.strictEqual(controller.sessionModel.words[1], egg.word);
+  assert.notStrictEqual(controller.sessionModel.words[0], egg.word);
+  assert.notStrictEqual(controller.sessionModel.words[2], egg.word);
+});
+
+it('Rare/Epic unlocks during peak flow (>= 90% momentum) are held in queue until flow dips below 90%', () => {
+  const { controller } = createTestHarness();
+  controller.init();
+
+  // Simulate peak egg-charging flow
+  controller.flowModel.momentum = 105;
+
+  // Queue an Epic hatched word
+  controller.queueHatchedWord('question', 'epic');
+
+  // Must be held in pendingRareEpicUnlocks to protect peak flow
+  assert.strictEqual(controller.pendingRareEpicUnlocks.length, 1);
+  assert.strictEqual(controller.pendingRareEpicUnlocks[0].word, 'question');
+  assert.strictEqual(controller.pendingHatchedWords.length, 0);
+
+  // Now flow dips below 90% (e.g. 50% momentum)
+  controller.flowModel.momentum = 50;
+
+  // Type a word and press space to trigger momentum check in handleSpace
+  controller.handleChar('t');
+  controller.handleChar('h');
+  controller.handleChar('e');
+  controller.handleSpace();
+
+  // Queued Epic word is released to pendingHatchedWords / induced into stream
+  assert.strictEqual(controller.pendingRareEpicUnlocks.length, 0);
+});
+
 console.log('\n========================================');
 console.log(`TEST RESULTS: ${passedTests} / ${totalTests} PASSED`);
 if (passedTests === totalTests) {

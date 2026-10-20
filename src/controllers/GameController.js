@@ -12,6 +12,13 @@ if (!_KeyboardController && typeof require !== 'undefined') {
   } catch (e) {}
 }
 
+var _BigramLedger = (typeof BigramLedger !== 'undefined') ? BigramLedger : null;
+if (!_BigramLedger && typeof require !== 'undefined') {
+  try {
+    _BigramLedger = require('../models/BigramLedger.js').BigramLedger;
+  } catch (e) {}
+}
+
 class GameController {
   constructor(deps = {}) {
     // Models
@@ -23,6 +30,21 @@ class GameController {
     // Services
     this.storageService = deps.storageService || (typeof StorageManager !== 'undefined' ? StorageManager : new StorageService());
     this.audioService = deps.audioService || (typeof audioService !== 'undefined' ? audioService : new AudioService());
+
+    // Bigram Ledger
+    const BLClass = deps.bigramLedgerClass || _BigramLedger || (typeof BigramLedger !== 'undefined' ? BigramLedger : null);
+    if (deps.bigramLedger) {
+      this.bigramLedger = deps.bigramLedger;
+    } else if (BLClass) {
+      const savedLedger = this.storageService.getBigramLedger ? this.storageService.getBigramLedger() : {};
+      this.bigramLedger = new BLClass(savedLedger);
+    } else {
+      this.bigramLedger = null;
+    }
+
+    this.lastKeystrokeTime = null;
+    this.pendingHatchedWords = [];
+    this.pendingRareEpicUnlocks = [];
 
     // Views
     this.stageView = deps.stageView || new StageView();
@@ -229,13 +251,26 @@ class GameController {
     this.flowModel.reset();
     this.visualMomentum = 0;
     this.wordsModel.resetHistory();
+    this.lastKeystrokeTime = null;
 
     const gameState = this.storageService.getGameSave();
     this.eggNestModel.syncBasket(gameState.eggBasket || []);
     const count = 70;
     const words = (this.currentMode === 'flow')
-      ? this.wordsModel.generateBatch(count, gameState.unlockedRanks, gameState.wordStats, this.flowModel.targetWpm, 0)
+      ? this.wordsModel.generateBatch(count, gameState.unlockedRanks, gameState.wordStats, this.flowModel.targetWpm, 0, this.bigramLedger)
       : this.wordsModel.generateClassicBatch(count);
+
+    // Sandwiched Induction Rule: If new words were hatched, launch with [Anchor1, NewWord, Anchor2]
+    if (this.currentMode === 'flow' && this.pendingHatchedWords && this.pendingHatchedWords.length > 0) {
+      const nextWordObj = this.pendingHatchedWords.shift();
+      const sandwich = this.wordsModel.createSandwich(
+        nextWordObj.word,
+        gameState.unlockedRanks,
+        gameState.wordStats,
+        this.bigramLedger
+      );
+      words.splice(0, 3, ...sandwich);
+    }
 
     this.sessionModel.reset({ mode: this.currentMode, duration: this.sessionModel.duration, words });
     this.stageView.renderWords(words);
@@ -299,6 +334,10 @@ class GameController {
       this.sessionModel.currentWordIdx
     );
 
+    if (this.bigramLedger) {
+      this.storageService.saveBigramLedger(this.bigramLedger.toJSON());
+    }
+
     this.modalView.showClassicResults(stats);
     this.chartView.render(this.sessionModel.wpmHistory);
   }
@@ -317,6 +356,25 @@ class GameController {
     const isExtra = charIdx >= currentWord.length;
     const isCorrect = !isExtra && currentWord[charIdx] === char;
 
+    const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+
+    // N-Gram Bigram Mastery Ledger transition recording
+    if (this.bigramLedger && charIdx > 0 && charIdx < currentWord.length) {
+      const prevChar = currentWord[charIdx - 1];
+      const targetChar = currentWord[charIdx];
+      const targetWpm = (this.flowModel && this.flowModel.targetWpm) || 40;
+      const targetInterval = 12000 / targetWpm;
+      let transitionMs = targetInterval;
+      if (this.lastKeystrokeTime !== null) {
+        const delta = now - this.lastKeystrokeTime;
+        if (delta > 0 && delta <= 5000) {
+          transitionMs = delta;
+        }
+      }
+      this.bigramLedger.recordTransition(prevChar, targetChar, transitionMs, isCorrect, targetWpm);
+    }
+    this.lastKeystrokeTime = now;
+
     this.sessionModel.recordChar(char, isCorrect, isExtra);
     this.flowModel.recordKeystroke();
     this.stageView.updateLetter(this.sessionModel.currentWordIdx, charIdx, isCorrect, isExtra, char);
@@ -327,6 +385,7 @@ class GameController {
 
   handleBackspace() {
     if (this.sessionModel.isFinished) return;
+    this.lastKeystrokeTime = null;
 
     if (this.sessionModel.currentCharIdx === 0) {
       if (this.sessionModel.currentWordIdx > 0) {
@@ -353,6 +412,7 @@ class GameController {
     if (this.sessionModel.isFinished) return;
     if (this.sessionModel.currentCharIdx === 0) return; // Prevent empty skipping
 
+    this.lastKeystrokeTime = null;
     this.audioService.init();
     this.audioService.playKey(true, this.currentMode === 'flow' ? this.flowModel.flowStreak : 0);
 
@@ -402,7 +462,8 @@ class GameController {
             xpRes.bonusEggRarity,
             curSave.wordStats,
             this.flowModel.targetWpm,
-            curBasket
+            curBasket,
+            this.bigramLedger
           );
           this.storageService.addEgg(bonusEgg);
           this.eggNestModel.syncBasket(this.storageService.getGameSave().eggBasket);
@@ -422,7 +483,8 @@ class GameController {
             null,
             freshSave.wordStats,
             this.flowModel.targetWpm,
-            freshBasket
+            freshBasket,
+            this.bigramLedger
           );
           this.storageService.addEgg(droppedEgg);
           this.eggNestModel.syncBasket(this.storageService.getGameSave().eggBasket);
@@ -450,6 +512,11 @@ class GameController {
         this.wordsModel.recordPatternHit(wordMeta.tags);
       }
 
+      // Persist Bigram Ledger
+      if (this.bigramLedger) {
+        this.storageService.saveBigramLedger(this.bigramLedger.toJSON());
+      }
+
       this.hudView.updateFlowGauge(
         liveWpm,
         this.flowModel.targetWpm,
@@ -459,6 +526,27 @@ class GameController {
         (this.storageService.getGameSave().unlockedRanks || [1]).length
       );
       this.stageView.setPacePaused(hasUncorrectedErrors || liveWpm < this.flowModel.targetWpm);
+
+      // Release held Rare/Epic unlocks if flow momentum has dipped below 90%
+      if (this.flowModel.momentum < 90 && this.pendingRareEpicUnlocks && this.pendingRareEpicUnlocks.length > 0) {
+        const released = this.pendingRareEpicUnlocks.shift();
+        this.pendingHatchedWords.push(released);
+      }
+
+      // If pending hatched words are ready to induce mid-stream
+      if (this.pendingHatchedWords && this.pendingHatchedWords.length > 0) {
+        const nextHatched = this.pendingHatchedWords.shift();
+        const curSave = this.storageService.getGameSave();
+        const sandwich = this.wordsModel.createSandwich(
+          nextHatched.word,
+          curSave.unlockedRanks,
+          curSave.wordStats,
+          this.bigramLedger
+        );
+        const insertPos = this.sessionModel.currentWordIdx + 3;
+        this.sessionModel.insertWordsAt(insertPos, sandwich);
+        this.stageView.insertWordsAt(insertPos, sandwich);
+      }
     }
 
     const prevIdx = this.sessionModel.currentWordIdx - 1;
@@ -470,7 +558,7 @@ class GameController {
     if (nextIdx >= this.stageView.wordElements.length - 10) {
       const gameState = this.storageService.getGameSave();
       const more = (this.currentMode === 'flow')
-        ? this.wordsModel.generateBatch(30, gameState.unlockedRanks, gameState.wordStats, this.flowModel.targetWpm, this.flowModel.momentum)
+        ? this.wordsModel.generateBatch(30, gameState.unlockedRanks, gameState.wordStats, this.flowModel.targetWpm, this.flowModel.momentum, this.bigramLedger)
         : this.wordsModel.generateClassicBatch(30);
       this.sessionModel.appendWords(more);
       this.stageView.appendWords(more);
@@ -518,10 +606,14 @@ class GameController {
         const hatchedRank = hatchRes.egg.wordRank;
         const meta = this.wordsModel.getWord(hatchedRank);
         const hatchedWord = hatchRes.egg.word || (meta ? meta.word : 'word');
+        const hatchedRarity = (hatchRes.egg.rarity || (meta && meta.tierName) || '').toLowerCase();
         this.eggNestModel.recordHatch(hatchedWord, hatchRes.egg);
         this.nestView.render(this.eggNestModel);
         this.updateLevelHud();
         this.hudView.spawnXpToast(`✨ Hatched: ${hatchedWord}!`, 1.0, null, true);
+
+        // Queue newly hatched word for Sandwiched Induction
+        this.queueHatchedWord(hatchedWord, hatchedRarity);
 
         // If all eggs in nest have now been hatched, exit hatch mode after brief reveal delay
         if (!this.eggNestModel.isHatching()) {
@@ -536,6 +628,18 @@ class GameController {
       }
     } else if (res.status === 'error') {
       this.nestView.triggerErrorShake(res.slotIndex);
+    }
+  }
+
+  queueHatchedWord(word, rarity = 'common') {
+    const isRareEpic = (rarity === 'rare' || rarity === 'epic');
+    const isPeakFlow = this.flowModel && this.flowModel.momentum >= 90;
+
+    if (isPeakFlow && isRareEpic) {
+      // Hold in queue during peak egg-charging cycle (>=90%) to protect rhythm
+      this.pendingRareEpicUnlocks.push({ word, rarity });
+    } else {
+      this.pendingHatchedWords.push({ word, rarity });
     }
   }
 
@@ -658,7 +762,8 @@ class GameController {
           (egg && egg.rarity) || null,
           gameState.wordStats || {},
           gameState.targetWpm || 40,
-          pending
+          pending,
+          this.bigramLedger
         );
         gameState.eggBasket[i] = newEgg;
         basketRanks.add(newEgg.wordRank);

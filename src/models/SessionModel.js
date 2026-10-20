@@ -118,6 +118,12 @@ class SessionModel extends _EventEmitter {
     }
   }
 
+  insertWordsAt(insertIdx, wordsToInsert) {
+    if (!Array.isArray(wordsToInsert) || wordsToInsert.length === 0) return;
+    const idx = Math.max(this.currentWordIdx + 1, Math.min(this.words.length, insertIdx));
+    this.words.splice(idx, 0, ...wordsToInsert);
+  }
+
   start(now = Date.now()) {
     if (this.isActive) return;
     this.isActive = true;

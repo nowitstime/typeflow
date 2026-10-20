@@ -9,10 +9,11 @@ const path = require('path');
 
 const { EventEmitter } = require('../src/core/EventEmitter.js');
 const { CONSTANTS } = require('../src/core/Constants.js');
-const { WordsModel, DICTIONARY, RAW_WORDS, classifyWordMotor, getSrsWeightedRandomWords } = require('../src/models/WordsModel.js');
+const { WordsModel, DICTIONARY, RAW_WORDS, classifyWordMotor, getSrsWeightedRandomWords, getAnchorWords, createWordSandwich, calculateWordWeight } = require('../src/models/WordsModel.js');
 const { FlowModel } = require('../src/models/FlowModel.js');
 const { SessionModel } = require('../src/models/SessionModel.js');
 const { EggNestModel } = require('../src/models/EggNestModel.js');
+const { BigramLedger } = require('../src/models/BigramLedger.js');
 
 let totalTests = 0;
 let passedTests = 0;
@@ -58,12 +59,13 @@ it('unsubscribes cleanly via returned unsubscribe function', () => {
 // 2. Constants Tests
 console.log('\n--- 2. Constants & Topography ---');
 
-it('defines all 4 progression rarity tiers with increasing XP rewards', () => {
+it('defines all 5 asymmetric progression rarity tiers with increasing XP rewards', () => {
   const tiers = CONSTANTS.RARITY_TIERS;
-  assert.strictEqual(tiers.COMMON.xp, 10);
-  assert.strictEqual(tiers.UNCOMMON.xp, 25);
-  assert.strictEqual(tiers.RARE.xp, 60);
-  assert.strictEqual(tiers.EPIC.xp, 150);
+  assert.strictEqual(tiers.STARTER.xp, 8);
+  assert.strictEqual(tiers.COMMON.xp, 15);
+  assert.strictEqual(tiers.UNCOMMON.xp, 35);
+  assert.strictEqual(tiers.RARE.xp, 80);
+  assert.strictEqual(tiers.EPIC.xp, 180);
 });
 
 it('defines flow momentum thresholds correctly', () => {
@@ -82,6 +84,36 @@ it('hydrates exactly 1,000 words with "the" pinned to Rank 1', () => {
   const word1 = wordsModel.getWord(1);
   assert.strictEqual(word1.word, 'the');
   assert.strictEqual(word1.rank, 1);
+});
+
+it('assigns 5 asymmetric tiers across the 1,000 words conforming to specification', () => {
+  assert.strictEqual(wordsModel.dictionary.length, 1000);
+  const starterWords = wordsModel.dictionary.filter(w => w.tier === 'STARTER');
+  const commonWords = wordsModel.dictionary.filter(w => w.tier === 'COMMON');
+  const uncommonWords = wordsModel.dictionary.filter(w => w.tier === 'UNCOMMON');
+  const rareWords = wordsModel.dictionary.filter(w => w.tier === 'RARE');
+  const epicWords = wordsModel.dictionary.filter(w => w.tier === 'EPIC');
+
+  assert.strictEqual(starterWords.length, 40);
+  assert.strictEqual(commonWords.length, 260);
+  assert.strictEqual(uncommonWords.length, 300);
+  assert.strictEqual(rareWords.length, 250);
+  assert.strictEqual(epicWords.length, 150);
+
+  // Top 40 words must include "the" pinned to Rank 1 and have short/smooth flow
+  assert.strictEqual(starterWords[0].word, 'the');
+  assert.strictEqual(starterWords[0].rank, 1);
+});
+
+it('early-game gacha draws heavily from Tier 0 (Starter pool) for typists with < 30 unlocked words', () => {
+  const unlocked = [1];
+  const rolls = [];
+  for (let i = 0; i < 100; i++) {
+    rolls.push(wordsModel.rollEgg(unlocked, 5, null, {}, 40, []));
+  }
+  const starterRolls = rolls.filter(e => e.rarity === 'starter');
+  // Expected ~85% starter eggs
+  assert.ok(starterRolls.length >= 70, `Expected at least 70% starter eggs in early onboarding, got ${starterRolls.length}%`);
 });
 
 it('looks up words by rank and by string', () => {
@@ -431,6 +463,186 @@ it('processHatchBackspace() correctly decrements hatch progress and emits event'
   assert.strictEqual(handled, true);
   assert.strictEqual(nest.hatchTyped, 'e');
   assert.strictEqual(emittedStage, 1);
+});
+
+// 7. BigramLedger & i+1 Bridge Scaffolding
+console.log('\n--- 7. BigramLedger & i+1 Scaffolding ---');
+
+it('records clean transition at or under target WPM interval with maximum speed score (1.0)', () => {
+  const ledger = new BigramLedger();
+  // 40 WPM target -> 12000 / 40 = 300ms interval
+  // Clean hit at 250ms (<= 300ms) -> S_bg = 1.0, A_bg = 1.0 -> M_instant = 1.0
+  const m1 = ledger.recordTransition('t', 'h', 250, true, 40);
+  assert.strictEqual(m1, 1.0);
+  assert.strictEqual(ledger.isStrong('th'), true);
+  assert.strictEqual(ledger.isWeak('th'), false);
+
+  // Second keystroke: Hesitation at 600ms (halfway between 300 and 900 -> S_bg = 0.5), mistyped (A_bg = 0.0)
+  // M_instant = 0.6 * 0.5 + 0.4 * 0 = 0.30
+  // EMA update: (1 - 0.15) * 1.0 + 0.15 * 0.30 = 0.85 + 0.045 = 0.895
+  const m2 = ledger.recordTransition('t', 'h', 600, false, 40);
+  assert.strictEqual(m2, 0.895);
+  assert.strictEqual(ledger.isStrong('th'), true);
+});
+
+it('identifies weak transitions and returns top weakest bigrams', () => {
+  const ledger = new BigramLedger();
+  // Severe hesitation + error: 1000ms transition with typo -> S_bg = 0, A_bg = 0 -> M = 0
+  ledger.recordTransition('s', 'f', 1000, false, 40);
+  ledger.recordTransition('u', 'n', 800, false, 40);
+  ledger.recordTransition('e', 'd', 750, false, 40);
+  ledger.recordTransition('i', 'n', 200, true, 40); // Clean
+
+  assert.strictEqual(ledger.isWeak('sf'), true);
+  assert.strictEqual(ledger.isWeak('un'), true);
+  assert.strictEqual(ledger.isWeak('ed'), true);
+  assert.strictEqual(ledger.isWeak('in'), false);
+
+  const weakest = ledger.getWeakestBigrams(2);
+  assert.strictEqual(weakest.length, 2);
+  assert.ok(weakest.includes('sf'));
+});
+
+it('evaluates early-game Confidence Words (< 35 words unlocked)', () => {
+  const ledger = new BigramLedger();
+  // Populate strong bigrams for "flow" ('fl', 'lo', 'ow')
+  ledger.recordTransition('f', 'l', 200, true, 40);
+  ledger.recordTransition('l', 'o', 200, true, 40);
+  ledger.recordTransition('o', 'w', 200, true, 40);
+
+  // Confidence word: all bigrams strong (or at most 1 unseen), 0 weak -> 2.0x weight
+  const eval1 = ledger.evaluateWordBridgeBonus('flow', 10);
+  assert.strictEqual(eval1.classification, 'confidence');
+  assert.strictEqual(eval1.weight, 2.0);
+
+  // Word with weak bigram: not confidence
+  ledger.recordTransition('b', 'a', 900, false, 40); // weak 'ba'
+  const eval2 = ledger.evaluateWordBridgeBonus('bad', 10);
+  assert.strictEqual(eval2.classification, 'standard');
+  assert.strictEqual(eval2.weight, 1.0);
+});
+
+it('evaluates standard-play Bridge Words, Pure Comfort, and Overload (35+ words unlocked)', () => {
+  const ledger = new BigramLedger();
+  // Set up strong bigrams: 'st', 'ar'
+  ledger.recordTransition('s', 't', 200, true, 40);
+  ledger.recordTransition('a', 'r', 200, true, 40);
+  // Set up 1 weak bigram: 'ta'
+  ledger.recordTransition('t', 'a', 900, false, 40);
+
+  // "star" has bigrams ['st', 'ta', 'ar']. Total = 3 bigrams.
+  // Weak = 1 ('ta'), Strong = 2 ('st', 'ar').
+  // This is a Bridge Word! (1 Weak + >= 75% / remaining Strong) -> 2.5x weight
+  const bridgeEval = ledger.evaluateWordBridgeBonus('star', 40);
+  assert.strictEqual(bridgeEval.classification, 'bridge');
+  assert.strictEqual(bridgeEval.weight, 2.5);
+
+  // Pure comfort word (0 weak bigrams) -> 1.2x weight
+  const comfortEval = ledger.evaluateWordBridgeBonus('so', 40);
+  assert.strictEqual(comfortEval.classification, 'comfort');
+  assert.strictEqual(comfortEval.weight, 1.2);
+
+  // Overload word (>= 2 weak bigrams) -> 0.15x weight
+  ledger.recordTransition('o', 'u', 900, false, 40);
+  ledger.recordTransition('u', 't', 900, false, 40);
+  const overloadEval = ledger.evaluateWordBridgeBonus('out', 40);
+  assert.strictEqual(overloadEval.classification, 'overload');
+  assert.strictEqual(overloadEval.weight, 0.15);
+});
+
+it('WordsModel.rollEgg scores candidate pool with N-Gram Bridge Bonus', () => {
+  const model = new WordsModel();
+  const ledger = new BigramLedger();
+  const egg = model.rollEgg([1, 2, 3], 5, null, {}, 40, [], ledger);
+  assert.ok(egg.wordRank);
+  assert.ok(egg.word);
+  assert.ok(['confidence', 'standard', 'bridge', 'comfort', 'overload', null].includes(egg.bridgeBonus));
+});
+
+// 8. Flow-Aware Dual-Mode Spawner (Drill vs Surf at 90%) & Sandwiched Induction
+console.log('\n--- 8. Dual-Mode Spawner (90% Threshold) & Sandwiched Induction ---');
+
+it('Drill Mode (< 90% Flow) aggressively boosts words targeting player weakest bigrams', () => {
+  const ledger = new BigramLedger();
+  // Mark 'th' as weak
+  ledger.recordTransition('t', 'h', 950, false, 40);
+  assert.strictEqual(ledger.isWeak('th'), true);
+
+  const wordWithWeak = { word: 'the', rank: 1, tags: ['Home Core Flow'] };
+  const neutralWord  = { word: 'so', rank: 20, tags: ['Home Core Flow'] };
+
+  // At 50% momentum (< 90% threshold: Drill Mode)
+  const weightWeak = calculateWordWeight(wordWithWeak, {}, 40, 50, ledger, ['th'], 40);
+  const weightNeutral = calculateWordWeight(neutralWord, {}, 40, 50, ledger, ['th'], 40);
+
+  // Weak bigram word receives +4.0 deliberate practice boost
+  assert.ok(weightWeak >= 5.0, `Expected weight >= 5.0, got ${weightWeak}`);
+  assert.ok(weightWeak > weightNeutral + 3.0, `Expected weak word weight to be > neutral word weight by at least 3.0`);
+});
+
+it('Surf Mode (>= 90% Flow) completely suppresses Overload words and prioritizes Anchor words (>= 85%)', () => {
+  const ledger = new BigramLedger();
+  // Word 'out' has 2 weak bigrams ('ou', 'ut') -> Overload
+  ledger.recordTransition('o', 'u', 900, false, 40);
+  ledger.recordTransition('u', 't', 900, false, 40);
+
+  // Word 'the' has 0 weak bigrams -> Anchor
+  ledger.recordTransition('t', 'h', 200, true, 40);
+  ledger.recordTransition('h', 'e', 200, true, 40);
+
+  const overloadWord = { word: 'out', rank: 35, tags: [] };
+  const anchorWord = { word: 'the', rank: 1, tags: [] };
+
+  // At 95% momentum (>= 90% threshold: Surf Mode)
+  const overloadWeight = calculateWordWeight(overloadWord, {}, 40, 95, ledger, [], 40);
+  const anchorWeight = calculateWordWeight(anchorWord, {}, 40, 95, ledger, [], 40);
+
+  // Overload words strictly suppressed to protect rhythm
+  assert.strictEqual(overloadWeight, 0.001);
+  // Anchor words given high weight (>= 4.5)
+  assert.ok(anchorWeight >= 4.5, `Expected anchor weight >= 4.5, got ${anchorWeight}`);
+
+  // Generate batch in Surf Mode: Overload words should NEVER be generated
+  const model = new WordsModel();
+  // Pool containing 'the' (rank 1), and suppose an overload word is present
+  const batch = model.generateBatch(100, [1, 2, 3, 4, 5], {}, 40, 95, ledger);
+  assert.strictEqual(batch.length, 100);
+  assert.strictEqual(batch.includes('out'), false, 'Overload word must be 0% in Surf Mode');
+});
+
+it('getAnchorWords identifies reliable words with 0 weak bigrams', () => {
+  const ledger = new BigramLedger();
+  // 'th' is strong, 'he' is strong
+  ledger.recordTransition('t', 'h', 200, true, 40);
+  ledger.recordTransition('h', 'e', 200, true, 40);
+
+  const anchors = getAnchorWords([1, 2, 3, 4, 5], DICTIONARY, {}, ledger);
+  assert.ok(anchors.length > 0);
+  assert.strictEqual(anchors[0].word, 'the');
+});
+
+it('createWordSandwich wraps newly unlocked words between launchpad and landing pad', () => {
+  const ledger = new BigramLedger();
+  ledger.recordTransition('t', 'h', 200, true, 40);
+  ledger.recordTransition('h', 'e', 200, true, 40);
+
+  // New word: 'question' (starts with 'q' [Left Hand])
+  const sandwich = createWordSandwich('question', [1, 2, 3, 4, 5], DICTIONARY, {}, ledger);
+
+  assert.strictEqual(sandwich.length, 3);
+  assert.strictEqual(sandwich[1], 'question');
+  assert.ok(sandwich[0].length > 0);
+  assert.ok(sandwich[2].length > 0);
+  assert.notStrictEqual(sandwich[0], 'question');
+  assert.notStrictEqual(sandwich[2], 'question');
+});
+
+it('SessionModel.insertWordsAt dynamically splices words into upcoming stream', () => {
+  const session = new SessionModel({ words: ['alpha', 'bravo', 'charlie', 'delta'] });
+  session.currentWordIdx = 0;
+
+  session.insertWordsAt(2, ['sandwich1', 'target', 'sandwich2']);
+  assert.deepStrictEqual(session.words, ['alpha', 'bravo', 'sandwich1', 'target', 'sandwich2', 'charlie', 'delta']);
 });
 
 console.log('\n========================================');
