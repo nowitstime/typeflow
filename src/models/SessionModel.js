@@ -36,6 +36,7 @@ class SessionModel extends _EventEmitter {
     this.currentCharIdx = 0;
     this.hadBackspaceOnCurrentWord = false;
     this.wordStreak = 0;
+    this.combo = 0;
 
     // Timestamps
     this.startTime = null;
@@ -80,6 +81,7 @@ class SessionModel extends _EventEmitter {
     this.hadBackspaceOnCurrentWord = false;
     this.currentWordCharCorrect = [];
     this.wordStreak = 0;
+    this.combo = 0;
 
     this.startTime = null;
     this.endTime = null;
@@ -207,6 +209,7 @@ class SessionModel extends _EventEmitter {
     }
 
     if (isExtra) {
+      this.combo = 0;
       this.extraCharsCount++;
       this.incorrectKeystrokes++;
       this.currentSecondErrors++;
@@ -224,6 +227,7 @@ class SessionModel extends _EventEmitter {
       list.push(errEntry);
       this.unfixedErrorsByKey.set(key, list);
     } else if (isCorrect) {
+      this.combo++;
       this.correctKeystrokes++;
       // Check if user is repairing a previously incorrect character at this position
       const key = `${this.currentWordIdx}:${prevCharIdx}:norm`;
@@ -238,6 +242,7 @@ class SessionModel extends _EventEmitter {
         this.unfixedErrorsByKey.delete(key);
       }
     } else {
+      this.combo = 0;
       this.incorrectKeystrokes++;
       this.currentSecondErrors++;
       const key = `${this.currentWordIdx}:${prevCharIdx}:norm`;
@@ -278,6 +283,7 @@ class SessionModel extends _EventEmitter {
     if (!this.isActive) return null;
     this.rawKeystrokes++;
     this.hadBackspaceOnCurrentWord = true;
+    this.combo = Math.max(0, this.combo - 1);
 
     let isExplicitFixed = false;
     let isExtraDeleted = false;
@@ -456,8 +462,10 @@ class SessionModel extends _EventEmitter {
 
     if (!hasErrors) {
       this.wordStreak++;
+      this.combo++;
     } else {
       this.wordStreak = 0;
+      this.combo = 0;
     }
 
     this.currentWordCharCorrect = [];
@@ -516,6 +524,7 @@ class SessionModel extends _EventEmitter {
     this.currentCharIdx = prevHistory.charIdx;
     this.currentWordCharCorrect = [...prevHistory.charCorrect];
     this.hadBackspaceOnCurrentWord = true;
+    this.combo = Math.max(0, this.combo - 1);
     this.rawKeystrokes++;
 
     this.emit('wordReverted', {
@@ -622,6 +631,49 @@ class SessionModel extends _EventEmitter {
       duration: this.duration,
       wpmHistory: this.wpmHistory
     };
+  }
+
+  /**
+   * Calculates floating-point blindfold distance M based on combo streak.
+   * - Fast Phase (combo <= 26): M = combo * 0.25
+   * - Slow Phase (combo > 26): M = 6.5 + 0.75 * Math.sqrt(combo - 26)
+   * @param {number} combo - Consecutive correct keystroke streak
+   * @returns {number} Blindfold mask distance M
+   */
+  static getBlindfoldMask(combo) {
+    const c = Math.max(0, combo || 0);
+    if (c <= 26) {
+      return c * 0.25;
+    }
+    return 6.5 + 0.75 * Math.sqrt(c - 26);
+  }
+
+  /**
+   * Calculates character opacity based on lookahead offset k and combo streak.
+   * If k <= 0 (already typed or active cursor position): returns 1.0.
+   * For upcoming characters (k >= 1):
+   *   penetration = M - (k - 1)
+   *   rawOpacity = Math.max(0.0, Math.min(1.0, 1.0 - penetration))
+   *   quantizedOpacity = Math.ceil(rawOpacity * 4) / 4 (0.0, 0.25, 0.50, 0.75, 1.0)
+   * @param {number} k - Character offset relative to cursor
+   * @param {number} combo - Consecutive correct keystroke streak
+   * @returns {number} Quantized opacity
+   */
+  static getHiddenOpacity(k, combo) {
+    if (k <= 0) return 1.0;
+    const M = SessionModel.getBlindfoldMask(combo);
+    const penetration = M - (k - 1);
+    const rawOpacity = Math.max(0.0, Math.min(1.0, 1.0 - penetration));
+    const scaled = rawOpacity * 4;
+    return (scaled <= 1e-9) ? 0.0 : Math.ceil(scaled - 1e-9) / 4;
+  }
+
+  getBlindfoldMask() {
+    return SessionModel.getBlindfoldMask(this.combo);
+  }
+
+  getHiddenOpacity(k) {
+    return SessionModel.getHiddenOpacity(k, this.combo);
   }
 
   /**

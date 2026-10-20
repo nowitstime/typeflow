@@ -598,9 +598,9 @@ it('typing keystrokes in Hidden Mode updates stage horizon and safety brake trig
   // Past typed character is fully transparent behind cursor
   assert.strictEqual(word0.children[0].classList.contains('hd-past'), true);
   assert.strictEqual(word0.children[0].style.opacity, '0');
-  // Untyped characters ahead remain visible with zero character fade
+  // Untyped character at k=0 (cursor 'h') is 1.0, k=1 ('e') dims to 0.75 (combo 1 -> M = 0.25)
   assert.strictEqual(word0.children[1].style.opacity, '');
-  assert.strictEqual(word0.children[2].style.opacity, '');
+  assert.strictEqual(word0.children[2].style.opacity, '0.75');
 
   // Type typo 'z' instead of 'h'
   controller.handleChar('z');
@@ -620,15 +620,32 @@ it('typing keystrokes in Hidden Mode updates stage horizon and safety brake trig
   controller.handleChar('e');
   controller.handleSpace();
 
-  // After 1 clean word, streak = 1 -> 1 character fade (zeroDist = 1)
+  // Since typo reset combo, the 3 subsequent correct keystrokes ('h', 'e', space) result in combo = 3, M = 0.75
   assert.strictEqual(controller.sessionModel.currentWordIdx, 1);
   assert.strictEqual(controller.sessionModel.wordStreak, 1);
-  assert.strictEqual(controller.getHiddenZeroDist(), 1);
-  assert.strictEqual(controller.getHiddenFadeDepth(), 5.0);
+  assert.strictEqual(controller.getHiddenCombo(), 3);
+  assert.strictEqual(controller.sessionModel.getBlindfoldMask(), 0.75);
 
-  // Word 1 now exhibits 1 character fade (letters within 1 char hit 0% opacity)
+  // Word 1 now exhibits blindfold mask:
+  // k=0 ('q' at cursor) is 1.0 (visible)
+  // k=1 ('u') is 0.25 opacity (penetration = 0.75 -> raw = 0.25 -> 0.25)
+  // k=2 ('i') is 1.0 (unaffected)
+  assert.strictEqual(word1.children[0].style.opacity, '');
+  assert.strictEqual(word1.children[1].style.opacity, '0.25');
+  assert.strictEqual(word1.children[2].style.opacity, '');
+
+  // Typing 1 more correct char advances combo to 4 (M = 1.0)
+  const nextWordText = controller.sessionModel.getCurrentWordText();
+  controller.handleChar(nextWordText[0]);
+  assert.strictEqual(controller.getHiddenCombo(), 4);
+  assert.strictEqual(controller.sessionModel.getBlindfoldMask(), 1.0);
+  // First letter is now behind cursor (k < 0 -> hd-past, opacity 0)
+  assert.strictEqual(word1.children[0].classList.contains('hd-past'), true);
   assert.strictEqual(word1.children[0].style.opacity, '0');
-  assert.strictEqual(word1.children[1].style.opacity, '0');
+  // Second letter is now at cursor (k = 0 -> opacity '')
+  assert.strictEqual(word1.children[1].style.opacity, '');
+  // Third letter is now upcoming char 1 (k = 1 -> overtaken by M=1.0 -> opacity '0')
+  assert.strictEqual(word1.children[2].style.opacity, '0');
 });
 
 it('Hidden Mode horizon scales: zero at start, 1..5, and 0.5 per word after word 6', () => {

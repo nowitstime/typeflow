@@ -3249,6 +3249,7 @@ class SessionModel extends _EventEmitter {
     this.currentCharIdx = 0;
     this.hadBackspaceOnCurrentWord = false;
     this.wordStreak = 0;
+    this.combo = 0;
     this.startTime = null;
     this.endTime = null;
     this.wordStartTime = null;
@@ -3283,6 +3284,7 @@ class SessionModel extends _EventEmitter {
     this.hadBackspaceOnCurrentWord = false;
     this.currentWordCharCorrect = [];
     this.wordStreak = 0;
+    this.combo = 0;
     this.startTime = null;
     this.endTime = null;
     this.wordStartTime = null;
@@ -3387,6 +3389,7 @@ class SessionModel extends _EventEmitter {
       isCorrect = !isExtra && currentWord.length > 0 && (currentWord[prevCharIdx] === char);
     }
     if (isExtra) {
+      this.combo = 0;
       this.extraCharsCount++;
       this.incorrectKeystrokes++;
       this.currentSecondErrors++;
@@ -3404,6 +3407,7 @@ class SessionModel extends _EventEmitter {
       list.push(errEntry);
       this.unfixedErrorsByKey.set(key, list);
     } else if (isCorrect) {
+      this.combo++;
       this.correctKeystrokes++;
       const key = `${this.currentWordIdx}:${prevCharIdx}:norm`;
       const unfixedList = this.unfixedErrorsByKey.get(key);
@@ -3417,6 +3421,7 @@ class SessionModel extends _EventEmitter {
         this.unfixedErrorsByKey.delete(key);
       }
     } else {
+      this.combo = 0;
       this.incorrectKeystrokes++;
       this.currentSecondErrors++;
       const key = `${this.currentWordIdx}:${prevCharIdx}:norm`;
@@ -3449,6 +3454,7 @@ class SessionModel extends _EventEmitter {
     if (!this.isActive) return null;
     this.rawKeystrokes++;
     this.hadBackspaceOnCurrentWord = true;
+    this.combo = Math.max(0, this.combo - 1);
     let isExplicitFixed = false;
     let isExtraDeleted = false;
     let now = Date.now();
@@ -3588,8 +3594,10 @@ class SessionModel extends _EventEmitter {
     };
     if (!hasErrors) {
       this.wordStreak++;
+      this.combo++;
     } else {
       this.wordStreak = 0;
+      this.combo = 0;
     }
     this.currentWordCharCorrect = [];
     this.lastWordEndTime = now;
@@ -3637,6 +3645,7 @@ class SessionModel extends _EventEmitter {
     this.currentCharIdx = prevHistory.charIdx;
     this.currentWordCharCorrect = [...prevHistory.charCorrect];
     this.hadBackspaceOnCurrentWord = true;
+    this.combo = Math.max(0, this.combo - 1);
     this.rawKeystrokes++;
     this.emit('wordReverted', {
       wordIdx: this.currentWordIdx,
@@ -3720,6 +3729,27 @@ class SessionModel extends _EventEmitter {
       duration: this.duration,
       wpmHistory: this.wpmHistory
     };
+  }
+  static getBlindfoldMask(combo) {
+    const c = Math.max(0, combo || 0);
+    if (c <= 26) {
+      return c * 0.25;
+    }
+    return 6.5 + 0.75 * Math.sqrt(c - 26);
+  }
+  static getHiddenOpacity(k, combo) {
+    if (k <= 0) return 1.0;
+    const M = SessionModel.getBlindfoldMask(combo);
+    const penetration = M - (k - 1);
+    const rawOpacity = Math.max(0.0, Math.min(1.0, 1.0 - penetration));
+    const scaled = rawOpacity * 4;
+    return (scaled <= 1e-9) ? 0.0 : Math.ceil(scaled - 1e-9) / 4;
+  }
+  getBlindfoldMask() {
+    return SessionModel.getBlindfoldMask(this.combo);
+  }
+  getHiddenOpacity(k) {
+    return SessionModel.getHiddenOpacity(k, this.combo);
   }
   static calculateHiddenZeroDist(streak) {
     if (!streak || streak <= 0) return 0;
@@ -4639,6 +4669,21 @@ class StageView {
       this.focusOverlay.addEventListener('click', handleBoxClick);
     }
   }
+  static getBlindfoldMask(combo) {
+    const c = Math.max(0, combo || 0);
+    if (c <= 26) {
+      return c * 0.25;
+    }
+    return 6.5 + 0.75 * Math.sqrt(c - 26);
+  }
+  static getHiddenOpacity(k, combo) {
+    if (k <= 0) return 1.0;
+    const M = StageView.getBlindfoldMask(combo);
+    const penetration = M - (k - 1);
+    const rawOpacity = Math.max(0.0, Math.min(1.0, 1.0 - penetration));
+    const scaled = rawOpacity * 4;
+    return (scaled <= 1e-9) ? 0.0 : Math.ceil(scaled - 1e-9) / 4;
+  }
   static calculateOpacity(d, fadeDepth = 6, zeroDist = 2) {
     if (zeroDist <= 0) return 1;
     if (d <= zeroDist) return 0;
@@ -4909,21 +4954,85 @@ class StageView {
       }
     }
   }
-  updateHiddenHorizon(currentWordIdx, currentCharIdx, fadeDepth = 6, hasError = false, zeroDist = null) {
+  updateHiddenHorizon(currentWordIdx, currentCharIdx, combo = 0, hasError = false, zeroDist = null) {
     if (!this.hiddenMode || !this.wordElements || this.wordElements.length === 0) return;
     const activeWordEl = this.wordElements[currentWordIdx];
     if (!activeWordEl) return;
-    const actualZeroDist = (zeroDist !== null && typeof zeroDist === 'number')
-      ? zeroDist
-      : Math.max(0, fadeDepth - 4);
-    const N = Math.max(actualZeroDist + 0.1, fadeDepth);
     if (hasError) {
       const activeLetters = activeWordEl.querySelectorAll('.letter');
       for (let i = 0; i < activeLetters.length; i++) {
         activeLetters[i].style.opacity = '';
       }
+      for (let w = 1; w <= 6; w++) {
+        const nextWordEl = this.wordElements[currentWordIdx + w];
+        if (!nextWordEl) break;
+        const letters = nextWordEl.querySelectorAll('.letter');
+        for (let j = 0; j < letters.length; j++) {
+          letters[j].style.opacity = '';
+          letters[j].classList.remove('hd-past');
+        }
+      }
       return;
     }
+    if (zeroDist !== null && typeof zeroDist === 'number') {
+      const actualZeroDist = zeroDist;
+      const N = Math.max(actualZeroDist + 0.1, combo || 6);
+      const activeLetters = activeWordEl.querySelectorAll('.letter');
+      const wordLen = activeLetters.length;
+      for (let i = 0; i < wordLen; i++) {
+        const letter = activeLetters[i];
+        if (i < currentCharIdx) {
+          letter.classList.add('hd-past');
+          letter.style.opacity = '0';
+        } else {
+          letter.classList.remove('hd-past');
+          const d = i - currentCharIdx;
+          if (actualZeroDist <= 0) {
+            letter.style.opacity = '';
+          } else if (d <= actualZeroDist) {
+            letter.style.opacity = '0';
+          } else if (d >= N) {
+            letter.style.opacity = '';
+          } else {
+            const alpha = StageView.calculateOpacity(d, N, actualZeroDist);
+            letter.style.opacity = String(alpha);
+          }
+        }
+      }
+      let dCumulative = Math.max(0, wordLen - currentCharIdx) + 1;
+      let nextWordOffset = 1;
+      while (currentWordIdx + nextWordOffset < this.wordElements.length) {
+        const nextWordEl = this.wordElements[currentWordIdx + nextWordOffset];
+        if (!nextWordEl) break;
+        const nextLetters = nextWordEl.querySelectorAll('.letter');
+        if (actualZeroDist > 0 && dCumulative >= N) {
+          for (let j = 0; j < nextLetters.length; j++) {
+            nextLetters[j].classList.remove('hd-past');
+            nextLetters[j].style.opacity = '';
+          }
+          break;
+        }
+        for (let j = 0; j < nextLetters.length; j++) {
+          const letter = nextLetters[j];
+          letter.classList.remove('hd-past');
+          const d = dCumulative + j;
+          if (actualZeroDist <= 0) {
+            letter.style.opacity = '';
+          } else if (d <= actualZeroDist) {
+            letter.style.opacity = '0';
+          } else if (d >= N) {
+            letter.style.opacity = '';
+          } else {
+            const alpha = StageView.calculateOpacity(d, N, actualZeroDist);
+            letter.style.opacity = String(alpha);
+          }
+        }
+        dCumulative += nextLetters.length + 1;
+        nextWordOffset++;
+      }
+      return;
+    }
+    const M = StageView.getBlindfoldMask(combo);
     const activeLetters = activeWordEl.querySelectorAll('.letter');
     const wordLen = activeLetters.length;
     for (let i = 0; i < wordLen; i++) {
@@ -4933,26 +5042,18 @@ class StageView {
         letter.style.opacity = '0';
       } else {
         letter.classList.remove('hd-past');
-        const d = i - currentCharIdx;
-        if (actualZeroDist <= 0) {
-          letter.style.opacity = '';
-        } else if (d <= actualZeroDist) {
-          letter.style.opacity = '0';
-        } else if (d >= N) {
-          letter.style.opacity = '';
-        } else {
-          const alpha = StageView.calculateOpacity(d, N, actualZeroDist);
-          letter.style.opacity = String(alpha);
-        }
+        const k = i - currentCharIdx;
+        const opacity = StageView.getHiddenOpacity(k, combo);
+        letter.style.opacity = (opacity >= 1.0) ? '' : String(opacity);
       }
     }
-    let dCumulative = Math.max(0, wordLen - currentCharIdx) + 1;
+    let kRunning = Math.max(0, wordLen - currentCharIdx) + 1;
     let nextWordOffset = 1;
     while (currentWordIdx + nextWordOffset < this.wordElements.length) {
       const nextWordEl = this.wordElements[currentWordIdx + nextWordOffset];
       if (!nextWordEl) break;
       const nextLetters = nextWordEl.querySelectorAll('.letter');
-      if (actualZeroDist > 0 && dCumulative >= N) {
+      if (kRunning >= M + 1) {
         for (let j = 0; j < nextLetters.length; j++) {
           nextLetters[j].classList.remove('hd-past');
           nextLetters[j].style.opacity = '';
@@ -4960,9 +5061,9 @@ class StageView {
         const aheadWordEl = this.wordElements[currentWordIdx + nextWordOffset + 1];
         if (aheadWordEl) {
           const aheadLetters = aheadWordEl.querySelectorAll('.letter');
-          for (let k = 0; k < aheadLetters.length; k++) {
-            aheadLetters[k].classList.remove('hd-past');
-            aheadLetters[k].style.opacity = '';
+          for (let q = 0; q < aheadLetters.length; q++) {
+            aheadLetters[q].classList.remove('hd-past');
+            aheadLetters[q].style.opacity = '';
           }
         }
         break;
@@ -4970,19 +5071,11 @@ class StageView {
       for (let j = 0; j < nextLetters.length; j++) {
         const letter = nextLetters[j];
         letter.classList.remove('hd-past');
-        const d = dCumulative + j;
-        if (actualZeroDist <= 0) {
-          letter.style.opacity = '';
-        } else if (d <= actualZeroDist) {
-          letter.style.opacity = '0';
-        } else if (d >= N) {
-          letter.style.opacity = '';
-        } else {
-          const alpha = StageView.calculateOpacity(d, N, actualZeroDist);
-          letter.style.opacity = String(alpha);
-        }
+        const k = kRunning + j;
+        const opacity = StageView.getHiddenOpacity(k, combo);
+        letter.style.opacity = (opacity >= 1.0) ? '' : String(opacity);
       }
-      dCumulative += nextLetters.length + 1;
+      kRunning += nextLetters.length + 1;
       nextWordOffset++;
     }
   }
@@ -6276,6 +6369,9 @@ class GameController {
     this.hudView.setMode(this.currentMode, this.sessionModel.duration);
     this.resetTest();
   }
+  getHiddenCombo() {
+    return this.sessionModel ? this.sessionModel.combo : 0;
+  }
   getHiddenZeroDist() {
     return this.sessionModel ? this.sessionModel.getHiddenZeroDist() : 0;
   }
@@ -6292,14 +6388,12 @@ class GameController {
     if (this.hudView.updateHiddenModeState) {
       this.hudView.updateHiddenModeState(next);
     }
-    const zeroDist = this.getHiddenZeroDist();
-    const fadeDepth = this.getHiddenFadeDepth();
+    const combo = this.getHiddenCombo();
     this.stageView.updateHiddenHorizon(
       this.sessionModel.currentWordIdx,
       this.sessionModel.currentCharIdx,
-      fadeDepth,
-      this.sessionModel.hasErrorInCurrentWord(),
-      zeroDist
+      combo,
+      this.sessionModel.hasErrorInCurrentWord()
     );
     return next;
   }
@@ -6333,8 +6427,8 @@ class GameController {
     this.sessionModel.reset({ mode: this.currentMode, duration: this.sessionModel.duration, words });
     this.stageView.renderWords(words);
     this.stageView.updateCaret(0, 0);
-    const fadeDepth = this.getHiddenFadeDepth();
-    this.stageView.updateHiddenHorizon(0, 0, fadeDepth, false);
+    const combo = this.getHiddenCombo();
+    this.stageView.updateHiddenHorizon(0, 0, combo, false);
     if (this.currentMode === 'classic') {
       this.hudView.updateTimer(this.sessionModel.duration);
       if (this.hudView.liveStats) this.hudView.liveStats.classList.remove('visible');
@@ -6421,10 +6515,9 @@ class GameController {
     this.flowModel.recordKeystroke();
     this.stageView.updateLetter(this.sessionModel.currentWordIdx, charIdx, isCorrect, isExtra, char);
     this.stageView.updateCaret(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
-    const zeroDist = this.getHiddenZeroDist();
-    const fadeDepth = this.getHiddenFadeDepth();
+    const combo = this.getHiddenCombo();
     const hasErr = isExtra || !isCorrect || this.sessionModel.hasErrorInCurrentWord();
-    this.stageView.updateHiddenHorizon(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx, fadeDepth, hasErr, zeroDist);
+    this.stageView.updateHiddenHorizon(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx, combo, hasErr);
     this.audioService.playKey(false, this.currentMode === 'flow' ? this.flowModel.flowStreak : 0);
   }
   handleBackspace() {
@@ -6438,11 +6531,11 @@ class GameController {
           this.stageView.revertWord(prevWordIdx + 1, prevWordIdx);
           this.stageView.updateCaret(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
           this.flowModel.recordKeystroke();
-          const fadeDepth = this.getHiddenFadeDepth();
+          const combo = this.getHiddenCombo();
           this.stageView.updateHiddenHorizon(
             this.sessionModel.currentWordIdx,
             this.sessionModel.currentCharIdx,
-            fadeDepth,
+            combo,
             this.sessionModel.hasErrorInCurrentWord()
           );
         }
@@ -6455,14 +6548,12 @@ class GameController {
     }
     this.flowModel.recordKeystroke();
     this.stageView.updateCaret(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
-    const zeroDist = this.getHiddenZeroDist();
-    const fadeDepth = this.getHiddenFadeDepth();
+    const combo = this.getHiddenCombo();
     this.stageView.updateHiddenHorizon(
       this.sessionModel.currentWordIdx,
       this.sessionModel.currentCharIdx,
-      fadeDepth,
-      this.sessionModel.hasErrorInCurrentWord(),
-      zeroDist
+      combo,
+      this.sessionModel.hasErrorInCurrentWord()
     );
   }
   handleSpace() {
@@ -6586,9 +6677,8 @@ class GameController {
     const nextIdx = this.sessionModel.currentWordIdx;
     this.stageView.advanceWord(prevIdx, nextIdx, hasUncorrectedErrors);
     this.stageView.updateCaret(nextIdx, 0);
-    const zeroDist = this.getHiddenZeroDist();
-    const fadeDepth = this.getHiddenFadeDepth();
-    this.stageView.updateHiddenHorizon(nextIdx, 0, fadeDepth, false, zeroDist);
+    const combo = this.getHiddenCombo();
+    this.stageView.updateHiddenHorizon(nextIdx, 0, combo, false);
     if (nextIdx >= this.stageView.wordElements.length - 10) {
       const gameState = this.storageService.getGameSave();
       const more = (this.currentMode === 'flow')

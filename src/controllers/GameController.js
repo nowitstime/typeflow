@@ -246,6 +246,10 @@ class GameController {
     this.resetTest();
   }
 
+  getHiddenCombo() {
+    return this.sessionModel ? this.sessionModel.combo : 0;
+  }
+
   getHiddenZeroDist() {
     return this.sessionModel ? this.sessionModel.getHiddenZeroDist() : 0;
   }
@@ -264,14 +268,12 @@ class GameController {
     if (this.hudView.updateHiddenModeState) {
       this.hudView.updateHiddenModeState(next);
     }
-    const zeroDist = this.getHiddenZeroDist();
-    const fadeDepth = this.getHiddenFadeDepth();
+    const combo = this.getHiddenCombo();
     this.stageView.updateHiddenHorizon(
       this.sessionModel.currentWordIdx,
       this.sessionModel.currentCharIdx,
-      fadeDepth,
-      this.sessionModel.hasErrorInCurrentWord(),
-      zeroDist
+      combo,
+      this.sessionModel.hasErrorInCurrentWord()
     );
     return next;
   }
@@ -311,8 +313,8 @@ class GameController {
     this.sessionModel.reset({ mode: this.currentMode, duration: this.sessionModel.duration, words });
     this.stageView.renderWords(words);
     this.stageView.updateCaret(0, 0);
-    const fadeDepth = this.getHiddenFadeDepth();
-    this.stageView.updateHiddenHorizon(0, 0, fadeDepth, false);
+    const combo = this.getHiddenCombo();
+    this.stageView.updateHiddenHorizon(0, 0, combo, false);
 
     if (this.currentMode === 'classic') {
       this.hudView.updateTimer(this.sessionModel.duration);
@@ -418,10 +420,9 @@ class GameController {
     this.stageView.updateLetter(this.sessionModel.currentWordIdx, charIdx, isCorrect, isExtra, char);
     this.stageView.updateCaret(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
 
-    const zeroDist = this.getHiddenZeroDist();
-    const fadeDepth = this.getHiddenFadeDepth();
+    const combo = this.getHiddenCombo();
     const hasErr = isExtra || !isCorrect || this.sessionModel.hasErrorInCurrentWord();
-    this.stageView.updateHiddenHorizon(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx, fadeDepth, hasErr, zeroDist);
+    this.stageView.updateHiddenHorizon(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx, combo, hasErr);
 
     this.audioService.playKey(false, this.currentMode === 'flow' ? this.flowModel.flowStreak : 0);
   }
@@ -438,11 +439,11 @@ class GameController {
           this.stageView.revertWord(prevWordIdx + 1, prevWordIdx);
           this.stageView.updateCaret(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
           this.flowModel.recordKeystroke();
-          const fadeDepth = this.getHiddenFadeDepth();
+          const combo = this.getHiddenCombo();
           this.stageView.updateHiddenHorizon(
             this.sessionModel.currentWordIdx,
             this.sessionModel.currentCharIdx,
-            fadeDepth,
+            combo,
             this.sessionModel.hasErrorInCurrentWord()
           );
         }
@@ -456,14 +457,12 @@ class GameController {
     }
     this.flowModel.recordKeystroke();
     this.stageView.updateCaret(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
-    const zeroDist = this.getHiddenZeroDist();
-    const fadeDepth = this.getHiddenFadeDepth();
+    const combo = this.getHiddenCombo();
     this.stageView.updateHiddenHorizon(
       this.sessionModel.currentWordIdx,
       this.sessionModel.currentCharIdx,
-      fadeDepth,
-      this.sessionModel.hasErrorInCurrentWord(),
-      zeroDist
+      combo,
+      this.sessionModel.hasErrorInCurrentWord()
     );
   }
 
@@ -615,9 +614,8 @@ class GameController {
     const nextIdx = this.sessionModel.currentWordIdx;
     this.stageView.advanceWord(prevIdx, nextIdx, hasUncorrectedErrors);
     this.stageView.updateCaret(nextIdx, 0);
-    const zeroDist = this.getHiddenZeroDist();
-    const fadeDepth = this.getHiddenFadeDepth();
-    this.stageView.updateHiddenHorizon(nextIdx, 0, fadeDepth, false, zeroDist);
+    const combo = this.getHiddenCombo();
+    this.stageView.updateHiddenHorizon(nextIdx, 0, combo, false);
 
     // Dynamic infinite stream appending
     if (nextIdx >= this.stageView.wordElements.length - 10) {
