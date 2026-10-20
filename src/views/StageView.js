@@ -15,6 +15,7 @@ class StageView {
 
     this.scrollOffset = 0;
     this.wordElements = [];
+    this.hiddenMode = false;
   }
 
   /**
@@ -35,6 +36,13 @@ class StageView {
     if (this.focusOverlay) {
       this.focusOverlay.addEventListener('click', handleBoxClick);
     }
+  }
+
+  static calculateOpacity(d, fadeDepth = 4) {
+    if (d <= 0) return 0;
+    if (d >= fadeDepth) return 1;
+    const alpha = Math.min(1.0, Math.pow(d / fadeDepth, 1.2));
+    return parseFloat(alpha.toFixed(2));
   }
 
   _getDoc() {
@@ -70,6 +78,9 @@ class StageView {
 
     this.scrollOffset = 0;
     this.wordsWrapper.style.transform = 'translateY(0px)';
+    if (this.wordsBox) {
+      this.wordsBox.classList.toggle('hidden-mode', this.hiddenMode);
+    }
   }
 
   /**
@@ -188,6 +199,13 @@ class StageView {
       } else {
         prevEl.classList.remove('error');
       }
+      if (this.hiddenMode) {
+        const letters = prevEl.querySelectorAll('.letter');
+        for (let i = 0; i < letters.length; i++) {
+          letters[i].classList.add('hd-past');
+          letters[i].style.opacity = '';
+        }
+      }
     }
 
     const nextEl = this.wordElements[nextWordIdx];
@@ -203,12 +221,26 @@ class StageView {
     const currentEl = this.wordElements[currentWordIdx];
     if (currentEl) {
       currentEl.classList.remove('active');
+      if (this.hiddenMode) {
+        const letters = currentEl.querySelectorAll('.letter');
+        for (let i = 0; i < letters.length; i++) {
+          letters[i].classList.remove('hd-past');
+          letters[i].style.opacity = '';
+        }
+      }
     }
 
     const prevEl = this.wordElements[prevWordIdx];
     if (prevEl) {
       prevEl.classList.add('active');
       this.checkWordErrorState(prevEl);
+      if (this.hiddenMode) {
+        const letters = prevEl.querySelectorAll('.letter');
+        for (let i = 0; i < letters.length; i++) {
+          letters[i].classList.remove('hd-past');
+          letters[i].style.opacity = '';
+        }
+      }
     }
   }
 
@@ -325,6 +357,103 @@ class StageView {
     try {
       this.typingInput.blur();
     } catch (e) {}
+  }
+
+  setHiddenMode(enabled) {
+    this.hiddenMode = !!enabled;
+    if (this.wordsBox) {
+      this.wordsBox.classList.toggle('hidden-mode', this.hiddenMode);
+    }
+    if (!this.hiddenMode) {
+      for (let i = 0; i < this.wordElements.length; i++) {
+        const wEl = this.wordElements[i];
+        if (wEl) {
+          const letters = wEl.querySelectorAll('.letter');
+          for (let j = 0; j < letters.length; j++) {
+            letters[j].style.opacity = '';
+            letters[j].classList.remove('hd-past');
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Updates character-by-character fade horizon based on cursor position.
+   * @param {number} currentWordIdx - Index of active word
+   * @param {number} currentCharIdx - Index of caret within active word
+   * @param {number} fadeDepth - Horizon depth in characters ahead (default: 4)
+   * @param {boolean} hasError - Safety brake: if true, immediately restores active word visibility
+   */
+  updateHiddenHorizon(currentWordIdx, currentCharIdx, fadeDepth = 4, hasError = false) {
+    if (!this.hiddenMode || !this.wordElements || this.wordElements.length === 0) return;
+    const activeWordEl = this.wordElements[currentWordIdx];
+    if (!activeWordEl) return;
+
+    const N = Math.max(1, fadeDepth);
+
+    // Safety brake: if error exists, immediately restore visibility of all letters in active word
+    if (hasError) {
+      const activeLetters = activeWordEl.querySelectorAll('.letter');
+      for (let i = 0; i < activeLetters.length; i++) {
+        activeLetters[i].style.opacity = '';
+      }
+      return;
+    }
+
+    // 1. Process active word
+    const activeLetters = activeWordEl.querySelectorAll('.letter');
+    const wordLen = activeLetters.length;
+
+    for (let i = 0; i < wordLen; i++) {
+      const letter = activeLetters[i];
+      if (i < currentCharIdx) {
+        letter.classList.add('hd-past');
+        letter.style.opacity = '';
+      } else if (i === currentCharIdx) {
+        letter.classList.remove('hd-past');
+        letter.style.opacity = '0';
+      } else {
+        letter.classList.remove('hd-past');
+        const d = i - currentCharIdx;
+        if (d >= N) {
+          letter.style.opacity = '';
+        } else {
+          const alpha = StageView.calculateOpacity(d, N);
+          letter.style.opacity = String(alpha);
+        }
+      }
+    }
+
+    // 2. Process immediate next word (currentWordIdx + 1)
+    const nextWordEl = this.wordElements[currentWordIdx + 1];
+    if (nextWordEl) {
+      const nextLetters = nextWordEl.querySelectorAll('.letter');
+      const remainingInActiveWord = Math.max(0, wordLen - currentCharIdx);
+      const dNextWordStart = remainingInActiveWord + 1;
+
+      for (let j = 0; j < nextLetters.length; j++) {
+        const letter = nextLetters[j];
+        letter.classList.remove('hd-past');
+        const d = dNextWordStart + j;
+        if (d >= N) {
+          letter.style.opacity = '';
+        } else {
+          const alpha = StageView.calculateOpacity(d, N);
+          letter.style.opacity = String(alpha);
+        }
+      }
+    }
+
+    // 3. Clear inline opacity on subsequent word (currentWordIdx + 2)
+    const followingWordEl = this.wordElements[currentWordIdx + 2];
+    if (followingWordEl) {
+      const folLetters = followingWordEl.querySelectorAll('.letter');
+      for (let k = 0; k < folLetters.length; k++) {
+        folLetters[k].classList.remove('hd-past');
+        folLetters[k].style.opacity = '';
+      }
+    }
   }
 }
 

@@ -83,6 +83,63 @@ it('updates letter styling for correct, incorrect, and extra characters', () => 
   assert.ok(!stage.wordElements[0].classList.contains('error'));
 });
 
+it('toggles hiddenMode on wordsBox and applies character fade horizon', () => {
+  const dom = new JSDOM(`
+    <div id="words-box">
+      <div id="words-wrapper"></div>
+      <div id="caret"></div>
+    </div>
+  `);
+  const { document } = dom.window;
+  const stage = new StageView({
+    wordsBox: document.getElementById('words-box'),
+    wordsWrapper: document.getElementById('words-wrapper'),
+    caret: document.getElementById('caret')
+  });
+
+  stage.renderWords(['the', 'quick']);
+  stage.setHiddenMode(true);
+  assert.strictEqual(stage.wordsBox.classList.contains('hidden-mode'), true);
+
+  // Initial state: cursor at word 0, char 0 ('t' in 'the')
+  stage.updateHiddenHorizon(0, 0, 4, false);
+
+  const word0 = stage.wordElements[0];
+  const word1 = stage.wordElements[1];
+
+  // Word 0, letter 0 ('t'): at cursor (d=0) -> opacity: '0'
+  assert.strictEqual(word0.children[0].style.opacity, '0');
+  // Word 0, letter 1 ('h'): ahead d=1 -> opacity: '0.19'
+  assert.strictEqual(word0.children[1].style.opacity, '0.19');
+  // Word 0, letter 2 ('e'): ahead d=2 -> opacity: '0.44'
+  assert.strictEqual(word0.children[2].style.opacity, '0.44');
+
+  // Next word: 'quick' starts at d = 3 + 1 = 4 -> d >= 4, full opacity (no inline opacity)
+  assert.strictEqual(word1.children[0].style.opacity, '');
+
+  // Advance cursor to letter 1 ('h')
+  stage.updateHiddenHorizon(0, 1, 4, false);
+  // letter 0 ('t') is now in the past: has hd-past, no inline opacity
+  assert.strictEqual(word0.children[0].classList.contains('hd-past'), true);
+  assert.strictEqual(word0.children[0].style.opacity, '');
+  // letter 1 ('h') is at cursor: opacity: '0'
+  assert.strictEqual(word0.children[1].style.opacity, '0');
+  // letter 2 ('e') is at d=1: opacity: '0.19'
+  assert.strictEqual(word0.children[2].style.opacity, '0.19');
+  // Next word start ('q' in 'quick'): d = (3 - 1) + 1 = 3 -> opacity: '0.71'
+  assert.strictEqual(word1.children[0].style.opacity, '0.71');
+  assert.strictEqual(word1.children[1].style.opacity, ''); // 'u' at d=4 -> full
+
+  // Safety brake: error clears inline opacity on active word
+  stage.updateHiddenHorizon(0, 1, 4, true);
+  assert.strictEqual(word0.children[1].style.opacity, '');
+
+  // Disabling hiddenMode cleans all styles
+  stage.setHiddenMode(false);
+  assert.strictEqual(stage.wordsBox.classList.contains('hidden-mode'), false);
+  assert.strictEqual(word0.children[0].classList.contains('hd-past'), false);
+});
+
 // 2. NestView Tests
 console.log('\n--- 2. NestView ---');
 
@@ -272,6 +329,23 @@ it('updateFlowGauge updates speedometer tags and multiplier badge across flow st
   assert.ok(hud.speedIndicatorText.textContent.includes('MAX FLOW'));
   assert.ok(hud.flowMultiplierBadge.classList.contains('rainbow-max'));
   assert.ok(hud.flowMultiplierBadge.classList.contains('cushion-active'));
+});
+
+it('HUDView.updateHiddenModeState updates active class and aria-pressed', () => {
+  const dom = new JSDOM(`
+    <button class="icon-btn" id="hd-btn" title="Toggle Hidden">HD</button>
+  `);
+  const hud = new HUDView({
+    hdBtn: dom.window.document.getElementById('hd-btn')
+  });
+
+  hud.updateHiddenModeState(true);
+  assert.strictEqual(hud.hdBtn.classList.contains('active'), true);
+  assert.strictEqual(hud.hdBtn.getAttribute('aria-pressed'), 'true');
+
+  hud.updateHiddenModeState(false);
+  assert.strictEqual(hud.hdBtn.classList.contains('active'), false);
+  assert.strictEqual(hud.hdBtn.getAttribute('aria-pressed'), 'false');
 });
 
 // 4. ModalView Tests

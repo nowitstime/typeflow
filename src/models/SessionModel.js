@@ -138,6 +138,16 @@ class SessionModel extends _EventEmitter {
     return this.words[this.currentWordIdx] || '';
   }
 
+  hasErrorInCurrentWord() {
+    const wordText = this.getCurrentWordText();
+    if (this.currentCharIdx > wordText.length) return true;
+    const limit = Math.min(this.currentCharIdx, wordText.length);
+    for (let i = 0; i < limit; i++) {
+      if (this.currentWordCharCorrect[i] === false) return true;
+    }
+    return false;
+  }
+
   getCurrentSecond(now = Date.now()) {
     if (this.mode === 'classic') {
       const elapsed = this.duration - this.timeLeft;

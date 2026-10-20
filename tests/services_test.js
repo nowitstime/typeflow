@@ -237,6 +237,24 @@ it('persists and retrieves Bigram Mastery Ledger', () => {
   assert.deepStrictEqual(reloaded.getBigramLedger(), { th: 0.95, he: 0.88, er: 0.35 });
 });
 
+it('persists and retrieves Hidden (HD) mode preference', () => {
+  const mock = new LocalStorageMock();
+  const service = new StorageService(mock);
+
+  assert.strictEqual(service.getHiddenMode(), false);
+  service.setHiddenMode(true);
+  assert.strictEqual(service.getHiddenMode(), true);
+
+  // Re-instantiate to verify storage persistence
+  const reloaded = new StorageService(mock);
+  assert.strictEqual(reloaded.getHiddenMode(), true);
+
+  service.setHiddenMode(false);
+  assert.strictEqual(service.getHiddenMode(), false);
+  const reloaded2 = new StorageService(mock);
+  assert.strictEqual(reloaded2.getHiddenMode(), false);
+});
+
 // 2. AudioService Tests
 console.log('\n--- 2. AudioService ---');
 

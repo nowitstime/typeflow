@@ -14,6 +14,7 @@ const { FlowModel } = require('../src/models/FlowModel.js');
 const { SessionModel } = require('../src/models/SessionModel.js');
 const { EggNestModel } = require('../src/models/EggNestModel.js');
 const { BigramLedger } = require('../src/models/BigramLedger.js');
+const { StageView } = require('../src/views/StageView.js');
 
 let totalTests = 0;
 let passedTests = 0;
@@ -643,6 +644,58 @@ it('SessionModel.insertWordsAt dynamically splices words into upcoming stream', 
 
   session.insertWordsAt(2, ['sandwich1', 'target', 'sandwich2']);
   assert.deepStrictEqual(session.words, ['alpha', 'bravo', 'sandwich1', 'target', 'sandwich2', 'charlie', 'delta']);
+});
+
+// 9. Hidden (HD) Look-Ahead Logic & Geometry
+console.log('\n--- 9. Hidden (HD) Look-Ahead Logic & Geometry ---');
+
+it('calculates fade opacity across distances and horizons accurately', () => {
+  // At or behind cursor (d <= 0): vanished
+  assert.strictEqual(StageView.calculateOpacity(0, 4), 0);
+  assert.strictEqual(StageView.calculateOpacity(-1, 4), 0);
+
+  // Ahead of cursor: scales naturally with power 1.2
+  // d=1, N=4: (1/4)^1.2 = 0.19
+  assert.strictEqual(StageView.calculateOpacity(1, 4), 0.19);
+  // d=2, N=4: (2/4)^1.2 = 0.44
+  assert.strictEqual(StageView.calculateOpacity(2, 4), 0.44);
+  // d=3, N=4: (3/4)^1.2 = 0.71
+  assert.strictEqual(StageView.calculateOpacity(3, 4), 0.71);
+  // d>=N: full opacity
+  assert.strictEqual(StageView.calculateOpacity(4, 4), 1);
+  assert.strictEqual(StageView.calculateOpacity(5, 4), 1);
+
+  // Custom horizon N=5
+  assert.strictEqual(StageView.calculateOpacity(0, 5), 0);
+  assert.strictEqual(StageView.calculateOpacity(5, 5), 1);
+});
+
+it('SessionModel.hasErrorInCurrentWord detects errors and fixes via backspace', () => {
+  const session = new SessionModel({ words: ['flow'] });
+  assert.strictEqual(session.hasErrorInCurrentWord(), false);
+
+  // Correct hit 'f'
+  session.recordChar('f', true, false);
+  assert.strictEqual(session.hasErrorInCurrentWord(), false);
+
+  // Mistyped 'x' instead of 'l'
+  session.recordChar('x', false, false);
+  assert.strictEqual(session.hasErrorInCurrentWord(), true);
+
+  // Backspace fixes the error
+  session.recordBackspace();
+  assert.strictEqual(session.hasErrorInCurrentWord(), false);
+
+  // Correct 'l'
+  session.recordChar('l', true, false);
+  assert.strictEqual(session.hasErrorInCurrentWord(), false);
+
+  // Extra characters count as error
+  session.recordChar('o', true, false);
+  session.recordChar('w', true, false);
+  assert.strictEqual(session.hasErrorInCurrentWord(), false);
+  session.recordChar('s', false, true); // extra letter
+  assert.strictEqual(session.hasErrorInCurrentWord(), true);
 });
 
 console.log('\n========================================');

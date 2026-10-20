@@ -7,7 +7,8 @@
 const STORAGE_KEYS = {
   CLASSIC_STATS: 'typeflow_classic_stats_v1',
   GAME_SAVE:     'typeflow_game_save_v2',
-  ACTIVE_MODE:   'typeflow_active_mode'
+  ACTIVE_MODE:   'typeflow_active_mode',
+  HIDDEN_MODE:   'typeflow_hidden_mode'
 };
 
 const DEFAULT_CLASSIC_STATS = {
@@ -33,7 +34,8 @@ const DEFAULT_GAME_SAVE = {
   wordStats: {},      // SRS telemetry: { [rank]: { seen, unfixedErr, fixedErr, avgWpm, streak } }
   bigramLedger: {},   // Rolling EMA bigram mastery ledger: { [bg]: mastery }
   lifetimeWords: 0,
-  highStreak: 0
+  highStreak: 0,
+  hiddenMode: false
 };
 
 function safeGetLocalStorage() {
@@ -162,6 +164,9 @@ class StorageService {
       }
       if (!state.bigramLedger || typeof state.bigramLedger !== 'object') {
         state.bigramLedger = {};
+      }
+      if (typeof state.hiddenMode !== 'boolean') {
+        state.hiddenMode = false;
       }
       return state;
     } catch (e) {
@@ -488,6 +493,34 @@ class StorageService {
       return clean;
     } catch (e) {
       return mode;
+    }
+  }
+
+  getHiddenMode() {
+    try {
+      const s = this._getStorage();
+      if (s) {
+        const val = s.getItem(STORAGE_KEYS.HIDDEN_MODE);
+        if (val !== null) return val === 'true';
+      }
+      const save = this.getGameSave();
+      return !!save.hiddenMode;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  setHiddenMode(enabled) {
+    const val = !!enabled;
+    try {
+      const s = this._getStorage();
+      if (s) s.setItem(STORAGE_KEYS.HIDDEN_MODE, String(val));
+      const save = this.getGameSave();
+      save.hiddenMode = val;
+      this.saveGameSave(save);
+      return val;
+    } catch (e) {
+      return val;
     }
   }
 }

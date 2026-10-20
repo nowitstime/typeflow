@@ -360,6 +360,21 @@ header {
   color: var(--main-color);
 }
 
+#hd-btn {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 6px 10px;
+}
+
+#hd-btn.active {
+  color: var(--main-color);
+  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.1);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.25);
+}
+
 /* Main Typing Stage */
 main {
   flex: 1;
@@ -577,6 +592,23 @@ main {
 
 .letter.extra {
   color: var(--error-extra-color);
+}
+
+/* Hidden (HD) Look-Ahead Mode */
+.words-box.hidden-mode .letter {
+  transition: color 0.1s ease, opacity 0.12s cubic-bezier(0.2, 0.0, 0.2, 1);
+  will-change: opacity;
+}
+
+.words-box.hidden-mode .letter.hd-past {
+  opacity: 0.15;
+}
+
+/* Safety brake: errors and typos restore full opacity instantly */
+.words-box.hidden-mode .letter.incorrect,
+.words-box.hidden-mode .letter.extra,
+.words-box.hidden-mode .word.error .letter {
+  opacity: 1 !important;
 }
 
 /* Caret / Cursor */

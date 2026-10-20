@@ -85,6 +85,7 @@ function createTestHarness() {
       </div>
       <div id="test-section"></div>
       <div id="results-section"></div>
+      <button id="hd-btn"></button>
       <div id="stats-modal" style="display: none;"></div>
     </body>
     </html>
@@ -548,6 +549,91 @@ it('Rare/Epic unlocks during peak flow (>= 90% momentum) are held in queue until
 
   // Queued Epic word is released to pendingHatchedWords / induced into stream
   assert.strictEqual(controller.pendingRareEpicUnlocks.length, 0);
+});
+
+it('GameController.toggleHiddenMode toggles mode, updates views, and persists to storageService', () => {
+  const { controller } = createTestHarness();
+  controller.init();
+
+  assert.strictEqual(controller.storageService.getHiddenMode(), false);
+  assert.strictEqual(controller.stageView.hiddenMode, false);
+
+  const toggledOn = controller.toggleHiddenMode();
+  assert.strictEqual(toggledOn, true);
+  assert.strictEqual(controller.storageService.getHiddenMode(), true);
+  assert.strictEqual(controller.stageView.hiddenMode, true);
+  assert.strictEqual(controller.stageView.wordsBox.classList.contains('hidden-mode'), true);
+  assert.strictEqual(controller.hudView.hdBtn.classList.contains('active'), true);
+
+  const toggledOff = controller.toggleHiddenMode();
+  assert.strictEqual(toggledOff, false);
+  assert.strictEqual(controller.storageService.getHiddenMode(), false);
+  assert.strictEqual(controller.stageView.hiddenMode, false);
+  assert.strictEqual(controller.stageView.wordsBox.classList.contains('hidden-mode'), false);
+  assert.strictEqual(controller.hudView.hdBtn.classList.contains('active'), false);
+});
+
+it('typing keystrokes in Hidden Mode updates stage horizon and safety brake triggers on error', () => {
+  const { controller } = createTestHarness();
+  controller.init();
+  controller.toggleHiddenMode(); // Enable Hidden mode
+
+  // First word is 'the'
+  assert.strictEqual(controller.sessionModel.getCurrentWordText(), 'the');
+
+  const word0 = controller.stageView.wordElements[0];
+  // Initial state: cursor at char 0 ('t'): opacity 0
+  assert.strictEqual(word0.children[0].style.opacity, '0');
+  // Char 1 ('h'): opacity 0.19 (at 0% momentum, fadeDepth is 3: (1/3)^1.2 = 0.27, or at N=4: 0.19)
+  assert.ok(parseFloat(word0.children[1].style.opacity) > 0);
+
+  // Type correct 't'
+  controller.handleChar('t');
+  assert.strictEqual(word0.children[0].classList.contains('hd-past'), true);
+  assert.strictEqual(word0.children[1].style.opacity, '0'); // 'h' vanished
+
+  // Type typo 'z' instead of 'h'
+  controller.handleChar('z');
+  // Safety brake triggers: mistake pops to full visibility (inline opacity cleared so CSS !important shows red)
+  assert.strictEqual(word0.children[1].classList.contains('incorrect'), true);
+  assert.strictEqual(word0.children[1].style.opacity, '');
+
+  // Backspace cleans error
+  controller.handleBackspace();
+  assert.strictEqual(word0.children[1].classList.contains('incorrect'), false);
+  assert.strictEqual(word0.children[1].style.opacity, '0'); // vanished again
+});
+
+it('completing words in Hidden Mode awards +15% bonus XP', () => {
+  const { controller } = createTestHarness();
+  controller.init();
+
+  const initialSave = controller.storageService.getGameSave();
+  const startXp = initialSave.currentXp;
+
+  // Type 'the' with Hidden Mode OFF
+  controller.handleChar('t');
+  controller.handleChar('h');
+  controller.handleChar('e');
+  controller.handleSpace();
+
+  const xpEarnedNormal = controller.storageService.getGameSave().currentXp - startXp;
+
+  // Now enable Hidden Mode
+  controller.toggleHiddenMode();
+  const xpBeforeHidden = controller.storageService.getGameSave().currentXp;
+
+  // Type next word (all unlocked ranks start with rank 1 'the')
+  const curWord = controller.sessionModel.getCurrentWordText();
+  for (let c of curWord) {
+    controller.handleChar(c);
+  }
+  controller.handleSpace();
+
+  const xpHidden = controller.storageService.getGameSave().currentXp - xpBeforeHidden;
+
+  // Hidden mode must award strictly greater XP (+15% bonus)
+  assert.ok(xpHidden > xpEarnedNormal, `Expected Hidden XP (${xpHidden}) > Normal XP (${xpEarnedNormal})`);
 });
 
 console.log('\n========================================');

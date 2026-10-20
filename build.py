@@ -145,6 +145,11 @@ def build():
           </svg>
         </button>
 
+        <!-- Hidden Mode Toggle Button -->
+        <button class="icon-btn" id="hd-btn" title="Toggle Hidden (HD) Look-Ahead Mode">
+          <span>HD</span>
+        </button>
+
         <!-- Sound Button -->
         <button class="icon-btn" id="sound-btn" title="Toggle Mechanical Keyboard Sounds">
           <svg id="sound-icon-on" style="display: none;" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">

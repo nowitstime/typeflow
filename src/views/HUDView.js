@@ -26,9 +26,10 @@ class HUDView {
     this.hudXpRatio = elements.hudXpRatio || (typeof document !== 'undefined' ? document.getElementById('hud-xp-ratio') : null);
     this.hudLevelBarFill = elements.hudLevelBarFill || (typeof document !== 'undefined' ? document.getElementById('hud-level-bar-fill') : null);
 
-    // Sound Controls
+    // Sound & Feature Controls
     this.soundIconOn = elements.soundIconOn || (typeof document !== 'undefined' ? document.getElementById('sound-icon-on') : null);
     this.soundIconOff = elements.soundIconOff || (typeof document !== 'undefined' ? document.getElementById('sound-icon-off') : null);
+    this.hdBtn = elements.hdBtn || (typeof document !== 'undefined' ? document.getElementById('hd-btn') : null);
 
     // Typing Stage HUD
     this.timerEl = elements.timerEl || (typeof document !== 'undefined' ? document.getElementById('timer') : null);
@@ -103,6 +104,13 @@ class HUDView {
     if (soundBtn) {
       soundBtn.addEventListener('click', () => {
         if (handlers.onSoundToggle) handlers.onSoundToggle();
+      });
+    }
+
+    const hdBtn = this.hdBtn || ((typeof document !== 'undefined') ? document.getElementById('hd-btn') : null);
+    if (hdBtn) {
+      hdBtn.addEventListener('click', () => {
+        if (handlers.onHiddenToggle) handlers.onHiddenToggle();
       });
     }
 
@@ -317,6 +325,17 @@ class HUDView {
     setTimeout(() => {
       if (toast.parentNode) toast.parentNode.removeChild(toast);
     }, 950);
+  }
+
+  updateHiddenModeState(enabled) {
+    const btn = this.hdBtn || ((typeof document !== 'undefined') ? document.getElementById('hd-btn') : null);
+    if (btn) {
+      btn.classList.toggle('active', !!enabled);
+      btn.setAttribute('aria-pressed', String(!!enabled));
+      btn.title = enabled
+        ? 'Hidden (HD) Look-Ahead: ON (Click to disable)'
+        : 'Toggle Hidden (HD) Look-Ahead Mode';
+    }
   }
 }
 

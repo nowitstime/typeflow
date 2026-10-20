@@ -115,6 +115,11 @@ class GameController {
       (gameState.eggBasket || []).length >= 3
     );
     this.hudView.updateSoundState(this.audioService.isEnabled());
+    const isHidden = this.storageService.getHiddenMode ? this.storageService.getHiddenMode() : false;
+    this.stageView.setHiddenMode(isHidden);
+    if (this.hudView.updateHiddenModeState) {
+      this.hudView.updateHiddenModeState(isHidden);
+    }
 
     // 3. Attach keyboard controller
     this.keyboardController.attach(
@@ -150,6 +155,7 @@ class GameController {
           this.audioService.playKey(false, 0);
         }
       },
+      onHiddenToggle: () => this.toggleHiddenMode(),
       onRestart: () => this.resetTest()
     });
 
@@ -240,6 +246,36 @@ class GameController {
     this.resetTest();
   }
 
+  getHiddenFadeDepth() {
+    if (this.currentMode === 'classic') {
+      return 4;
+    }
+    const momentum = this.flowModel ? this.flowModel.momentum : 0;
+    if (momentum < 60) return 3;
+    if (momentum < 90) return 4;
+    return 5;
+  }
+
+  toggleHiddenMode() {
+    const current = this.storageService.getHiddenMode ? this.storageService.getHiddenMode() : false;
+    const next = !current;
+    if (this.storageService.setHiddenMode) {
+      this.storageService.setHiddenMode(next);
+    }
+    this.stageView.setHiddenMode(next);
+    if (this.hudView.updateHiddenModeState) {
+      this.hudView.updateHiddenModeState(next);
+    }
+    const fadeDepth = this.getHiddenFadeDepth();
+    this.stageView.updateHiddenHorizon(
+      this.sessionModel.currentWordIdx,
+      this.sessionModel.currentCharIdx,
+      fadeDepth,
+      this.sessionModel.hasErrorInCurrentWord()
+    );
+    return next;
+  }
+
   resetTest() {
     if (this.classicTimerInterval) {
       clearInterval(this.classicTimerInterval);
@@ -275,6 +311,8 @@ class GameController {
     this.sessionModel.reset({ mode: this.currentMode, duration: this.sessionModel.duration, words });
     this.stageView.renderWords(words);
     this.stageView.updateCaret(0, 0);
+    const fadeDepth = this.getHiddenFadeDepth();
+    this.stageView.updateHiddenHorizon(0, 0, fadeDepth, false);
 
     if (this.currentMode === 'classic') {
       this.hudView.updateTimer(this.sessionModel.duration);
@@ -380,6 +418,10 @@ class GameController {
     this.stageView.updateLetter(this.sessionModel.currentWordIdx, charIdx, isCorrect, isExtra, char);
     this.stageView.updateCaret(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
 
+    const fadeDepth = this.getHiddenFadeDepth();
+    const hasErr = isExtra || !isCorrect || this.sessionModel.hasErrorInCurrentWord();
+    this.stageView.updateHiddenHorizon(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx, fadeDepth, hasErr);
+
     this.audioService.playKey(false, this.currentMode === 'flow' ? this.flowModel.flowStreak : 0);
   }
 
@@ -395,6 +437,13 @@ class GameController {
           this.stageView.revertWord(prevWordIdx + 1, prevWordIdx);
           this.stageView.updateCaret(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
           this.flowModel.recordKeystroke();
+          const fadeDepth = this.getHiddenFadeDepth();
+          this.stageView.updateHiddenHorizon(
+            this.sessionModel.currentWordIdx,
+            this.sessionModel.currentCharIdx,
+            fadeDepth,
+            this.sessionModel.hasErrorInCurrentWord()
+          );
         }
       }
       return;
@@ -406,6 +455,13 @@ class GameController {
     }
     this.flowModel.recordKeystroke();
     this.stageView.updateCaret(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
+    const fadeDepth = this.getHiddenFadeDepth();
+    this.stageView.updateHiddenHorizon(
+      this.sessionModel.currentWordIdx,
+      this.sessionModel.currentCharIdx,
+      fadeDepth,
+      this.sessionModel.hasErrorInCurrentWord()
+    );
   }
 
   handleSpace() {
@@ -437,7 +493,10 @@ class GameController {
       const gameState = this.storageService.getGameSave();
       const basketCount = (gameState.eggBasket || []).length;
       const wordMeta = this.wordsModel.getWordByText(currentWordText) || this.wordsModel.getWord(1);
-      const baseXp = wordMeta.reward || 10;
+      let baseXp = wordMeta.reward || 10;
+      if (this.storageService.getHiddenMode && this.storageService.getHiddenMode()) {
+        baseXp = Math.round(baseXp * 1.15);
+      }
       const evalRes = this.flowModel.evaluateWord(hasUncorrectedErrors, liveWpm, isHadBackspace, basketCount, baseXp);
       const earnedXp = evalRes.earnedXp;
 
@@ -553,6 +612,8 @@ class GameController {
     const nextIdx = this.sessionModel.currentWordIdx;
     this.stageView.advanceWord(prevIdx, nextIdx, hasUncorrectedErrors);
     this.stageView.updateCaret(nextIdx, 0);
+    const fadeDepth = this.getHiddenFadeDepth();
+    this.stageView.updateHiddenHorizon(nextIdx, 0, fadeDepth, false);
 
     // Dynamic infinite stream appending
     if (nextIdx >= this.stageView.wordElements.length - 10) {
