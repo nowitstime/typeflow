@@ -25,7 +25,6 @@ class HUDView {
     this.hudLevelTitle = elements.hudLevelTitle || (typeof document !== 'undefined' ? document.getElementById('hud-level-title') : null);
     this.hudXpRatio = elements.hudXpRatio || (typeof document !== 'undefined' ? document.getElementById('hud-xp-ratio') : null);
     this.hudLevelBarFill = elements.hudLevelBarFill || (typeof document !== 'undefined' ? document.getElementById('hud-level-bar-fill') : null);
-    this.eggBasketBtn = elements.eggBasketBtn || (typeof document !== 'undefined' ? document.getElementById('egg-basket-btn') : null);
 
     // Sound Controls
     this.soundIconOn = elements.soundIconOn || (typeof document !== 'undefined' ? document.getElementById('sound-icon-on') : null);
@@ -46,7 +45,6 @@ class HUDView {
     this.flowMultVal = elements.flowMultVal || (typeof document !== 'undefined' ? document.getElementById('flow-mult-val') : null);
     this.momentumBarFill = elements.momentumBarFill || (typeof document !== 'undefined' ? document.getElementById('momentum-bar-fill') : null);
     this.flowVignetteOverlay = elements.flowVignetteOverlay || (typeof document !== 'undefined' ? document.getElementById('flow-vignette-overlay') : null);
-    this.deckCountNum = elements.deckCountNum || (typeof document !== 'undefined' ? document.getElementById('deck-count-num') : null);
     this.xpToastLayer = elements.xpToastLayer || (typeof document !== 'undefined' ? document.getElementById('xp-toast-layer') : null);
 
     this.lastRenderedMomentum = -1;
@@ -147,7 +145,6 @@ class HUDView {
     if (this.classicDurationPill) this.classicDurationPill.style.display = isClassic ? 'flex' : 'none';
     if (this.flowTargetPill) this.flowTargetPill.style.display = isClassic ? 'none' : 'flex';
     if (this.levelHudCard) this.levelHudCard.style.display = isClassic ? 'none' : 'flex';
-    if (this.eggBasketBtn) this.eggBasketBtn.style.display = 'none';
 
     if (this.restartBtnLabel) {
       this.restartBtnLabel.textContent = isClassic ? 'restart test' : 'restart flow';
@@ -203,10 +200,6 @@ class HUDView {
       this.flowMultiplierBadge.classList.toggle('active', multiplier > 1.0);
       this.flowMultiplierBadge.classList.toggle('rainbow-max', isMaxFlow);
       this.flowMultiplierBadge.classList.toggle('cushion-active', isCushion);
-    }
-
-    if (this.deckCountNum) {
-      this.deckCountNum.textContent = `${deckCount} word${deckCount === 1 ? '' : 's'}`;
     }
   }
 

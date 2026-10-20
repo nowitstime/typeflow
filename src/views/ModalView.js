@@ -133,14 +133,8 @@ class ModalView {
     }
 
     const statsBtn = (typeof document !== 'undefined') ? document.getElementById('stats-btn') : null;
-    const openDeckMasteryBtn = (typeof document !== 'undefined') ? document.getElementById('open-deck-mastery-btn') : null;
     if (statsBtn) {
       statsBtn.addEventListener('click', () => {
-        if (handlers.onOpenStats) handlers.onOpenStats('flow');
-      });
-    }
-    if (openDeckMasteryBtn) {
-      openDeckMasteryBtn.addEventListener('click', () => {
         if (handlers.onOpenStats) handlers.onOpenStats('flow');
       });
     }

@@ -227,6 +227,53 @@ it('synchronizes target WPM slider and numeric input', () => {
   assert.strictEqual(hud.diffInput.value, '75');
 });
 
+it('updateFlowGauge updates speedometer tags and multiplier badge across flow states', () => {
+  const dom = new JSDOM(`
+    <div id="flow-gauge" style="display: flex;">
+      <div id="flow-speed-tag" class="flow-speed-tag">
+        <span id="speed-status-dot"></span>
+        <span id="speed-indicator-text"></span>
+      </div>
+      <div id="flow-multiplier-badge" class="flow-multiplier-badge">
+        <span id="flow-mult-val"></span>
+      </div>
+    </div>
+  `);
+  const hud = new HUDView({
+    flowGauge: dom.window.document.getElementById('flow-gauge'),
+    flowSpeedTag: dom.window.document.getElementById('flow-speed-tag'),
+    speedIndicatorText: dom.window.document.getElementById('speed-indicator-text'),
+    flowMultiplierBadge: dom.window.document.getElementById('flow-multiplier-badge'),
+    flowMultVal: dom.window.document.getElementById('flow-mult-val')
+  });
+
+  // 1. Idle state (liveWpm = 0)
+  hud.updateFlowGauge(0, 40, 0, 1.0, 0, 1);
+  assert.strictEqual(hud.flowSpeedTag.className, 'flow-speed-tag slow');
+  assert.strictEqual(hud.speedIndicatorText.textContent, 'Target: 40 WPM');
+  assert.strictEqual(hud.flowMultVal.textContent, '1.0x Flow');
+  assert.ok(!hud.flowMultiplierBadge.classList.contains('active'));
+
+  // 2. Slow paced state (liveWpm = 25 < target 40)
+  hud.updateFlowGauge(25, 40, 20, 1.0, 0, 1);
+  assert.strictEqual(hud.flowSpeedTag.className, 'flow-speed-tag slow');
+  assert.strictEqual(hud.speedIndicatorText.textContent, '⚡ Paced: 25 / 40 WPM');
+
+  // 3. In Flow state (liveWpm = 45 >= target 40, momentum = 80)
+  hud.updateFlowGauge(45, 40, 80, 2.5, 0, 1);
+  assert.strictEqual(hud.flowSpeedTag.className, 'flow-speed-tag in-flow');
+  assert.strictEqual(hud.speedIndicatorText.textContent, '🔥 Flow Active (45 WPM)');
+  assert.strictEqual(hud.flowMultVal.textContent, '2.5x Flow');
+  assert.ok(hud.flowMultiplierBadge.classList.contains('active'));
+
+  // 4. Max Flow / Cushion (momentum >= 100)
+  hud.updateFlowGauge(55, 40, 110, 3.0, 0, 1);
+  assert.strictEqual(hud.flowSpeedTag.className, 'flow-speed-tag in-flow');
+  assert.ok(hud.speedIndicatorText.textContent.includes('MAX FLOW'));
+  assert.ok(hud.flowMultiplierBadge.classList.contains('rainbow-max'));
+  assert.ok(hud.flowMultiplierBadge.classList.contains('cushion-active'));
+});
+
 // 4. ModalView Tests
 console.log('\n--- 4. ModalView ---');
 

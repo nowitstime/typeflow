@@ -7,8 +7,30 @@ so that Android content:// URIs and standard browsers load seamlessly without CO
 
 import os
 import sys
+import re
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def clean_css(css):
+    """Strips comments and collapses empty lines from CSS while preserving rules."""
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.DOTALL)
+    lines = [l for l in css.splitlines() if l.strip()]
+    return "\n".join(lines)
+
+def clean_js(js):
+    """Strips comments and collapses empty lines from JS while preserving string literals."""
+    js = re.sub(r"/\*.*?\*/", "", js, flags=re.DOTALL)
+    out_lines = []
+    for line in js.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("//"):
+            continue
+        if "//" in line:
+            if '"' not in line and "'" not in line and '`' not in line:
+                line = re.sub(r"\s*//.*$", "", line)
+        if line.strip():
+            out_lines.append(line)
+    return "\n".join(out_lines)
 
 def build():
     print("[TypeFlow] Starting build with Observable MVC modules...")
@@ -21,7 +43,7 @@ def build():
         sys.exit(1)
 
     with open(css_path, "r", encoding="utf-8") as f:
-        css_content = f.read()
+        css_content = clean_css(f.read())
 
     mvc_modules = [
         "src/core/Constants.js",
@@ -49,9 +71,9 @@ def build():
             print(f"Error: Missing required module {mod_path}")
             sys.exit(1)
         with open(mod_path, "r", encoding="utf-8") as f:
-            bundled_js_parts.append(f"// --- {mod_rel} ---\n" + f.read())
+            bundled_js_parts.append(clean_js(f.read()))
 
-    bundled_js = "\n\n".join(bundled_js_parts)
+    bundled_js = "\n".join(bundled_js_parts)
 
     html_template = f"""<!DOCTYPE html>
 <html lang="en">
@@ -102,11 +124,6 @@ def build():
             <span class="diff-unit">wpm</span>
           </div>
         </div>
-
-        <!-- Egg Basket Pill in Header (deprecated, replaced by in-situ nest) -->
-        <button class="egg-basket-btn" id="egg-basket-btn" style="display: none !important;">
-          <span id="egg-count-badge">0 Eggs</span>
-        </button>
 
         <!-- Level HUD Card in Header -->
         <div class="level-hud-card" id="level-hud-card" title="Player Level & XP Progress">
@@ -480,8 +497,13 @@ def build():
 </html>
 """
 
+    # Strip HTML comments and collapse empty lines
+    cleaned_html = re.sub(r"<!--.*?-->", "", html_template, flags=re.DOTALL)
+    cleaned_html_lines = [l for l in cleaned_html.splitlines() if l.strip()]
+    final_output = "\n".join(cleaned_html_lines) + "\n"
+
     with open(output_path, "w", encoding="utf-8") as f:
-        f.write(html_template)
+        f.write(final_output)
 
     size_kb = os.path.getsize(output_path) / 1024
     print(f"[TypeFlow] Build complete! index.html generated ({size_kb:.1f} KB).")
