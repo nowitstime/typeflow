@@ -61,8 +61,6 @@ class SessionModel extends _EventEmitter {
     this.wordHistory = [];
 
     // Per-second delta telemetry (for timeline graph)
-    this.currentSecondErrors = 0;
-    this.currentSecondFixed = 0;
     this.lastSecCorrect = 0;
     this.lastSecRaw = 0;
     this.secondDeltas = [];
@@ -101,12 +99,9 @@ class SessionModel extends _EventEmitter {
     this.unfixedErrorsByKey = new Map();
     this.wordHistory = [];
 
-    this.currentSecondErrors = 0;
-    this.currentSecondFixed = 0;
     this.lastSecCorrect = 0;
     this.lastSecRaw = 0;
     this.secondDeltas = [];
-    this.wordStreak = 0;
 
     this.emit('reset', { mode: this.mode, duration: this.duration });
   }
@@ -163,12 +158,32 @@ class SessionModel extends _EventEmitter {
   }
 
   refreshWpmHistoryErrors() {
+    if (this.wpmHistory.length === 0 || this.errorLog.length === 0) {
+      for (let i = 0; i < this.wpmHistory.length; i++) {
+        this.wpmHistory[i].errors = 0;
+        this.wpmHistory[i].fixed = 0;
+      }
+      return;
+    }
+
+    const counts = new Map();
+    for (let i = 0; i < this.errorLog.length; i++) {
+      const e = this.errorLog[i];
+      let entry = counts.get(e.second);
+      if (!entry) {
+        entry = { errors: 0, fixed: 0 };
+        counts.set(e.second, entry);
+      }
+      entry.errors++;
+      if (e.fixed) entry.fixed++;
+    }
+
     for (let i = 0; i < this.wpmHistory.length; i++) {
       const snap = this.wpmHistory[i];
       const sec = snap.second || (i + 1);
-      const secErrors = this.errorLog.filter(e => e.second === sec);
-      snap.errors = secErrors.length;
-      snap.fixed = secErrors.filter(e => e.fixed).length;
+      const entry = counts.get(sec);
+      snap.errors = entry ? entry.errors : 0;
+      snap.fixed = entry ? entry.fixed : 0;
     }
   }
 
@@ -212,7 +227,6 @@ class SessionModel extends _EventEmitter {
       this.combo = 0;
       this.extraCharsCount++;
       this.incorrectKeystrokes++;
-      this.currentSecondErrors++;
       const key = `${this.currentWordIdx}:${prevCharIdx}:extra`;
       const errEntry = {
         id: this.errorLog.length + 1,
@@ -244,7 +258,6 @@ class SessionModel extends _EventEmitter {
     } else {
       this.combo = 0;
       this.incorrectKeystrokes++;
-      this.currentSecondErrors++;
       const key = `${this.currentWordIdx}:${prevCharIdx}:norm`;
       const errEntry = {
         id: this.errorLog.length + 1,
@@ -344,7 +357,7 @@ class SessionModel extends _EventEmitter {
         }
       }
 
-      delete this.currentWordCharCorrect[deletedIdx];
+      this.currentWordCharCorrect.length = deletedIdx;
       this.currentCharIdx--;
 
       this.emit('backspace', {
@@ -372,7 +385,7 @@ class SessionModel extends _EventEmitter {
     this.rollingKeystrokeTimestamps = this.rollingKeystrokeTimestamps.filter(t => now - t <= 3000);
     const count = this.rollingKeystrokeTimestamps.length;
     if (count === 0) return 0;
-    const windowSeconds = Math.max(1, (now - this.rollingKeystrokeTimestamps[0]) / 1000);
+    const windowSeconds = Math.min(3.0, Math.max(1.0, (now - this.rollingKeystrokeTimestamps[0]) / 1000));
     const wpm = Math.round((count / 5) * (60 / windowSeconds));
     return isNaN(wpm) ? 0 : wpm;
   }
@@ -409,15 +422,24 @@ class SessionModel extends _EventEmitter {
     const liveWpm = this.getLiveWpm(wordText.length, now);
     const hadBackspace = this.hadBackspaceOnCurrentWord;
     const completedIdx = this.currentWordIdx;
+    const savedWordStartTime = this.wordStartTime || (now - 600);
+    const savedLastWordEndTime = this.lastWordEndTime;
+    const prevWordStreak = this.wordStreak;
+    const prevCombo = this.combo;
 
     let hasErrors = false;
     let missedLetters = 0;
     let extraLetters = 0;
+    let extraLettersAddedOnSubmit = 0;
 
     if (typeof hasErrorsArg === 'boolean') {
       hasErrors = hasErrorsArg;
       missedLetters = typeof missedLettersArg === 'number' ? missedLettersArg : 0;
       extraLetters = typeof extraLettersArg === 'number' ? extraLettersArg : 0;
+      if (extraLetters > 0) {
+        extraLettersAddedOnSubmit = extraLetters;
+        this.extraCharsCount += extraLetters;
+      }
     } else {
       // Autonomous calculation directly from pure model state
       missedLetters = Math.max(0, wordText.length - this.currentCharIdx);
@@ -431,13 +453,12 @@ class SessionModel extends _EventEmitter {
           break;
         }
       }
+      // Note: extra characters are already counted in recordChar(), avoid double counting here
     }
 
-    this.extraCharsCount += extraLetters;
     this.missedCharsCount += missedLetters;
     if (missedLetters > 0) {
       this.incorrectKeystrokes += missedLetters;
-      this.currentSecondErrors += missedLetters;
       const sec = this.getCurrentSecond(now);
       for (let i = 0; i < missedLetters; i++) {
         this.errorLog.push({
@@ -452,21 +473,31 @@ class SessionModel extends _EventEmitter {
       }
     }
 
-    this.wordHistory[completedIdx] = {
-      charIdx: this.currentCharIdx,
-      charCorrect: [...this.currentWordCharCorrect],
-      hadBackspace: this.hadBackspaceOnCurrentWord,
-      missedLetters,
-      extraLetters
-    };
-
+    // Spacebar keystroke accounting (Divisor of 5 chars/word assumes 4 letters + 1 space)
+    this.rawKeystrokes++;
+    this.rollingKeystrokeTimestamps.push(now);
     if (!hasErrors) {
+      this.correctKeystrokes++;
       this.wordStreak++;
       this.combo++;
     } else {
       this.wordStreak = 0;
       this.combo = 0;
     }
+
+    this.wordHistory[completedIdx] = {
+      charIdx: this.currentCharIdx,
+      charCorrect: [...this.currentWordCharCorrect],
+      hadBackspace: this.hadBackspaceOnCurrentWord,
+      missedLetters,
+      extraLetters,
+      extraLettersAddedOnSubmit,
+      hasErrors,
+      wordStreakBefore: prevWordStreak,
+      comboBefore: prevCombo,
+      wordStartTime: savedWordStartTime,
+      lastWordEndTime: savedLastWordEndTime
+    };
 
     this.currentWordCharCorrect = [];
     this.lastWordEndTime = now;
@@ -512,19 +543,26 @@ class SessionModel extends _EventEmitter {
     if (prevHistory.missedLetters > 0) {
       this.missedCharsCount = Math.max(0, this.missedCharsCount - prevHistory.missedLetters);
       this.incorrectKeystrokes = Math.max(0, this.incorrectKeystrokes - prevHistory.missedLetters);
-      this.currentSecondErrors = Math.max(0, this.currentSecondErrors - prevHistory.missedLetters);
       this.errorLog = this.errorLog.filter(e => !(e.wordIdx === prevIdx && e.isMissed));
     }
 
-    if (prevHistory.extraLetters > 0) {
-      this.extraCharsCount = Math.max(0, this.extraCharsCount - prevHistory.extraLetters);
+    if (prevHistory.extraLettersAddedOnSubmit > 0) {
+      this.extraCharsCount = Math.max(0, this.extraCharsCount - prevHistory.extraLettersAddedOnSubmit);
+    }
+
+    // Rollback spacebar keystroke from submitWord (Bug 1A / 1C)
+    if (!prevHistory.hasErrors) {
+      this.correctKeystrokes = Math.max(0, this.correctKeystrokes - 1);
     }
 
     this.currentWordIdx = prevIdx;
     this.currentCharIdx = prevHistory.charIdx;
     this.currentWordCharCorrect = [...prevHistory.charCorrect];
     this.hadBackspaceOnCurrentWord = true;
-    this.combo = Math.max(0, this.combo - 1);
+    this.wordStartTime = prevHistory.wordStartTime || 0;
+    this.lastWordEndTime = prevHistory.lastWordEndTime || 0;
+    this.wordStreak = prevHistory.wordStreakBefore !== undefined ? prevHistory.wordStreakBefore : 0;
+    this.combo = prevHistory.comboBefore !== undefined ? prevHistory.comboBefore : Math.max(0, this.combo - 1);
     this.rawKeystrokes++;
 
     this.emit('wordReverted', {
@@ -572,11 +610,6 @@ class SessionModel extends _EventEmitter {
       errors: errorsThisSec,
       fixed: fixedThisSec
     });
-
-    this.refreshWpmHistoryErrors();
-
-    this.currentSecondErrors = 0;
-    this.currentSecondFixed = 0;
 
     this.emit('tick', { timeLeft: this.timeLeft, wpm: currentWpm, burstWpm, rawWpm: currentRaw });
 

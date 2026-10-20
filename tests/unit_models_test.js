@@ -859,6 +859,110 @@ it('SessionModel.hasErrorInCurrentWord detects errors and fixes via backspace', 
   assert.strictEqual(session.hasErrorInCurrentWord(), true);
 });
 
+// 10. SessionModel Telemetry & Word Boundary Accounting
+console.log('\n--- 10. SessionModel Telemetry & Word Boundary Accounting ---');
+
+it('submitWord() counts spacebar keystroke towards raw and correct keystrokes', () => {
+  const session = new SessionModel({ mode: 'flow', words: ['the', 'end'] });
+  const t0 = 100000;
+  // Type 't', 'h', 'e'
+  session.recordChar('t', true, false, t0);
+  session.recordChar('h', true, false, t0 + 100);
+  session.recordChar('e', true, false, t0 + 200);
+
+  assert.strictEqual(session.rawKeystrokes, 3);
+  assert.strictEqual(session.correctKeystrokes, 3);
+
+  // Submit word cleanly via Spacebar
+  session.submitWord(null, null, null, t0 + 300);
+
+  // Spacebar must count as 1 raw keystroke and 1 correct keystroke
+  assert.strictEqual(session.rawKeystrokes, 4);
+  assert.strictEqual(session.correctKeystrokes, 4);
+  assert.strictEqual(session.rollingKeystrokeTimestamps.length, 4);
+});
+
+it('submitWord() does not double-count extra characters in extraCharsCount', () => {
+  const session = new SessionModel({ mode: 'flow', words: ['cat'] });
+  // Type 'c', 'a', 't'
+  session.recordChar('c');
+  session.recordChar('a');
+  session.recordChar('t');
+  assert.strictEqual(session.extraCharsCount, 0);
+
+  // Type two extra letters: 's', 'y'
+  session.recordChar('s');
+  assert.strictEqual(session.extraCharsCount, 1);
+  session.recordChar('y');
+  assert.strictEqual(session.extraCharsCount, 2);
+
+  // Typist hits Space without backspacing the extras
+  session.submitWord();
+
+  // extraCharsCount must STILL be 2, NOT 4!
+  assert.strictEqual(session.extraCharsCount, 2);
+});
+
+it('revertToPreviousWord() rolls back spacebar keystroke and restores word timings and streaks', () => {
+  const session = new SessionModel({ mode: 'flow', words: ['alpha', 'beta'] });
+  const t0 = 100000;
+  session.start(t0);
+
+  // Type "alpha"
+  'alpha'.split('').forEach((ch, i) => session.recordChar(ch, true, false, t0 + i * 100));
+  assert.strictEqual(session.rawKeystrokes, 5);
+  assert.strictEqual(session.correctKeystrokes, 5);
+  assert.strictEqual(session.combo, 5);
+  assert.strictEqual(session.wordStreak, 0); // word not submitted yet
+
+  // Submit clean word at t0 + 600
+  session.submitWord(null, null, null, t0 + 600);
+  assert.strictEqual(session.rawKeystrokes, 6); // 5 letters + 1 space
+  assert.strictEqual(session.correctKeystrokes, 6);
+  assert.strictEqual(session.combo, 6);
+  assert.strictEqual(session.wordStreak, 1);
+  assert.strictEqual(session.currentWordIdx, 1);
+  assert.strictEqual(session.wordStartTime, 0);
+
+  // Revert back into "alpha" via backspace at start of word 1
+  const reverted = session.revertToPreviousWord();
+  assert.strictEqual(reverted, true);
+  assert.strictEqual(session.currentWordIdx, 0);
+  assert.strictEqual(session.currentCharIdx, 5);
+
+  // Spacebar correct keystroke rolled back (6 - 1 = 5)
+  assert.strictEqual(session.correctKeystrokes, 5);
+  // Revert backspace itself is a raw keystroke (6 + 1 = 7)
+  assert.strictEqual(session.rawKeystrokes, 7);
+
+  // Pre-submit streaks restored
+  assert.strictEqual(session.combo, 5);
+  assert.strictEqual(session.wordStreak, 0);
+
+  // wordStartTime and lastWordEndTime restored - no 0.20s cadence WPM spike!
+  assert.ok(session.wordStartTime > 0);
+  const cadenceWpm = session.getWordCadenceWpm(5, t0 + 650);
+  assert.ok(cadenceWpm < 300, `Expected realistic cadence WPM, got ${cadenceWpm}`);
+});
+
+it('recordBackspace() truncates array length avoiding sparse undefined array holes', () => {
+  const session = new SessionModel({ mode: 'flow', words: ['cat'] });
+  session.recordChar('c');
+  session.recordChar('a');
+  session.recordChar('t');
+  assert.strictEqual(session.currentWordCharCorrect.length, 3);
+
+  // Backspace 't'
+  session.recordBackspace();
+  assert.strictEqual(session.currentWordCharCorrect.length, 2);
+
+  // Check array iteration has NO undefined holes
+  assert.strictEqual(session.currentWordCharCorrect.includes(undefined), false);
+  const spread = [...session.currentWordCharCorrect];
+  assert.strictEqual(spread.length, 2);
+  assert.strictEqual(spread.includes(undefined), false);
+});
+
 console.log('\n========================================');
 console.log(`TEST RESULTS: ${passedTests} / ${totalTests} PASSED`);
 if (passedTests === totalTests) {
