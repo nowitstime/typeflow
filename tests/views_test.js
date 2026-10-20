@@ -106,9 +106,11 @@ it('toggles hiddenMode on wordsBox and applies character fade horizon', () => {
   assert.strictEqual(StageView.getBlindfoldMask(4), 1.0);
   assert.strictEqual(StageView.getBlindfoldMask(26), 6.5);
   assert.strictEqual(StageView.getBlindfoldMask(90), 12.5);
-  assert.strictEqual(StageView.getHiddenOpacity(0, 10), 1.0);
-  assert.strictEqual(StageView.getHiddenOpacity(1, 1), 0.75);
-  assert.strictEqual(StageView.getHiddenOpacity(1, 4), 0.0);
+  assert.strictEqual(StageView.getHiddenOpacity(0, 0), 1.0);
+  assert.strictEqual(StageView.getHiddenOpacity(0, 1), 0.75);
+  assert.strictEqual(StageView.getHiddenOpacity(0, 4), 0.0);
+  assert.strictEqual(StageView.getHiddenOpacity(1, 4), 1.0);
+  assert.strictEqual(StageView.getHiddenOpacity(1, 5), 0.75);
 
   // Initial state (combo 0): zero character fade
   stage.updateHiddenHorizon(0, 0, 0, false);
@@ -133,23 +135,23 @@ it('toggles hiddenMode on wordsBox and applies character fade horizon', () => {
   assert.strictEqual(word0.children[1].style.opacity, '');
   assert.strictEqual(word0.children[2].style.opacity, '');
 
-  // With combo = 1 (M = 0.25): caret at 0 in word0
+  // With combo = 1 (M = 0.25): caret at 0 in word0 -> letter at cursor (k=0) dims to 0.75
   stage.updateHiddenHorizon(0, 0, 1, false);
-  assert.strictEqual(word0.children[0].style.opacity, ''); // k=0 (cursor): 1.0
-  assert.strictEqual(word0.children[1].style.opacity, '0.75'); // k=1: 0.75
+  assert.strictEqual(word0.children[0].style.opacity, '0.75'); // k=0 (cursor): dims to 0.75
+  assert.strictEqual(word0.children[1].style.opacity, ''); // k=1: 1.0
   assert.strictEqual(word0.children[2].style.opacity, ''); // k=2: 1.0
 
-  // With combo = 4 (M = 1.0): caret at 0 in word0
+  // With combo = 4 (M = 1.0): caret at 0 in word0 -> letter at cursor (k=0) hits 0% opacity
   stage.updateHiddenHorizon(0, 0, 4, false);
-  assert.strictEqual(word0.children[0].style.opacity, ''); // k=0: 1.0
-  assert.strictEqual(word0.children[1].style.opacity, '0'); // k=1: 0.0 (overtaken)
+  assert.strictEqual(word0.children[0].style.opacity, '0'); // k=0 (cursor): 0.0 (overtaken)
+  assert.strictEqual(word0.children[1].style.opacity, ''); // k=1: 1.0
   assert.strictEqual(word0.children[2].style.opacity, ''); // k=2: 1.0
 
   // First word completed (word 1 active, caret at 0, combo = 4)
   stage.updateHiddenHorizon(1, 0, 4, false);
-  // Word 1 ('quick'): k=0 ('q') is cursor -> 1.0; k=1 ('u') is 0.0; k=2 ('i') is 1.0
-  assert.strictEqual(word1.children[0].style.opacity, '');
-  assert.strictEqual(word1.children[1].style.opacity, '0');
+  // Word 1 ('quick'): k=0 ('q') is cursor -> 0.0; k=1 ('u') is 1.0; k=2 ('i') is 1.0
+  assert.strictEqual(word1.children[0].style.opacity, '0');
+  assert.strictEqual(word1.children[1].style.opacity, '');
   assert.strictEqual(word1.children[2].style.opacity, '');
 
   // Safety brake: error clears inline opacity on active word and upcoming words

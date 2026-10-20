@@ -598,9 +598,9 @@ it('typing keystrokes in Hidden Mode updates stage horizon and safety brake trig
   // Past typed character is fully transparent behind cursor
   assert.strictEqual(word0.children[0].classList.contains('hd-past'), true);
   assert.strictEqual(word0.children[0].style.opacity, '0');
-  // Untyped character at k=0 (cursor 'h') is 1.0, k=1 ('e') dims to 0.75 (combo 1 -> M = 0.25)
-  assert.strictEqual(word0.children[1].style.opacity, '');
-  assert.strictEqual(word0.children[2].style.opacity, '0.75');
+  // Letter at cursor k=0 ('h') dims to 0.75 (combo 1 -> M = 0.25), k=1 ('e') is 1.0
+  assert.strictEqual(word0.children[1].style.opacity, '0.75');
+  assert.strictEqual(word0.children[2].style.opacity, '');
 
   // Type typo 'z' instead of 'h'
   controller.handleChar('z');
@@ -611,9 +611,10 @@ it('typing keystrokes in Hidden Mode updates stage horizon and safety brake trig
   // Backspace cleans error
   controller.handleBackspace();
   assert.strictEqual(word0.children[1].classList.contains('incorrect'), false);
-  // Returns to zero character fade visibility
+  // Returns to zero combo visibility (cursor letter restored to 1.0)
   assert.strictEqual(word0.children[0].style.opacity, '0');
   assert.strictEqual(word0.children[1].style.opacity, '');
+  assert.strictEqual(word0.children[2].style.opacity, '');
 
   // Finish word 0 cleanly ('h', 'e', ' ') to complete first word and enter word 1
   controller.handleChar('h');
@@ -627,11 +628,10 @@ it('typing keystrokes in Hidden Mode updates stage horizon and safety brake trig
   assert.strictEqual(controller.sessionModel.getBlindfoldMask(), 0.75);
 
   // Word 1 now exhibits blindfold mask:
-  // k=0 ('q' at cursor) is 1.0 (visible)
-  // k=1 ('u') is 0.25 opacity (penetration = 0.75 -> raw = 0.25 -> 0.25)
-  // k=2 ('i') is 1.0 (unaffected)
-  assert.strictEqual(word1.children[0].style.opacity, '');
-  assert.strictEqual(word1.children[1].style.opacity, '0.25');
+  // k=0 (letter at cursor) dims to 0.25 opacity (penetration = 0.75 - 0 = 0.75 -> raw = 0.25)
+  // k=1 and k=2 are 1.0 (unaffected)
+  assert.strictEqual(word1.children[0].style.opacity, '0.25');
+  assert.strictEqual(word1.children[1].style.opacity, '');
   assert.strictEqual(word1.children[2].style.opacity, '');
 
   // Typing 1 more correct char advances combo to 4 (M = 1.0)
@@ -642,10 +642,10 @@ it('typing keystrokes in Hidden Mode updates stage horizon and safety brake trig
   // First letter is now behind cursor (k < 0 -> hd-past, opacity 0)
   assert.strictEqual(word1.children[0].classList.contains('hd-past'), true);
   assert.strictEqual(word1.children[0].style.opacity, '0');
-  // Second letter is now at cursor (k = 0 -> opacity '')
-  assert.strictEqual(word1.children[1].style.opacity, '');
-  // Third letter is now upcoming char 1 (k = 1 -> overtaken by M=1.0 -> opacity '0')
-  assert.strictEqual(word1.children[2].style.opacity, '0');
+  // Second letter is at cursor (k = 0 -> penetration = 1.0 - 0 = 1.0 -> raw = 0 -> opacity '0')
+  assert.strictEqual(word1.children[1].style.opacity, '0');
+  // Third letter is upcoming char 1 (k = 1 -> penetration = 1.0 - 1 = 0 -> opacity '')
+  assert.strictEqual(word1.children[2].style.opacity, '');
 });
 
 it('Hidden Mode horizon scales: zero at start, 1..5, and 0.5 per word after word 6', () => {

@@ -3738,9 +3738,9 @@ class SessionModel extends _EventEmitter {
     return 6.5 + 0.75 * Math.sqrt(c - 26);
   }
   static getHiddenOpacity(k, combo) {
-    if (k <= 0) return 1.0;
+    if (k < 0) return 0.0;
     const M = SessionModel.getBlindfoldMask(combo);
-    const penetration = M - (k - 1);
+    const penetration = M - k;
     const rawOpacity = Math.max(0.0, Math.min(1.0, 1.0 - penetration));
     const scaled = rawOpacity * 4;
     return (scaled <= 1e-9) ? 0.0 : Math.ceil(scaled - 1e-9) / 4;
@@ -4677,9 +4677,9 @@ class StageView {
     return 6.5 + 0.75 * Math.sqrt(c - 26);
   }
   static getHiddenOpacity(k, combo) {
-    if (k <= 0) return 1.0;
+    if (k < 0) return 0.0;
     const M = StageView.getBlindfoldMask(combo);
-    const penetration = M - (k - 1);
+    const penetration = M - k;
     const rawOpacity = Math.max(0.0, Math.min(1.0, 1.0 - penetration));
     const scaled = rawOpacity * 4;
     return (scaled <= 1e-9) ? 0.0 : Math.ceil(scaled - 1e-9) / 4;
@@ -5053,7 +5053,7 @@ class StageView {
       const nextWordEl = this.wordElements[currentWordIdx + nextWordOffset];
       if (!nextWordEl) break;
       const nextLetters = nextWordEl.querySelectorAll('.letter');
-      if (kRunning >= M + 1) {
+      if (kRunning >= M) {
         for (let j = 0; j < nextLetters.length; j++) {
           nextLetters[j].classList.remove('hd-past');
           nextLetters[j].style.opacity = '';

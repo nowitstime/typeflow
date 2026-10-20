@@ -700,41 +700,41 @@ it('SessionModel.getBlindfoldMask calculates fast phase and decelerating slow ph
   assert.strictEqual(SessionModel.getBlindfoldMask(-5), 0.0);
 });
 
-it('SessionModel.getHiddenOpacity quantizes opacity to 0.25 steps and keeps k <= 0 visible', () => {
-  // Active cursor and past letters (k <= 0) must always return 1.0
-  assert.strictEqual(SessionModel.getHiddenOpacity(0, 100), 1.0);
-  assert.strictEqual(SessionModel.getHiddenOpacity(-1, 100), 1.0);
-  assert.strictEqual(SessionModel.getHiddenOpacity(-5, 0), 1.0);
+it('SessionModel.getHiddenOpacity quantizes opacity to 0.25 steps and fades starting from cursor (k=0)', () => {
+  // Past typed letters (k < 0) return 0.0
+  assert.strictEqual(SessionModel.getHiddenOpacity(-1, 100), 0.0);
+  assert.strictEqual(SessionModel.getHiddenOpacity(-5, 0), 0.0);
 
-  // combo = 0 (M = 0.0): all upcoming characters are 1.0
+  // combo = 0 (M = 0.0): cursor (k=0) and all upcoming characters are 1.0
+  assert.strictEqual(SessionModel.getHiddenOpacity(0, 0), 1.0);
   assert.strictEqual(SessionModel.getHiddenOpacity(1, 0), 1.0);
   assert.strictEqual(SessionModel.getHiddenOpacity(2, 0), 1.0);
 
-  // combo = 1 (M = 0.25): k=1 penetration = 0.25, raw = 0.75, quantized = 0.75
-  assert.strictEqual(SessionModel.getHiddenOpacity(1, 1), 0.75);
-  assert.strictEqual(SessionModel.getHiddenOpacity(2, 1), 1.0);
+  // combo = 1 (M = 0.25): k=0 (cursor) dims to 0.75, k=1 is 1.0
+  assert.strictEqual(SessionModel.getHiddenOpacity(0, 1), 0.75);
+  assert.strictEqual(SessionModel.getHiddenOpacity(1, 1), 1.0);
 
-  // combo = 2 (M = 0.50): k=1 penetration = 0.50, raw = 0.50, quantized = 0.50
-  assert.strictEqual(SessionModel.getHiddenOpacity(1, 2), 0.50);
-  assert.strictEqual(SessionModel.getHiddenOpacity(2, 2), 1.0);
+  // combo = 2 (M = 0.50): k=0 (cursor) dims to 0.50, k=1 is 1.0
+  assert.strictEqual(SessionModel.getHiddenOpacity(0, 2), 0.50);
+  assert.strictEqual(SessionModel.getHiddenOpacity(1, 2), 1.0);
 
-  // combo = 3 (M = 0.75): k=1 penetration = 0.75, raw = 0.25, quantized = 0.25
-  assert.strictEqual(SessionModel.getHiddenOpacity(1, 3), 0.25);
-  assert.strictEqual(SessionModel.getHiddenOpacity(2, 3), 1.0);
+  // combo = 3 (M = 0.75): k=0 (cursor) dims to 0.25, k=1 is 1.0
+  assert.strictEqual(SessionModel.getHiddenOpacity(0, 3), 0.25);
+  assert.strictEqual(SessionModel.getHiddenOpacity(1, 3), 1.0);
 
-  // combo = 4 (M = 1.00): k=1 penetration = 1.00, raw = 0.00, quantized = 0.00 (blindfold fully overtakes char 1)
-  assert.strictEqual(SessionModel.getHiddenOpacity(1, 4), 0.0);
-  assert.strictEqual(SessionModel.getHiddenOpacity(2, 4), 1.0);
+  // combo = 4 (M = 1.00): k=0 (cursor) reaches 0% opacity (invisible at cursor!), k=1 is 1.0
+  assert.strictEqual(SessionModel.getHiddenOpacity(0, 4), 0.0);
+  assert.strictEqual(SessionModel.getHiddenOpacity(1, 4), 1.0);
 
-  // combo = 5 (M = 1.25): k=1 is 0.0, k=2 penetration = 0.25 -> 0.75
-  assert.strictEqual(SessionModel.getHiddenOpacity(1, 5), 0.0);
-  assert.strictEqual(SessionModel.getHiddenOpacity(2, 5), 0.75);
-  assert.strictEqual(SessionModel.getHiddenOpacity(3, 5), 1.0);
+  // combo = 5 (M = 1.25): k=0 is 0.0, k=1 dims to 0.75, k=2 is 1.0
+  assert.strictEqual(SessionModel.getHiddenOpacity(0, 5), 0.0);
+  assert.strictEqual(SessionModel.getHiddenOpacity(1, 5), 0.75);
+  assert.strictEqual(SessionModel.getHiddenOpacity(2, 5), 1.0);
 
-  // combo = 8 (M = 2.00): k=1 is 0.0, k=2 is 0.0, k=3 is 1.0
+  // combo = 8 (M = 2.00): k=0 is 0.0, k=1 reaches 0.0, k=2 is 1.0
+  assert.strictEqual(SessionModel.getHiddenOpacity(0, 8), 0.0);
   assert.strictEqual(SessionModel.getHiddenOpacity(1, 8), 0.0);
-  assert.strictEqual(SessionModel.getHiddenOpacity(2, 8), 0.0);
-  assert.strictEqual(SessionModel.getHiddenOpacity(3, 8), 1.0);
+  assert.strictEqual(SessionModel.getHiddenOpacity(2, 8), 1.0);
 });
 
 it('SessionModel tracks consecutive correct keystroke combo streak', () => {

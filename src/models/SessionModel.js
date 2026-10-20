@@ -650,19 +650,19 @@ class SessionModel extends _EventEmitter {
 
   /**
    * Calculates character opacity based on lookahead offset k and combo streak.
-   * If k <= 0 (already typed or active cursor position): returns 1.0.
-   * For upcoming characters (k >= 1):
-   *   penetration = M - (k - 1)
+   * If k < 0 (already typed): returns 0.0.
+   * For active and upcoming characters (k >= 0):
+   *   penetration = M - k
    *   rawOpacity = Math.max(0.0, Math.min(1.0, 1.0 - penetration))
    *   quantizedOpacity = Math.ceil(rawOpacity * 4) / 4 (0.0, 0.25, 0.50, 0.75, 1.0)
-   * @param {number} k - Character offset relative to cursor
+   * @param {number} k - Character offset relative to cursor (0 = active cursor character)
    * @param {number} combo - Consecutive correct keystroke streak
    * @returns {number} Quantized opacity
    */
   static getHiddenOpacity(k, combo) {
-    if (k <= 0) return 1.0;
+    if (k < 0) return 0.0;
     const M = SessionModel.getBlindfoldMask(combo);
-    const penetration = M - (k - 1);
+    const penetration = M - k;
     const rawOpacity = Math.max(0.0, Math.min(1.0, 1.0 - penetration));
     const scaled = rawOpacity * 4;
     return (scaled <= 1e-9) ? 0.0 : Math.ceil(scaled - 1e-9) / 4;

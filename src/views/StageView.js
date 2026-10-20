@@ -47,9 +47,9 @@ class StageView {
   }
 
   static getHiddenOpacity(k, combo) {
-    if (k <= 0) return 1.0;
+    if (k < 0) return 0.0;
     const M = StageView.getBlindfoldMask(combo);
-    const penetration = M - (k - 1);
+    const penetration = M - k;
     const rawOpacity = Math.max(0.0, Math.min(1.0, 1.0 - penetration));
     const scaled = rawOpacity * 4;
     return (scaled <= 1e-9) ? 0.0 : Math.ceil(scaled - 1e-9) / 4;
@@ -521,9 +521,9 @@ class StageView {
       if (!nextWordEl) break;
       const nextLetters = nextWordEl.querySelectorAll('.letter');
 
-      // If upcoming word is completely past blindfold horizon (kRunning >= M + 1),
+      // If upcoming word is completely past blindfold horizon (kRunning >= M),
       // all characters are 1.0: clear inline opacity and stop.
-      if (kRunning >= M + 1) {
+      if (kRunning >= M) {
         for (let j = 0; j < nextLetters.length; j++) {
           nextLetters[j].classList.remove('hd-past');
           nextLetters[j].style.opacity = '';
