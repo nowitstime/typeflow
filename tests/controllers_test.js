@@ -584,19 +584,22 @@ it('typing keystrokes in Hidden Mode updates stage horizon and safety brake trig
 
   const word0 = controller.stageView.wordElements[0];
   const word1 = controller.stageView.wordElements[1];
-  // Initial state: cursor at char 0 ('t'): within 2 chars of distance -> opacity 0
-  assert.strictEqual(word0.children[0].style.opacity, '0');
-  assert.strictEqual(word0.children[1].style.opacity, '0');
-  assert.strictEqual(word0.children[2].style.opacity, '0');
+
+  // Initial state on word 0: first word onboarding makes untyped characters fully visible
+  assert.strictEqual(word0.children[0].style.opacity, '');
+  assert.strictEqual(word0.children[1].style.opacity, '');
+  assert.strictEqual(word0.children[2].style.opacity, '');
   // Next word starts at distance 4 -> gradual 50% visibility
   assert.strictEqual(word1.children[0].style.opacity, '0.5');
 
   // Type correct 't'
   controller.handleChar('t');
-  // Past typed character is fully transparent
+  // Past typed character is fully transparent behind cursor
   assert.strictEqual(word0.children[0].classList.contains('hd-past'), true);
   assert.strictEqual(word0.children[0].style.opacity, '0');
-  assert.strictEqual(word0.children[1].style.opacity, '0');
+  // Untyped characters in first word remain fully visible
+  assert.strictEqual(word0.children[1].style.opacity, '');
+  assert.strictEqual(word0.children[2].style.opacity, '');
 
   // Type typo 'z' instead of 'h'
   controller.handleChar('z');
@@ -607,7 +610,19 @@ it('typing keystrokes in Hidden Mode updates stage horizon and safety brake trig
   // Backspace cleans error
   controller.handleBackspace();
   assert.strictEqual(word0.children[1].classList.contains('incorrect'), false);
-  assert.strictEqual(word0.children[1].style.opacity, '0'); // vanished again
+  // Untyped char is visible again in first word, typed char remains transparent
+  assert.strictEqual(word0.children[0].style.opacity, '0');
+  assert.strictEqual(word0.children[1].style.opacity, '');
+
+  // Finish word 0 and enter word 1 to verify normal hidden mode fading kicks in
+  controller.handleChar('h');
+  controller.handleChar('e');
+  controller.handleSpace();
+
+  assert.strictEqual(controller.sessionModel.currentWordIdx, 1);
+  // Word 1 is no longer first word, so within 2 chars it hits 0% opacity
+  assert.strictEqual(word1.children[0].style.opacity, '0');
+  assert.strictEqual(word1.children[1].style.opacity, '0');
 });
 
 it('Hidden Mode horizon scales infinitely at a quarter character per word in a row', () => {

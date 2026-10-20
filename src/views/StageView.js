@@ -406,13 +406,18 @@ class StageView {
     // 1. Process active word
     const activeLetters = activeWordEl.querySelectorAll('.letter');
     const wordLen = activeLetters.length;
+    const isFirstWord = (currentWordIdx === 0);
 
     for (let i = 0; i < wordLen; i++) {
       const letter = activeLetters[i];
       if (i < currentCharIdx) {
-        // Behind cursor: fully transparent
+        // Behind cursor: fully transparent once typed
         letter.classList.add('hd-past');
         letter.style.opacity = '0';
+      } else if (isFirstWord) {
+        // First word onboarding: fully visible so the typist can see and type to start
+        letter.classList.remove('hd-past');
+        letter.style.opacity = '';
       } else {
         letter.classList.remove('hd-past');
         const d = i - currentCharIdx;

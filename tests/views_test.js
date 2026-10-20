@@ -107,13 +107,11 @@ it('toggles hiddenMode on wordsBox and applies character fade horizon', () => {
   const word0 = stage.wordElements[0];
   const word1 = stage.wordElements[1];
 
-  // Letters within 2 characters of distance hit 0% opacity:
-  // Word 0, letter 0 ('t'): d=0 -> opacity: '0'
-  assert.strictEqual(word0.children[0].style.opacity, '0');
-  // Word 0, letter 1 ('h'): d=1 -> opacity: '0'
-  assert.strictEqual(word0.children[1].style.opacity, '0');
-  // Word 0, letter 2 ('e'): d=2 -> opacity: '0'
-  assert.strictEqual(word0.children[2].style.opacity, '0');
+  // First word onboarding rule: untyped letters in word 0 are fully visible
+  // so the player can see what to type at test start:
+  assert.strictEqual(word0.children[0].style.opacity, '');
+  assert.strictEqual(word0.children[1].style.opacity, '');
+  assert.strictEqual(word0.children[2].style.opacity, '');
 
   // Next word: 'quick' starts at d = 3 + 1 = 4
   // Letter 0 ('q'): d=4 -> opacity: '0.5'
@@ -123,22 +121,30 @@ it('toggles hiddenMode on wordsBox and applies character fade horizon', () => {
   // Letter 2 ('i'): d=6 >= 6 -> full opacity
   assert.strictEqual(word1.children[2].style.opacity, '');
 
-  // Advance cursor to letter 1 ('h')
+  // Advance cursor to letter 1 ('h') in first word
   stage.updateHiddenHorizon(0, 1, 6, false);
   // letter 0 ('t') is now in the past: has hd-past and opacity: '0' (fully transparent)
   assert.strictEqual(word0.children[0].classList.contains('hd-past'), true);
   assert.strictEqual(word0.children[0].style.opacity, '0');
-  // letter 1 ('h') is at cursor: opacity: '0'
-  assert.strictEqual(word0.children[1].style.opacity, '0');
-  // letter 2 ('e') is at d=1: opacity: '0'
-  assert.strictEqual(word0.children[2].style.opacity, '0');
+  // Untyped letters in first word remain fully visible
+  assert.strictEqual(word0.children[1].style.opacity, '');
+  assert.strictEqual(word0.children[2].style.opacity, '');
   // Next word start ('q' in 'quick'): d = (3 - 1) + 1 = 3 -> opacity: '0.25'
   assert.strictEqual(word1.children[0].style.opacity, '0.25');
   assert.strictEqual(word1.children[1].style.opacity, '0.5');
 
+  // Once past word 0 (e.g. at word 1, char 0), standard hidden fading applies to active word:
+  stage.updateHiddenHorizon(1, 0, 6, false);
+  // Word 1 ('quick'): letters within 2 chars hit 0% opacity
+  assert.strictEqual(word1.children[0].style.opacity, '0');
+  assert.strictEqual(word1.children[1].style.opacity, '0');
+  assert.strictEqual(word1.children[2].style.opacity, '0');
+  assert.strictEqual(word1.children[3].style.opacity, '0.25');
+
   // Safety brake: error clears inline opacity on active word
-  stage.updateHiddenHorizon(0, 1, 6, true);
-  assert.strictEqual(word0.children[1].style.opacity, '');
+  stage.updateHiddenHorizon(1, 0, 6, true);
+  assert.strictEqual(word1.children[0].style.opacity, '');
+  assert.strictEqual(word1.children[1].style.opacity, '');
 
   // Disabling hiddenMode cleans all styles
   stage.setHiddenMode(false);
