@@ -208,8 +208,18 @@ class EggNestModel extends _EventEmitter {
     };
     this.eggsHatchedInSession = true;
 
-    // Remove first egg from basket
-    this.basket.shift();
+    // Remove hatched egg from basket by ID if available, otherwise shift first
+    let removed = false;
+    if (eggData && eggData.id !== undefined) {
+      const idx = this.basket.findIndex(e => e && e.id === eggData.id);
+      if (idx !== -1) {
+        this.basket.splice(idx, 1);
+        removed = true;
+      }
+    }
+    if (!removed) {
+      this.basket.shift();
+    }
 
     this.emit('eggHatched', {
       slotIndex: slotIdx,

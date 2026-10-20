@@ -9,7 +9,7 @@ const path = require('path');
 
 const { EventEmitter } = require('../src/core/EventEmitter.js');
 const { CONSTANTS } = require('../src/core/Constants.js');
-const { WordsModel, DICTIONARY, RAW_WORDS } = require('../src/models/WordsModel.js');
+const { WordsModel, DICTIONARY, RAW_WORDS, classifyWordMotor, getSrsWeightedRandomWords } = require('../src/models/WordsModel.js');
 const { FlowModel } = require('../src/models/FlowModel.js');
 const { SessionModel } = require('../src/models/SessionModel.js');
 const { EggNestModel } = require('../src/models/EggNestModel.js');
@@ -108,6 +108,30 @@ it('updates motor pattern heat on hits and errors', () => {
   // Error on HOME_CORE drops heat
   model.recordPatternError(['HOME_CORE']);
   assert.ok(model.patternHeat.HOME_CORE <= 1.0);
+});
+
+it('provides backward-compatible classifyWordMotor and getSrsWeightedRandomWords aliases', () => {
+  assert.strictEqual(classifyWordMotor('the'), 'HOME_CORE');
+  const words = getSrsWeightedRandomWords([1], {}, 40, 10, 0);
+  assert.strictEqual(words.length, 10);
+  assert.strictEqual(words[0], 'the');
+});
+
+it('rollNewEgg strictly excludes pending egg basket ranks and unlocked ranks', () => {
+  const model = new WordsModel();
+  const unlocked = [1, 2, 3];
+  // Put ranks 4, 5, 28 ("which") into pending egg basket
+  const pending = [
+    { wordRank: 4 },
+    { wordRank: 5 },
+    { wordRank: 28 }
+  ];
+
+  for (let i = 0; i < 100; i++) {
+    const egg = model.rollEgg(unlocked, 5, null, {}, 40, pending);
+    assert.ok(!unlocked.includes(egg.wordRank), `Egg rank ${egg.wordRank} should not be in unlocked ranks`);
+    assert.ok(![4, 5, 28].includes(egg.wordRank), `Egg rank ${egg.wordRank} ("${egg.word}") should not be in pending basket`);
+  }
 });
 
 // 4. FlowModel Tests

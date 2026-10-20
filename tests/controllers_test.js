@@ -311,6 +311,67 @@ it('incubates egg deterministically in Flow mode, spawns egg into basket, and tr
   assert.strictEqual(save.eggCharge, 0.0);
 });
 
+it('consecutive incubated eggs earned in Flow mode are strictly unique and never duplicate', () => {
+  const { controller, flowModel, sessionModel, storageService, eggNestModel } = createTestHarness();
+  controller.init();
+
+  // Incubate Egg 1
+  flowModel.momentum = 100.0;
+  flowModel.eggCharge = 98.0;
+  let word = sessionModel.words[sessionModel.currentWordIdx] || 'the';
+  for (const c of word) controller.handleChar(c);
+  controller.handleSpace();
+
+  // Incubate Egg 2
+  flowModel.momentum = 100.0;
+  flowModel.eggCharge = 98.0;
+  word = sessionModel.words[sessionModel.currentWordIdx] || 'the';
+  for (const c of word) controller.handleChar(c);
+  controller.handleSpace();
+
+  // Incubate Egg 3
+  flowModel.momentum = 100.0;
+  flowModel.eggCharge = 98.0;
+  word = sessionModel.words[sessionModel.currentWordIdx] || 'the';
+  for (const c of word) controller.handleChar(c);
+  controller.handleSpace();
+
+  const finalSave = storageService.getGameSave();
+  assert.strictEqual(finalSave.eggBasket.length, 3);
+  const basketRanks = finalSave.eggBasket.map(e => e.wordRank);
+  const uniqueRanks = new Set(basketRanks);
+  assert.strictEqual(uniqueRanks.size, 3, 'All 3 eggs in basket must have distinct unique word ranks');
+  basketRanks.forEach(r => {
+    assert.notStrictEqual(r, 1, 'Eggs must not roll already-unlocked rank 1 ("the")');
+  });
+});
+
+it('sanitizeEggBasket automatically repairs legacy duplicate or already-unlocked eggs on init', () => {
+  const { storageService } = createTestHarness();
+  const corruptSave = storageService.getGameSave();
+  corruptSave.unlockedRanks = [1, 28]; // Rank 28 ("which") is already unlocked!
+  corruptSave.eggBasket = [
+    { id: 'old_1', wordRank: 28, word: 'which', rarity: 'common' }, // Corrupt: already unlocked!
+    { id: 'old_2', wordRank: 45, word: 'time', rarity: 'common' },
+    { id: 'old_3', wordRank: 45, word: 'time', rarity: 'common' }   // Corrupt: duplicate of slot 1!
+  ];
+  storageService.saveGameSave(corruptSave);
+
+  // Initialize controller with this corrupt save
+  const { controller } = createTestHarness();
+  // Set the pre-populated storage
+  controller.storageService = storageService;
+  controller.init();
+
+  const sanitizedSave = storageService.getGameSave();
+  assert.strictEqual(sanitizedSave.eggBasket.length, 3);
+  const ranks = sanitizedSave.eggBasket.map(e => e.wordRank);
+  const unique = new Set(ranks);
+  assert.strictEqual(unique.size, 3, 'All eggs must be sanitized to unique words');
+  assert.ok(!ranks.includes(28), 'Egg for rank 28 must be re-rolled since 28 is already unlocked');
+  assert.ok(!ranks.includes(1), 'Egg must not roll rank 1');
+});
+
 it('classic mode chooses words across 1,000 common words with frequency weighting', () => {
   const { controller, wordsModel } = createTestHarness();
   controller.init();

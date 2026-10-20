@@ -76,6 +76,7 @@ class GameController {
     this.sessionModel.mode = this.currentMode;
 
     const gameState = this.storageService.getGameSave();
+    this.sanitizeEggBasket(gameState);
     this.flowModel.setTargetWpm(gameState.targetWpm || 40);
     this.flowModel.highStreak = gameState.highStreak || 0;
     this.flowModel.eggCharge = gameState.eggCharge || 0.0;
@@ -392,13 +393,16 @@ class GameController {
 
       if (xpRes.leveledUp) {
         this.audioService.playLevelUp();
-        if (basketCount < 3) {
+        const curSave = this.storageService.getGameSave();
+        const curBasket = curSave.eggBasket || [];
+        if (curBasket.length < 3) {
           const bonusEgg = this.wordsModel.rollEgg(
-            xpRes.save.unlockedRanks,
+            curSave.unlockedRanks,
             evalRes.flowStreak,
             xpRes.bonusEggRarity,
-            xpRes.save.wordStats,
-            this.flowModel.targetWpm
+            curSave.wordStats,
+            this.flowModel.targetWpm,
+            curBasket
           );
           this.storageService.addEgg(bonusEgg);
           this.eggNestModel.syncBasket(this.storageService.getGameSave().eggBasket);
@@ -408,20 +412,25 @@ class GameController {
       }
 
       // Deterministic Egg Incubation Spawn
-      if (evalRes.eggRollSuccess && basketCount < 3) {
-        const droppedEgg = this.wordsModel.rollEgg(
-          gameState.unlockedRanks,
-          evalRes.flowStreak,
-          null,
-          gameState.wordStats,
-          this.flowModel.targetWpm
-        );
-        this.storageService.addEgg(droppedEgg);
-        this.eggNestModel.syncBasket(this.storageService.getGameSave().eggBasket);
-        this.nestView.render(this.eggNestModel);
-        this.nestView.triggerMaterialize();
-        this.audioService.playEggDrop();
-        this.hudView.spawnXpToast(`🥚 ${droppedEgg.name}!`, 1.0, wordEl, true);
+      if (evalRes.eggRollSuccess) {
+        const freshSave = this.storageService.getGameSave();
+        const freshBasket = freshSave.eggBasket || [];
+        if (freshBasket.length < 3) {
+          const droppedEgg = this.wordsModel.rollEgg(
+            freshSave.unlockedRanks,
+            evalRes.flowStreak,
+            null,
+            freshSave.wordStats,
+            this.flowModel.targetWpm,
+            freshBasket
+          );
+          this.storageService.addEgg(droppedEgg);
+          this.eggNestModel.syncBasket(this.storageService.getGameSave().eggBasket);
+          this.nestView.render(this.eggNestModel);
+          this.nestView.triggerMaterialize();
+          this.audioService.playEggDrop();
+          this.hudView.spawnXpToast(`🥚 ${droppedEgg.name}!`, 1.0, wordEl, true);
+        }
       }
 
       // Persist eggCharge and update under-track & ambient aura
@@ -502,7 +511,9 @@ class GameController {
       this.nestView.updateCrackPrompt(res.slotIndex, res.hatchTyped);
     } else if (res.status === 'complete') {
       this.audioService.playHatch();
-      const hatchRes = this.storageService.hatchEgg(0);
+      const slotStatus = this.eggNestModel.getSlotStatus(res.slotIndex);
+      const eggToHatch = (slotStatus && slotStatus.egg) || this.eggNestModel.basket[0];
+      const hatchRes = this.storageService.hatchEgg(eggToHatch ? eggToHatch.id : 0);
       if (hatchRes.success) {
         const hatchedRank = hatchRes.egg.wordRank;
         const meta = this.wordsModel.getWord(hatchedRank);
@@ -624,6 +635,41 @@ class GameController {
     };
     if (typeof window !== 'undefined' && window.requestAnimationFrame) {
       this.physicsAnimFrame = window.requestAnimationFrame(tick);
+    }
+  }
+
+  sanitizeEggBasket(gameState) {
+    if (!gameState || !Array.isArray(gameState.eggBasket) || gameState.eggBasket.length === 0) {
+      return;
+    }
+    const unlockedSet = new Set(gameState.unlockedRanks || [1]);
+    const basketRanks = new Set();
+    let modified = false;
+
+    for (let i = 0; i < gameState.eggBasket.length; i++) {
+      const egg = gameState.eggBasket[i];
+      const rank = egg ? egg.wordRank : null;
+      if (!egg || typeof rank !== 'number' || unlockedSet.has(rank) || basketRanks.has(rank)) {
+        // Re-roll duplicate or already-unlocked egg into an unowned word
+        const pending = [...basketRanks];
+        const newEgg = this.wordsModel.rollEgg(
+          gameState.unlockedRanks,
+          0,
+          (egg && egg.rarity) || null,
+          gameState.wordStats || {},
+          gameState.targetWpm || 40,
+          pending
+        );
+        gameState.eggBasket[i] = newEgg;
+        basketRanks.add(newEgg.wordRank);
+        modified = true;
+      } else {
+        basketRanks.add(rank);
+      }
+    }
+
+    if (modified) {
+      this.storageService.saveGameSave(gameState);
     }
   }
 

@@ -247,12 +247,22 @@ class StorageService {
     return save;
   }
 
-  // Add an Egg to the nest (Hard limit of 3 slots)
+  // Add an Egg to the nest (Hard limit of 3 slots, strictly unique unowned words)
   addEgg(egg) {
     const save = this.getGameSave();
     if (!save.eggBasket) save.eggBasket = [];
     if (save.eggBasket.length >= 3) {
       return { success: false, reason: 'Nest full', save };
+    }
+    if (egg && typeof egg.wordRank === 'number') {
+      if (save.unlockedRanks && save.unlockedRanks.includes(egg.wordRank)) {
+        console.warn('[StorageService] Refusing to add already-unlocked egg:', egg.wordRank);
+        return { success: false, reason: 'Word already unlocked', save };
+      }
+      if (save.eggBasket.some(e => e && e.wordRank === egg.wordRank)) {
+        console.warn('[StorageService] Refusing duplicate egg in basket:', egg.wordRank);
+        return { success: false, reason: 'Duplicate egg in basket', save };
+      }
     }
     save.eggBasket.push(egg);
     this.saveGameSave(save);
@@ -260,16 +270,34 @@ class StorageService {
   }
 
   // Hatch an Egg: unlocks the word and removes the egg from basket
-  hatchEgg(eggIndex = 0) {
+  hatchEgg(eggIndexOrId = 0) {
     const save = this.getGameSave();
-    if (!save.eggBasket || !save.eggBasket[eggIndex]) {
-      return { success: false, reason: 'Egg not found' };
+    if (!save.eggBasket || save.eggBasket.length === 0) {
+      return { success: false, reason: 'Egg basket is empty' };
+    }
+
+    let eggIndex = -1;
+    // 1. Match by egg.id if provided
+    if (eggIndexOrId !== undefined && eggIndexOrId !== null) {
+      const foundIdx = save.eggBasket.findIndex(e => e && e.id === eggIndexOrId);
+      if (foundIdx !== -1) {
+        eggIndex = foundIdx;
+      }
+    }
+
+    // 2. Otherwise match by numeric array index if within bounds
+    if (eggIndex === -1 && typeof eggIndexOrId === 'number') {
+      eggIndex = Math.max(0, Math.min(save.eggBasket.length - 1, eggIndexOrId));
+    } else if (eggIndex === -1) {
+      eggIndex = 0;
     }
 
     const egg = save.eggBasket.splice(eggIndex, 1)[0];
-    if (!save.unlockedRanks.includes(egg.wordRank)) {
-      save.unlockedRanks.push(egg.wordRank);
-      save.unlockedRanks.sort((a, b) => a - b);
+    if (egg && typeof egg.wordRank === 'number') {
+      if (!save.unlockedRanks.includes(egg.wordRank)) {
+        save.unlockedRanks.push(egg.wordRank);
+        save.unlockedRanks.sort((a, b) => a - b);
+      }
     }
     this.saveGameSave(save);
     return { success: true, egg, save };

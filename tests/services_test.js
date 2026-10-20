@@ -135,13 +135,36 @@ it('hatches egg, unlocks progression rank, and removes from basket', () => {
   const mock = new LocalStorageMock();
   const service = new StorageService(mock);
 
-  service.addEgg({ id: 1, name: 'Star Egg', wordRank: 42 });
-  const hatchRes = service.hatchEgg(0);
+  service.addEgg({ id: 'egg_a', name: 'Star Egg', wordRank: 42 });
+  service.addEgg({ id: 'egg_b', name: 'Moon Egg', wordRank: 84 });
 
+  // Hatch by egg ID
+  const hatchRes = service.hatchEgg('egg_b');
   assert.strictEqual(hatchRes.success, true);
-  assert.strictEqual(hatchRes.egg.wordRank, 42);
-  assert.strictEqual(hatchRes.save.eggBasket.length, 0);
-  assert.ok(hatchRes.save.unlockedRanks.includes(42));
+  assert.strictEqual(hatchRes.egg.wordRank, 84);
+  assert.strictEqual(hatchRes.save.eggBasket.length, 1);
+  assert.strictEqual(hatchRes.save.eggBasket[0].id, 'egg_a');
+  assert.ok(hatchRes.save.unlockedRanks.includes(84));
+});
+
+it('rejects adding duplicate eggs or already-unlocked words to basket', () => {
+  const mock = new LocalStorageMock();
+  const service = new StorageService(mock);
+
+  // Rank 1 ("the") is already unlocked by default
+  const dupUnlocked = service.addEgg({ id: 'e1', name: 'Egg The', wordRank: 1 });
+  assert.strictEqual(dupUnlocked.success, false);
+  assert.strictEqual(dupUnlocked.reason, 'Word already unlocked');
+
+  // Add unique egg
+  const first = service.addEgg({ id: 'e2', name: 'Egg Which', wordRank: 28 });
+  assert.strictEqual(first.success, true);
+
+  // Attempt duplicate in basket
+  const dupBasket = service.addEgg({ id: 'e3', name: 'Egg Which 2', wordRank: 28 });
+  assert.strictEqual(dupBasket.success, false);
+  assert.strictEqual(dupBasket.reason, 'Duplicate egg in basket');
+  assert.strictEqual(service.getGameSave().eggBasket.length, 1);
 });
 
 it('persists and updates deterministic eggCharge progress', () => {
