@@ -102,36 +102,42 @@ it('toggles hiddenMode on wordsBox and applies character fade horizon', () => {
   assert.strictEqual(stage.wordsBox.classList.contains('hidden-mode'), true);
 
   // Initial state: cursor at word 0, char 0 ('t' in 'the')
-  stage.updateHiddenHorizon(0, 0, 4, false);
+  stage.updateHiddenHorizon(0, 0, 6, false);
 
   const word0 = stage.wordElements[0];
   const word1 = stage.wordElements[1];
 
-  // Word 0, letter 0 ('t'): at cursor (d=0) -> opacity: '0'
+  // Letters within 2 characters of distance hit 0% opacity:
+  // Word 0, letter 0 ('t'): d=0 -> opacity: '0'
   assert.strictEqual(word0.children[0].style.opacity, '0');
-  // Word 0, letter 1 ('h'): ahead d=1 -> opacity: '0.19'
-  assert.strictEqual(word0.children[1].style.opacity, '0.19');
-  // Word 0, letter 2 ('e'): ahead d=2 -> opacity: '0.44'
-  assert.strictEqual(word0.children[2].style.opacity, '0.44');
+  // Word 0, letter 1 ('h'): d=1 -> opacity: '0'
+  assert.strictEqual(word0.children[1].style.opacity, '0');
+  // Word 0, letter 2 ('e'): d=2 -> opacity: '0'
+  assert.strictEqual(word0.children[2].style.opacity, '0');
 
-  // Next word: 'quick' starts at d = 3 + 1 = 4 -> d >= 4, full opacity (no inline opacity)
-  assert.strictEqual(word1.children[0].style.opacity, '');
+  // Next word: 'quick' starts at d = 3 + 1 = 4
+  // Letter 0 ('q'): d=4 -> opacity: '0.5'
+  assert.strictEqual(word1.children[0].style.opacity, '0.5');
+  // Letter 1 ('u'): d=5 -> opacity: '0.75'
+  assert.strictEqual(word1.children[1].style.opacity, '0.75');
+  // Letter 2 ('i'): d=6 >= 6 -> full opacity
+  assert.strictEqual(word1.children[2].style.opacity, '');
 
   // Advance cursor to letter 1 ('h')
-  stage.updateHiddenHorizon(0, 1, 4, false);
-  // letter 0 ('t') is now in the past: has hd-past, no inline opacity
+  stage.updateHiddenHorizon(0, 1, 6, false);
+  // letter 0 ('t') is now in the past: has hd-past and opacity: '0' (fully transparent)
   assert.strictEqual(word0.children[0].classList.contains('hd-past'), true);
-  assert.strictEqual(word0.children[0].style.opacity, '');
+  assert.strictEqual(word0.children[0].style.opacity, '0');
   // letter 1 ('h') is at cursor: opacity: '0'
   assert.strictEqual(word0.children[1].style.opacity, '0');
-  // letter 2 ('e') is at d=1: opacity: '0.19'
-  assert.strictEqual(word0.children[2].style.opacity, '0.19');
-  // Next word start ('q' in 'quick'): d = (3 - 1) + 1 = 3 -> opacity: '0.71'
-  assert.strictEqual(word1.children[0].style.opacity, '0.71');
-  assert.strictEqual(word1.children[1].style.opacity, ''); // 'u' at d=4 -> full
+  // letter 2 ('e') is at d=1: opacity: '0'
+  assert.strictEqual(word0.children[2].style.opacity, '0');
+  // Next word start ('q' in 'quick'): d = (3 - 1) + 1 = 3 -> opacity: '0.25'
+  assert.strictEqual(word1.children[0].style.opacity, '0.25');
+  assert.strictEqual(word1.children[1].style.opacity, '0.5');
 
   // Safety brake: error clears inline opacity on active word
-  stage.updateHiddenHorizon(0, 1, 4, true);
+  stage.updateHiddenHorizon(0, 1, 6, true);
   assert.strictEqual(word0.children[1].style.opacity, '');
 
   // Disabling hiddenMode cleans all styles

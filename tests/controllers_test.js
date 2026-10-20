@@ -139,7 +139,8 @@ function createTestHarness() {
     hudLevelTitle: document.getElementById('hud-level-title'),
     hudXpRatio: document.getElementById('hud-xp-ratio'),
     hudLevelBarFill: document.getElementById('hud-level-bar-fill'),
-    flowVignetteOverlay: document.getElementById('flow-vignette-overlay')
+    flowVignetteOverlay: document.getElementById('flow-vignette-overlay'),
+    hdBtn: document.getElementById('hd-btn')
   });
 
   const chartView = new ChartView();
@@ -582,15 +583,20 @@ it('typing keystrokes in Hidden Mode updates stage horizon and safety brake trig
   assert.strictEqual(controller.sessionModel.getCurrentWordText(), 'the');
 
   const word0 = controller.stageView.wordElements[0];
-  // Initial state: cursor at char 0 ('t'): opacity 0
+  const word1 = controller.stageView.wordElements[1];
+  // Initial state: cursor at char 0 ('t'): within 2 chars of distance -> opacity 0
   assert.strictEqual(word0.children[0].style.opacity, '0');
-  // Char 1 ('h'): opacity 0.19 (at 0% momentum, fadeDepth is 3: (1/3)^1.2 = 0.27, or at N=4: 0.19)
-  assert.ok(parseFloat(word0.children[1].style.opacity) > 0);
+  assert.strictEqual(word0.children[1].style.opacity, '0');
+  assert.strictEqual(word0.children[2].style.opacity, '0');
+  // Next word starts at distance 4 -> gradual 50% visibility
+  assert.strictEqual(word1.children[0].style.opacity, '0.5');
 
   // Type correct 't'
   controller.handleChar('t');
+  // Past typed character is fully transparent
   assert.strictEqual(word0.children[0].classList.contains('hd-past'), true);
-  assert.strictEqual(word0.children[1].style.opacity, '0'); // 'h' vanished
+  assert.strictEqual(word0.children[0].style.opacity, '0');
+  assert.strictEqual(word0.children[1].style.opacity, '0');
 
   // Type typo 'z' instead of 'h'
   controller.handleChar('z');
@@ -602,6 +608,41 @@ it('typing keystrokes in Hidden Mode updates stage horizon and safety brake trig
   controller.handleBackspace();
   assert.strictEqual(word0.children[1].classList.contains('incorrect'), false);
   assert.strictEqual(word0.children[1].style.opacity, '0'); // vanished again
+});
+
+it('Hidden Mode horizon scales infinitely at a quarter character per word in a row', () => {
+  const { controller } = createTestHarness();
+  controller.init();
+
+  // Base Classic Mode horizon: 6 characters
+  assert.strictEqual(controller.getHiddenFadeDepth(), 6.0);
+
+  // Type 1 clean word
+  controller.handleChar('t');
+  controller.handleChar('h');
+  controller.handleChar('e');
+  controller.handleSpace();
+
+  assert.strictEqual(controller.sessionModel.wordStreak, 1);
+  assert.strictEqual(controller.getHiddenFadeDepth(), 6.25);
+
+  // Type 3 more clean words (total 4 words in a row)
+  for (let w = 0; w < 3; w++) {
+    const cur = controller.sessionModel.getCurrentWordText();
+    for (let c of cur) controller.handleChar(c);
+    controller.handleSpace();
+  }
+  assert.strictEqual(controller.sessionModel.wordStreak, 4);
+  assert.strictEqual(controller.getHiddenFadeDepth(), 7.0);
+
+  // Type 4 more clean words (total 8 words in a row)
+  for (let w = 0; w < 4; w++) {
+    const cur = controller.sessionModel.getCurrentWordText();
+    for (let c of cur) controller.handleChar(c);
+    controller.handleSpace();
+  }
+  assert.strictEqual(controller.sessionModel.wordStreak, 8);
+  assert.strictEqual(controller.getHiddenFadeDepth(), 8.0);
 });
 
 it('completing words in Hidden Mode awards +15% bonus XP', () => {

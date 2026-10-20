@@ -35,6 +35,7 @@ class SessionModel extends _EventEmitter {
     this.currentWordIdx = 0;
     this.currentCharIdx = 0;
     this.hadBackspaceOnCurrentWord = false;
+    this.wordStreak = 0;
 
     // Timestamps
     this.startTime = null;
@@ -78,6 +79,7 @@ class SessionModel extends _EventEmitter {
     this.currentCharIdx = 0;
     this.hadBackspaceOnCurrentWord = false;
     this.currentWordCharCorrect = [];
+    this.wordStreak = 0;
 
     this.startTime = null;
     this.endTime = null;
@@ -102,6 +104,7 @@ class SessionModel extends _EventEmitter {
     this.lastSecCorrect = 0;
     this.lastSecRaw = 0;
     this.secondDeltas = [];
+    this.wordStreak = 0;
 
     this.emit('reset', { mode: this.mode, duration: this.duration });
   }
@@ -451,6 +454,12 @@ class SessionModel extends _EventEmitter {
       extraLetters
     };
 
+    if (!hasErrors) {
+      this.wordStreak++;
+    } else {
+      this.wordStreak = 0;
+    }
+
     this.currentWordCharCorrect = [];
     this.lastWordEndTime = now;
     this.hadBackspaceOnCurrentWord = false;
@@ -466,6 +475,7 @@ class SessionModel extends _EventEmitter {
       liveWpm,
       missedLetters,
       extraLetters,
+      wordStreak: this.wordStreak,
       now
     });
 
@@ -476,7 +486,8 @@ class SessionModel extends _EventEmitter {
       hadBackspace,
       liveWpm,
       missedLetters,
-      extraLetters
+      extraLetters,
+      wordStreak: this.wordStreak
     };
   }
 

@@ -522,7 +522,7 @@ main {
   will-change: opacity;
 }
 .words-box.hidden-mode .letter.hd-past {
-  opacity: 0.15;
+  opacity: 0;
 }
 .words-box.hidden-mode .letter.incorrect,
 .words-box.hidden-mode .letter.extra,
@@ -3248,6 +3248,7 @@ class SessionModel extends _EventEmitter {
     this.currentWordIdx = 0;
     this.currentCharIdx = 0;
     this.hadBackspaceOnCurrentWord = false;
+    this.wordStreak = 0;
     this.startTime = null;
     this.endTime = null;
     this.wordStartTime = null;
@@ -3281,6 +3282,7 @@ class SessionModel extends _EventEmitter {
     this.currentCharIdx = 0;
     this.hadBackspaceOnCurrentWord = false;
     this.currentWordCharCorrect = [];
+    this.wordStreak = 0;
     this.startTime = null;
     this.endTime = null;
     this.wordStartTime = null;
@@ -3301,6 +3303,7 @@ class SessionModel extends _EventEmitter {
     this.lastSecCorrect = 0;
     this.lastSecRaw = 0;
     this.secondDeltas = [];
+    this.wordStreak = 0;
     this.emit('reset', { mode: this.mode, duration: this.duration });
   }
   setWords(words) {
@@ -3583,6 +3586,11 @@ class SessionModel extends _EventEmitter {
       missedLetters,
       extraLetters
     };
+    if (!hasErrors) {
+      this.wordStreak++;
+    } else {
+      this.wordStreak = 0;
+    }
     this.currentWordCharCorrect = [];
     this.lastWordEndTime = now;
     this.hadBackspaceOnCurrentWord = false;
@@ -3597,6 +3605,7 @@ class SessionModel extends _EventEmitter {
       liveWpm,
       missedLetters,
       extraLetters,
+      wordStreak: this.wordStreak,
       now
     });
     return {
@@ -3606,7 +3615,8 @@ class SessionModel extends _EventEmitter {
       hadBackspace,
       liveWpm,
       missedLetters,
-      extraLetters
+      extraLetters,
+      wordStreak: this.wordStreak
     };
   }
   revertToPreviousWord() {
@@ -4614,10 +4624,11 @@ class StageView {
       this.focusOverlay.addEventListener('click', handleBoxClick);
     }
   }
-  static calculateOpacity(d, fadeDepth = 4) {
-    if (d <= 0) return 0;
+  static calculateOpacity(d, fadeDepth = 6, zeroDist = 2) {
+    if (d <= zeroDist) return 0;
     if (d >= fadeDepth) return 1;
-    const alpha = Math.min(1.0, Math.pow(d / fadeDepth, 1.2));
+    const span = Math.max(0.1, fadeDepth - zeroDist);
+    const alpha = Math.min(1.0, Math.max(0.0, (d - zeroDist) / span));
     return parseFloat(alpha.toFixed(2));
   }
   _getDoc() {
@@ -4742,7 +4753,7 @@ class StageView {
         const letters = prevEl.querySelectorAll('.letter');
         for (let i = 0; i < letters.length; i++) {
           letters[i].classList.add('hd-past');
-          letters[i].style.opacity = '';
+          letters[i].style.opacity = '0';
         }
       }
     }
@@ -4882,11 +4893,12 @@ class StageView {
       }
     }
   }
-  updateHiddenHorizon(currentWordIdx, currentCharIdx, fadeDepth = 4, hasError = false) {
+  updateHiddenHorizon(currentWordIdx, currentCharIdx, fadeDepth = 6, hasError = false) {
     if (!this.hiddenMode || !this.wordElements || this.wordElements.length === 0) return;
     const activeWordEl = this.wordElements[currentWordIdx];
     if (!activeWordEl) return;
-    const N = Math.max(1, fadeDepth);
+    const zeroDist = 2;
+    const N = Math.max(zeroDist + 0.1, fadeDepth);
     if (hasError) {
       const activeLetters = activeWordEl.querySelectorAll('.letter');
       for (let i = 0; i < activeLetters.length; i++) {
@@ -4900,45 +4912,56 @@ class StageView {
       const letter = activeLetters[i];
       if (i < currentCharIdx) {
         letter.classList.add('hd-past');
-        letter.style.opacity = '';
-      } else if (i === currentCharIdx) {
-        letter.classList.remove('hd-past');
         letter.style.opacity = '0';
       } else {
         letter.classList.remove('hd-past');
         const d = i - currentCharIdx;
-        if (d >= N) {
+        if (d <= zeroDist) {
+          letter.style.opacity = '0';
+        } else if (d >= N) {
           letter.style.opacity = '';
         } else {
-          const alpha = StageView.calculateOpacity(d, N);
+          const alpha = StageView.calculateOpacity(d, N, zeroDist);
           letter.style.opacity = String(alpha);
         }
       }
     }
-    const nextWordEl = this.wordElements[currentWordIdx + 1];
-    if (nextWordEl) {
+    let dCumulative = Math.max(0, wordLen - currentCharIdx) + 1;
+    let nextWordOffset = 1;
+    while (currentWordIdx + nextWordOffset < this.wordElements.length) {
+      const nextWordEl = this.wordElements[currentWordIdx + nextWordOffset];
+      if (!nextWordEl) break;
       const nextLetters = nextWordEl.querySelectorAll('.letter');
-      const remainingInActiveWord = Math.max(0, wordLen - currentCharIdx);
-      const dNextWordStart = remainingInActiveWord + 1;
+      if (dCumulative >= N) {
+        for (let j = 0; j < nextLetters.length; j++) {
+          nextLetters[j].classList.remove('hd-past');
+          nextLetters[j].style.opacity = '';
+        }
+        const aheadWordEl = this.wordElements[currentWordIdx + nextWordOffset + 1];
+        if (aheadWordEl) {
+          const aheadLetters = aheadWordEl.querySelectorAll('.letter');
+          for (let k = 0; k < aheadLetters.length; k++) {
+            aheadLetters[k].classList.remove('hd-past');
+            aheadLetters[k].style.opacity = '';
+          }
+        }
+        break;
+      }
       for (let j = 0; j < nextLetters.length; j++) {
         const letter = nextLetters[j];
         letter.classList.remove('hd-past');
-        const d = dNextWordStart + j;
-        if (d >= N) {
+        const d = dCumulative + j;
+        if (d <= zeroDist) {
+          letter.style.opacity = '0';
+        } else if (d >= N) {
           letter.style.opacity = '';
         } else {
-          const alpha = StageView.calculateOpacity(d, N);
+          const alpha = StageView.calculateOpacity(d, N, zeroDist);
           letter.style.opacity = String(alpha);
         }
       }
-    }
-    const followingWordEl = this.wordElements[currentWordIdx + 2];
-    if (followingWordEl) {
-      const folLetters = followingWordEl.querySelectorAll('.letter');
-      for (let k = 0; k < folLetters.length; k++) {
-        folLetters[k].classList.remove('hd-past');
-        folLetters[k].style.opacity = '';
-      }
+      dCumulative += nextLetters.length + 1;
+      nextWordOffset++;
     }
   }
 }
@@ -6232,13 +6255,9 @@ class GameController {
     this.resetTest();
   }
   getHiddenFadeDepth() {
-    if (this.currentMode === 'classic') {
-      return 4;
-    }
-    const momentum = this.flowModel ? this.flowModel.momentum : 0;
-    if (momentum < 60) return 3;
-    if (momentum < 90) return 4;
-    return 5;
+    const baseHorizon = 6.0;
+    const streak = this.sessionModel ? (this.sessionModel.wordStreak || 0) : 0;
+    return baseHorizon + (streak * 0.25);
   }
   toggleHiddenMode() {
     const current = this.storageService.getHiddenMode ? this.storageService.getHiddenMode() : false;

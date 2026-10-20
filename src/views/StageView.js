@@ -38,10 +38,11 @@ class StageView {
     }
   }
 
-  static calculateOpacity(d, fadeDepth = 4) {
-    if (d <= 0) return 0;
+  static calculateOpacity(d, fadeDepth = 6, zeroDist = 2) {
+    if (d <= zeroDist) return 0;
     if (d >= fadeDepth) return 1;
-    const alpha = Math.min(1.0, Math.pow(d / fadeDepth, 1.2));
+    const span = Math.max(0.1, fadeDepth - zeroDist);
+    const alpha = Math.min(1.0, Math.max(0.0, (d - zeroDist) / span));
     return parseFloat(alpha.toFixed(2));
   }
 
@@ -203,7 +204,7 @@ class StageView {
         const letters = prevEl.querySelectorAll('.letter');
         for (let i = 0; i < letters.length; i++) {
           letters[i].classList.add('hd-past');
-          letters[i].style.opacity = '';
+          letters[i].style.opacity = '0';
         }
       }
     }
@@ -382,15 +383,16 @@ class StageView {
    * Updates character-by-character fade horizon based on cursor position.
    * @param {number} currentWordIdx - Index of active word
    * @param {number} currentCharIdx - Index of caret within active word
-   * @param {number} fadeDepth - Horizon depth in characters ahead (default: 4)
+   * @param {number} fadeDepth - Horizon depth in characters ahead (default: 6)
    * @param {boolean} hasError - Safety brake: if true, immediately restores active word visibility
    */
-  updateHiddenHorizon(currentWordIdx, currentCharIdx, fadeDepth = 4, hasError = false) {
+  updateHiddenHorizon(currentWordIdx, currentCharIdx, fadeDepth = 6, hasError = false) {
     if (!this.hiddenMode || !this.wordElements || this.wordElements.length === 0) return;
     const activeWordEl = this.wordElements[currentWordIdx];
     if (!activeWordEl) return;
 
-    const N = Math.max(1, fadeDepth);
+    const zeroDist = 2;
+    const N = Math.max(zeroDist + 0.1, fadeDepth);
 
     // Safety brake: if error exists, immediately restore visibility of all letters in active word
     if (hasError) {
@@ -408,51 +410,67 @@ class StageView {
     for (let i = 0; i < wordLen; i++) {
       const letter = activeLetters[i];
       if (i < currentCharIdx) {
+        // Behind cursor: fully transparent
         letter.classList.add('hd-past');
-        letter.style.opacity = '';
-      } else if (i === currentCharIdx) {
-        letter.classList.remove('hd-past');
         letter.style.opacity = '0';
       } else {
         letter.classList.remove('hd-past');
         const d = i - currentCharIdx;
-        if (d >= N) {
+        if (d <= zeroDist) {
+          // Hits 0% opacity within zeroDist (about 2 characters)
+          letter.style.opacity = '0';
+        } else if (d >= N) {
           letter.style.opacity = '';
         } else {
-          const alpha = StageView.calculateOpacity(d, N);
+          const alpha = StageView.calculateOpacity(d, N, zeroDist);
           letter.style.opacity = String(alpha);
         }
       }
     }
 
-    // 2. Process immediate next word (currentWordIdx + 1)
-    const nextWordEl = this.wordElements[currentWordIdx + 1];
-    if (nextWordEl) {
+    // 2. Process subsequent words ahead within horizon N
+    let dCumulative = Math.max(0, wordLen - currentCharIdx) + 1; // +1 accounts for space
+    let nextWordOffset = 1;
+
+    while (currentWordIdx + nextWordOffset < this.wordElements.length) {
+      const nextWordEl = this.wordElements[currentWordIdx + nextWordOffset];
+      if (!nextWordEl) break;
       const nextLetters = nextWordEl.querySelectorAll('.letter');
-      const remainingInActiveWord = Math.max(0, wordLen - currentCharIdx);
-      const dNextWordStart = remainingInActiveWord + 1;
+
+      if (dCumulative >= N) {
+        // Word is past horizon: clear inline opacity so CSS renders at full visibility
+        for (let j = 0; j < nextLetters.length; j++) {
+          nextLetters[j].classList.remove('hd-past');
+          nextLetters[j].style.opacity = '';
+        }
+        // Also clear one word further ahead to clean up previous frame remnants
+        const aheadWordEl = this.wordElements[currentWordIdx + nextWordOffset + 1];
+        if (aheadWordEl) {
+          const aheadLetters = aheadWordEl.querySelectorAll('.letter');
+          for (let k = 0; k < aheadLetters.length; k++) {
+            aheadLetters[k].classList.remove('hd-past');
+            aheadLetters[k].style.opacity = '';
+          }
+        }
+        break;
+      }
 
       for (let j = 0; j < nextLetters.length; j++) {
         const letter = nextLetters[j];
         letter.classList.remove('hd-past');
-        const d = dNextWordStart + j;
-        if (d >= N) {
+        const d = dCumulative + j;
+        if (d <= zeroDist) {
+          letter.style.opacity = '0';
+        } else if (d >= N) {
           letter.style.opacity = '';
         } else {
-          const alpha = StageView.calculateOpacity(d, N);
+          const alpha = StageView.calculateOpacity(d, N, zeroDist);
           letter.style.opacity = String(alpha);
         }
       }
-    }
 
-    // 3. Clear inline opacity on subsequent word (currentWordIdx + 2)
-    const followingWordEl = this.wordElements[currentWordIdx + 2];
-    if (followingWordEl) {
-      const folLetters = followingWordEl.querySelectorAll('.letter');
-      for (let k = 0; k < folLetters.length; k++) {
-        folLetters[k].classList.remove('hd-past');
-        folLetters[k].style.opacity = '';
-      }
+      dCumulative += nextLetters.length + 1;
+      nextWordOffset++;
     }
   }
 }

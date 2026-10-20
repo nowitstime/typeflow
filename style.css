@@ -601,7 +601,7 @@ main {
 }
 
 .words-box.hidden-mode .letter.hd-past {
-  opacity: 0.15;
+  opacity: 0;
 }
 
 /* Safety brake: errors and typos restore full opacity instantly */

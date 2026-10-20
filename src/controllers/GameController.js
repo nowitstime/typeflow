@@ -247,13 +247,9 @@ class GameController {
   }
 
   getHiddenFadeDepth() {
-    if (this.currentMode === 'classic') {
-      return 4;
-    }
-    const momentum = this.flowModel ? this.flowModel.momentum : 0;
-    if (momentum < 60) return 3;
-    if (momentum < 90) return 4;
-    return 5;
+    const baseHorizon = 6.0;
+    const streak = this.sessionModel ? (this.sessionModel.wordStreak || 0) : 0;
+    return baseHorizon + (streak * 0.25);
   }
 
   toggleHiddenMode() {

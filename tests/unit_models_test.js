@@ -650,24 +650,46 @@ it('SessionModel.insertWordsAt dynamically splices words into upcoming stream', 
 console.log('\n--- 9. Hidden (HD) Look-Ahead Logic & Geometry ---');
 
 it('calculates fade opacity across distances and horizons accurately', () => {
-  // At or behind cursor (d <= 0): vanished
-  assert.strictEqual(StageView.calculateOpacity(0, 4), 0);
-  assert.strictEqual(StageView.calculateOpacity(-1, 4), 0);
+  // At or within zeroDist = 2 characters from cursor: vanished (0% capacity)
+  assert.strictEqual(StageView.calculateOpacity(0, 6), 0);
+  assert.strictEqual(StageView.calculateOpacity(1, 6), 0);
+  assert.strictEqual(StageView.calculateOpacity(2, 6), 0);
 
-  // Ahead of cursor: scales naturally with power 1.2
-  // d=1, N=4: (1/4)^1.2 = 0.19
-  assert.strictEqual(StageView.calculateOpacity(1, 4), 0.19);
-  // d=2, N=4: (2/4)^1.2 = 0.44
-  assert.strictEqual(StageView.calculateOpacity(2, 4), 0.44);
-  // d=3, N=4: (3/4)^1.2 = 0.71
-  assert.strictEqual(StageView.calculateOpacity(3, 4), 0.71);
+  // Ahead of cursor in Classic Mode (N = 6): gradual 25% increments
+  // d=3: (3 - 2) / 4 = 0.25
+  assert.strictEqual(StageView.calculateOpacity(3, 6), 0.25);
+  // d=4: (4 - 2) / 4 = 0.50
+  assert.strictEqual(StageView.calculateOpacity(4, 6), 0.50);
+  // d=5: (5 - 2) / 4 = 0.75
+  assert.strictEqual(StageView.calculateOpacity(5, 6), 0.75);
   // d>=N: full opacity
-  assert.strictEqual(StageView.calculateOpacity(4, 4), 1);
-  assert.strictEqual(StageView.calculateOpacity(5, 4), 1);
+  assert.strictEqual(StageView.calculateOpacity(6, 6), 1);
+  assert.strictEqual(StageView.calculateOpacity(7, 6), 1);
 
-  // Custom horizon N=5
-  assert.strictEqual(StageView.calculateOpacity(0, 5), 0);
-  assert.strictEqual(StageView.calculateOpacity(5, 5), 1);
+  // Scaled horizon after 4 words in a row (N = 7, span = 5)
+  assert.strictEqual(StageView.calculateOpacity(2, 7), 0);
+  assert.strictEqual(StageView.calculateOpacity(3, 7), 0.20);
+  assert.strictEqual(StageView.calculateOpacity(4, 7), 0.40);
+  assert.strictEqual(StageView.calculateOpacity(5, 7), 0.60);
+  assert.strictEqual(StageView.calculateOpacity(6, 7), 0.80);
+  assert.strictEqual(StageView.calculateOpacity(7, 7), 1);
+});
+
+it('SessionModel.wordStreak increments on clean words and resets on error', () => {
+  const session = new SessionModel({ words: ['one', 'two', 'three'] });
+  assert.strictEqual(session.wordStreak, 0);
+
+  // Submit word 0 cleanly
+  session.submitWord(false);
+  assert.strictEqual(session.wordStreak, 1);
+
+  // Submit word 1 cleanly
+  session.submitWord(false);
+  assert.strictEqual(session.wordStreak, 2);
+
+  // Submit word 2 with uncorrected error -> resets
+  session.submitWord(true);
+  assert.strictEqual(session.wordStreak, 0);
 });
 
 it('SessionModel.hasErrorInCurrentWord detects errors and fixes via backspace', () => {
