@@ -255,6 +255,30 @@ it('persists and retrieves Hidden (HD) mode preference', () => {
   assert.strictEqual(reloaded2.getHiddenMode(), false);
 });
 
+it('persists and retrieves Ghost Cursor preference and speed', () => {
+  const mock = new LocalStorageMock();
+  const service = new StorageService(mock);
+
+  assert.strictEqual(service.getGhostCursor(), false);
+  assert.strictEqual(service.getGhostSpeed(), 50);
+
+  service.setGhostCursor(true);
+  service.setGhostSpeed(75);
+  assert.strictEqual(service.getGhostCursor(), true);
+  assert.strictEqual(service.getGhostSpeed(), 75);
+
+  // Re-instantiate to verify storage persistence
+  const reloaded = new StorageService(mock);
+  assert.strictEqual(reloaded.getGhostCursor(), true);
+  assert.strictEqual(reloaded.getGhostSpeed(), 75);
+
+  // Clamps out-of-bounds speed (15 to 150)
+  service.setGhostSpeed(5);
+  assert.strictEqual(service.getGhostSpeed(), 15);
+  service.setGhostSpeed(300);
+  assert.strictEqual(service.getGhostSpeed(), 150);
+});
+
 // 2. AudioService Tests
 console.log('\n--- 2. AudioService ---');
 

@@ -8,7 +8,9 @@ const STORAGE_KEYS = {
   CLASSIC_STATS: 'typeflow_classic_stats_v1',
   GAME_SAVE:     'typeflow_game_save_v2',
   ACTIVE_MODE:   'typeflow_active_mode',
-  HIDDEN_MODE:   'typeflow_hidden_mode'
+  HIDDEN_MODE:   'typeflow_hidden_mode',
+  GHOST_CURSOR:  'typeflow_ghost_cursor',
+  GHOST_SPEED:   'typeflow_ghost_speed'
 };
 
 const DEFAULT_CLASSIC_STATS = {
@@ -35,7 +37,9 @@ const DEFAULT_GAME_SAVE = {
   bigramLedger: {},   // Rolling EMA bigram mastery ledger: { [bg]: mastery }
   lifetimeWords: 0,
   highStreak: 0,
-  hiddenMode: false
+  hiddenMode: false,
+  ghostCursor: false,
+  ghostSpeed: 50
 };
 
 function safeGetLocalStorage() {
@@ -167,6 +171,12 @@ class StorageService {
       }
       if (typeof state.hiddenMode !== 'boolean') {
         state.hiddenMode = false;
+      }
+      if (typeof state.ghostCursor !== 'boolean') {
+        state.ghostCursor = false;
+      }
+      if (typeof state.ghostSpeed !== 'number' || isNaN(state.ghostSpeed) || state.ghostSpeed <= 0) {
+        state.ghostSpeed = 50;
       }
       return state;
     } catch (e) {
@@ -521,6 +531,65 @@ class StorageService {
       return val;
     } catch (e) {
       return val;
+    }
+  }
+
+  getGhostCursor() {
+    try {
+      const s = this._getStorage();
+      if (s) {
+        const val = s.getItem(STORAGE_KEYS.GHOST_CURSOR);
+        if (val !== null) return val === 'true';
+      }
+      const save = this.getGameSave();
+      return !!save.ghostCursor;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  setGhostCursor(enabled) {
+    const val = !!enabled;
+    try {
+      const s = this._getStorage();
+      if (s) s.setItem(STORAGE_KEYS.GHOST_CURSOR, String(val));
+      const save = this.getGameSave();
+      save.ghostCursor = val;
+      this.saveGameSave(save);
+      return val;
+    } catch (e) {
+      return val;
+    }
+  }
+
+  getGhostSpeed() {
+    try {
+      const s = this._getStorage();
+      if (s) {
+        const val = s.getItem(STORAGE_KEYS.GHOST_SPEED);
+        if (val !== null) {
+          const num = parseInt(val, 10);
+          if (!isNaN(num) && num > 0) return num;
+        }
+      }
+      const save = this.getGameSave();
+      return (typeof save.ghostSpeed === 'number' && save.ghostSpeed > 0) ? save.ghostSpeed : 50;
+    } catch (e) {
+      return 50;
+    }
+  }
+
+  setGhostSpeed(speed) {
+    const num = Math.max(15, Math.min(150, parseInt(speed, 10) || 50));
+    try {
+      const s = this._getStorage();
+      if (s) s.setItem(STORAGE_KEYS.GHOST_SPEED, String(num));
+      const save = this.getGameSave();
+      save.ghostSpeed = num;
+      this.saveGameSave(save);
+      return num;
+    } catch (e) {
+      return num;
     }
   }
 }

@@ -62,6 +62,17 @@ class GameController {
     this.lastTestFinishedTime = 0;
     this.currentMode = 'flow';
 
+    // Ghost Cursor Pacer state
+    this.ghostEnabled = false;
+    this.ghostSpeed = 50;
+    this.ghostAnimId = null;
+    this.ghostLastFrameTime = null;
+    this.ghostTotalChars = 0;
+    this.ghostPhaseTimer = null;
+    this.ghostResetTimer = null;
+    this.isGhostRunning = false;
+    this.ghostNeedsSync = true;
+
     const KBClass = deps.keyboardControllerClass || _KeyboardController;
     if (KBClass) {
       this.keyboardController = new KBClass({
@@ -120,6 +131,11 @@ class GameController {
     if (this.hudView.updateHiddenModeState) {
       this.hudView.updateHiddenModeState(isHidden);
     }
+    this.ghostEnabled = this.storageService.getGhostCursor ? this.storageService.getGhostCursor() : false;
+    this.ghostSpeed = this.storageService.getGhostSpeed ? this.storageService.getGhostSpeed() : 50;
+    if (this.hudView.updateGhostState) {
+      this.hudView.updateGhostState(this.ghostEnabled, this.ghostSpeed);
+    }
 
     // 3. Attach keyboard controller
     this.keyboardController.attach(
@@ -156,6 +172,8 @@ class GameController {
         }
       },
       onHiddenToggle: () => this.toggleHiddenMode(),
+      onGhostToggle: () => this.toggleGhostCursor(),
+      onGhostSpeedChange: (speed) => this.updateGhostSpeed(speed),
       onRestart: () => this.resetTest()
     });
 
@@ -278,11 +296,192 @@ class GameController {
     return next;
   }
 
+  toggleGhostCursor() {
+    this.ghostEnabled = !this.ghostEnabled;
+    if (this.storageService.setGhostCursor) {
+      this.storageService.setGhostCursor(this.ghostEnabled);
+    }
+    if (this.hudView.updateGhostState) {
+      this.hudView.updateGhostState(this.ghostEnabled, this.ghostSpeed);
+    }
+    if (!this.ghostEnabled) {
+      this.stopGhostPacer(true);
+      if (this.stageView.setGhostVisible) {
+        this.stageView.setGhostVisible(false);
+      }
+    } else {
+      this.ghostNeedsSync = true;
+      this.syncGhostToPlayer();
+    }
+    return this.ghostEnabled;
+  }
+
+  updateGhostSpeed(speed) {
+    const num = Math.max(15, Math.min(150, parseInt(speed, 10) || 50));
+    this.ghostSpeed = num;
+    if (this.storageService.setGhostSpeed) {
+      this.storageService.setGhostSpeed(num);
+    }
+    if (this.hudView.updateGhostState) {
+      this.hudView.updateGhostState(this.ghostEnabled, this.ghostSpeed);
+    }
+    return num;
+  }
+
+  getCharCumulativeIndex(wordIdx, charIdx) {
+    const words = this.sessionModel.words || [];
+    let total = 0;
+    for (let i = 0; i < wordIdx && i < words.length; i++) {
+      total += words[i].length + 1;
+    }
+    return total + charIdx;
+  }
+
+  mapCharsToPosition(totalChars) {
+    const words = this.sessionModel.words || [];
+    let remaining = Math.max(0, totalChars);
+    for (let i = 0; i < words.length; i++) {
+      const wLen = words[i].length;
+      const totalSlot = wLen + 1;
+      if (remaining < totalSlot) {
+        const charIdx = Math.floor(remaining);
+        const fraction = remaining - charIdx;
+        return { wordIdx: i, charIdx: Math.min(charIdx, wLen), fraction, isOutOfBounds: false };
+      }
+      remaining -= totalSlot;
+    }
+    return { wordIdx: Math.max(0, words.length - 1), charIdx: 999, fraction: 0, isOutOfBounds: true };
+  }
+
+  triggerGhostActivity() {
+    if (!this.ghostEnabled || this.sessionModel.isFinished) return;
+    if (this.eggNestModel && this.eggNestModel.isHatching && this.eggNestModel.isHatching()) return;
+
+    if (this.ghostPhaseTimer) {
+      clearTimeout(this.ghostPhaseTimer);
+      this.ghostPhaseTimer = null;
+    }
+    if (this.ghostResetTimer) {
+      clearTimeout(this.ghostResetTimer);
+      this.ghostResetTimer = null;
+    }
+
+    if (this.stageView.setGhostFading) {
+      this.stageView.setGhostFading(false);
+    }
+    if (this.stageView.setGhostVisible) {
+      this.stageView.setGhostVisible(true);
+    }
+
+    if (!this.isGhostRunning) {
+      if (this.ghostNeedsSync) {
+        this.syncGhostToPlayer();
+        this.ghostNeedsSync = false;
+      }
+      this.startGhostPacer();
+    }
+
+    // 0.6s inactivity: start phasing out smoothly
+    this.ghostPhaseTimer = setTimeout(() => {
+      this.stopGhostPacer(false);
+      if (this.stageView.setGhostFading) {
+        this.stageView.setGhostFading(true);
+      }
+    }, 600);
+
+    // 1.2s inactivity: full reset back to actual cursor, hide
+    this.ghostResetTimer = setTimeout(() => {
+      this.syncGhostToPlayer();
+      this.ghostNeedsSync = true;
+      if (this.stageView.setGhostVisible) {
+        this.stageView.setGhostVisible(false);
+      }
+    }, 1200);
+  }
+
+  startGhostPacer() {
+    if (this.isGhostRunning) return;
+    this.isGhostRunning = true;
+    this.ghostLastFrameTime = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+
+    const tick = (now) => {
+      if (!this.isGhostRunning || !this.ghostEnabled) return;
+      const currentTime = now || ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now());
+      const dt = Math.min(100, currentTime - this.ghostLastFrameTime);
+      this.ghostLastFrameTime = currentTime;
+
+      const v = (this.ghostSpeed * 5) / 60000;
+      this.ghostTotalChars += v * dt;
+
+      const pos = this.mapCharsToPosition(this.ghostTotalChars);
+      let res = null;
+      if (this.stageView.updateGhostCaret) {
+        res = this.stageView.updateGhostCaret(pos.wordIdx, pos.charIdx, pos.fraction);
+      }
+
+      if ((res && res.isOutOfBounds) || pos.isOutOfBounds) {
+        this.syncGhostToPlayer();
+        this.ghostNeedsSync = true;
+        if (this.stageView.setGhostVisible) {
+          this.stageView.setGhostVisible(false);
+        }
+        this.stopGhostPacer(false);
+        return;
+      }
+
+      if (typeof requestAnimationFrame !== 'undefined') {
+        this.ghostAnimId = requestAnimationFrame(tick);
+      }
+    };
+
+    if (typeof requestAnimationFrame !== 'undefined') {
+      this.ghostAnimId = requestAnimationFrame(tick);
+    }
+  }
+
+  stopGhostPacer(cancelTimers = false) {
+    this.isGhostRunning = false;
+    if (this.ghostAnimId && typeof cancelAnimationFrame !== 'undefined') {
+      cancelAnimationFrame(this.ghostAnimId);
+      this.ghostAnimId = null;
+    }
+    if (cancelTimers) {
+      if (this.ghostPhaseTimer) {
+        clearTimeout(this.ghostPhaseTimer);
+        this.ghostPhaseTimer = null;
+      }
+      if (this.ghostResetTimer) {
+        clearTimeout(this.ghostResetTimer);
+        this.ghostResetTimer = null;
+      }
+      this.ghostNeedsSync = true;
+    }
+  }
+
+  syncGhostToPlayer() {
+    this.ghostTotalChars = this.getCharCumulativeIndex(
+      this.sessionModel.currentWordIdx,
+      this.sessionModel.currentCharIdx
+    );
+    if (this.stageView.syncGhostToCaret) {
+      this.stageView.syncGhostToCaret(
+        this.sessionModel.currentWordIdx,
+        this.sessionModel.currentCharIdx
+      );
+    }
+  }
+
   resetTest() {
     if (this.classicTimerInterval) {
       clearInterval(this.classicTimerInterval);
       this.classicTimerInterval = null;
     }
+
+    this.stopGhostPacer(true);
+    if (this.stageView.setGhostVisible) {
+      this.stageView.setGhostVisible(false);
+    }
+    this.syncGhostToPlayer();
 
     this.modalView.hideClassicResults();
     this.stageView.setPacePaused(false);
@@ -364,6 +563,11 @@ class GameController {
     this.lastTestFinishedTime = Date.now();
     const stats = this.sessionModel.calculateFinalStats();
 
+    this.stopGhostPacer(true);
+    if (this.stageView.setGhostVisible) {
+      this.stageView.setGhostVisible(false);
+    }
+
     this.storageService.recordClassicTest(
       this.sessionModel.duration,
       stats.wpm,
@@ -424,6 +628,7 @@ class GameController {
     const hasErr = isExtra || !isCorrect || this.sessionModel.hasErrorInCurrentWord();
     this.stageView.updateHiddenHorizon(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx, combo, hasErr);
 
+    this.triggerGhostActivity();
     this.audioService.playKey(false, this.currentMode === 'flow' ? this.flowModel.flowStreak : 0);
   }
 
@@ -438,6 +643,7 @@ class GameController {
         if (reverted) {
           this.stageView.revertWord(prevWordIdx + 1, prevWordIdx);
           this.stageView.updateCaret(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
+          this.triggerGhostActivity();
           this.flowModel.recordKeystroke();
           const combo = this.getHiddenCombo();
           this.stageView.updateHiddenHorizon(
@@ -457,6 +663,7 @@ class GameController {
     }
     this.flowModel.recordKeystroke();
     this.stageView.updateCaret(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
+    this.triggerGhostActivity();
     const combo = this.getHiddenCombo();
     this.stageView.updateHiddenHorizon(
       this.sessionModel.currentWordIdx,
@@ -616,6 +823,7 @@ class GameController {
     this.stageView.updateCaret(nextIdx, 0);
     const combo = this.getHiddenCombo();
     this.stageView.updateHiddenHorizon(nextIdx, 0, combo, false);
+    this.triggerGhostActivity();
 
     // Dynamic infinite stream appending
     if (nextIdx >= this.stageView.wordElements.length - 10) {
@@ -634,6 +842,10 @@ class GameController {
     const entered = this.eggNestModel.enterHatchMode(preferredSlot);
     if (entered) {
       this.nestView.render(this.eggNestModel);
+      this.stopGhostPacer(false);
+      if (this.stageView.setGhostFading) {
+        this.stageView.setGhostFading(true);
+      }
     }
     return entered;
   }

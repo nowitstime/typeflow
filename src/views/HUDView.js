@@ -30,6 +30,10 @@ class HUDView {
     this.soundIconOn = elements.soundIconOn || (typeof document !== 'undefined' ? document.getElementById('sound-icon-on') : null);
     this.soundIconOff = elements.soundIconOff || (typeof document !== 'undefined' ? document.getElementById('sound-icon-off') : null);
     this.hdBtn = elements.hdBtn || (typeof document !== 'undefined' ? document.getElementById('hd-btn') : null);
+    this.ghostBtn = elements.ghostBtn || (typeof document !== 'undefined' ? document.getElementById('ghost-btn') : null);
+    this.ghostSliderPill = elements.ghostSliderPill || (typeof document !== 'undefined' ? document.getElementById('ghost-slider-pill') : null);
+    this.ghostSlider = elements.ghostSlider || (typeof document !== 'undefined' ? document.getElementById('ghost-slider') : null);
+    this.ghostVal = elements.ghostVal || (typeof document !== 'undefined' ? document.getElementById('ghost-val') : null);
 
     // Typing Stage HUD
     this.timerEl = elements.timerEl || (typeof document !== 'undefined' ? document.getElementById('timer') : null);
@@ -111,6 +115,21 @@ class HUDView {
     if (hdBtn) {
       hdBtn.addEventListener('click', () => {
         if (handlers.onHiddenToggle) handlers.onHiddenToggle();
+      });
+    }
+
+    const ghostBtn = this.ghostBtn || ((typeof document !== 'undefined') ? document.getElementById('ghost-btn') : null);
+    if (ghostBtn) {
+      ghostBtn.addEventListener('click', () => {
+        if (handlers.onGhostToggle) handlers.onGhostToggle();
+      });
+    }
+
+    const ghostSlider = this.ghostSlider || ((typeof document !== 'undefined') ? document.getElementById('ghost-slider') : null);
+    if (ghostSlider) {
+      ghostSlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        if (handlers.onGhostSpeedChange) handlers.onGhostSpeedChange(val);
       });
     }
 
@@ -335,6 +354,29 @@ class HUDView {
       btn.title = enabled
         ? 'Hidden (HD) Look-Ahead: ON (Click to disable)'
         : 'Toggle Hidden (HD) Look-Ahead Mode';
+    }
+  }
+
+  updateGhostState(enabled, speed) {
+    const btn = this.ghostBtn || ((typeof document !== 'undefined') ? document.getElementById('ghost-btn') : null);
+    if (btn) {
+      btn.classList.toggle('active', !!enabled);
+      btn.setAttribute('aria-pressed', String(!!enabled));
+      btn.title = enabled
+        ? `Ghost Cursor Pacer: ON (${speed || 50} WPM) - Click to disable`
+        : 'Toggle Ghost Cursor Pacer';
+    }
+    const pill = this.ghostSliderPill || ((typeof document !== 'undefined') ? document.getElementById('ghost-slider-pill') : null);
+    if (pill) {
+      pill.style.display = enabled ? 'flex' : 'none';
+    }
+    const slider = this.ghostSlider || ((typeof document !== 'undefined') ? document.getElementById('ghost-slider') : null);
+    const valEl = this.ghostVal || ((typeof document !== 'undefined') ? document.getElementById('ghost-val') : null);
+    if (slider) {
+      slider.value = speed || 50;
+    }
+    if (valEl) {
+      valEl.textContent = `${speed || 50} WPM`;
     }
   }
 }

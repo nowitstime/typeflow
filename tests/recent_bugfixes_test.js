@@ -82,9 +82,16 @@ function createBugfixHarness() {
         <span id="hud-xp-ratio"></span>
         <div id="hud-level-bar-fill"></div>
       </div>
+      <button id="hd-btn">HD</button>
+      <button id="ghost-btn"></button>
+      <div id="ghost-slider-pill" style="display: none;">
+        <input type="range" id="ghost-slider" min="15" max="150" step="5" value="50">
+        <span id="ghost-val">50 WPM</span>
+      </div>
       <div id="words-box">
         <div id="words-wrapper"></div>
         <div id="caret"></div>
+        <div id="ghost-caret" style="display: none;"></div>
       </div>
       <input id="typing-input" />
       <div id="focus-overlay"></div>

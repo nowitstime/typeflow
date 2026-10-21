@@ -172,6 +172,52 @@ it('toggles hiddenMode on wordsBox and applies character fade horizon', () => {
   assert.strictEqual(word0.children[0].classList.contains('hd-past'), false);
 });
 
+it('manages Ghost Caret visibility, coordinates, and fading in StageView', () => {
+  const dom = new JSDOM(`
+    <div id="words-box">
+      <div id="words-wrapper"></div>
+      <div id="caret"></div>
+      <div id="ghost-caret"></div>
+    </div>
+  `);
+  const { document } = dom.window;
+  const stage = new StageView({
+    wordsBox: document.getElementById('words-box'),
+    wordsWrapper: document.getElementById('words-wrapper'),
+    caret: document.getElementById('caret'),
+    ghostCaret: document.getElementById('ghost-caret')
+  });
+
+  stage.renderWords(['hello', 'world']);
+
+  // Initially hidden
+  stage.setGhostVisible(false);
+  assert.strictEqual(stage.ghostCaret.style.display, 'none');
+  assert.strictEqual(stage.ghostCaret.classList.contains('visible'), false);
+
+  // Set visible
+  stage.setGhostVisible(true);
+  assert.strictEqual(stage.ghostCaret.style.display, 'block');
+  assert.strictEqual(stage.ghostCaret.classList.contains('visible'), true);
+
+  // Set fading
+  stage.setGhostFading(true);
+  assert.strictEqual(stage.ghostCaret.classList.contains('fading'), true);
+  assert.strictEqual(stage.ghostCaret.classList.contains('visible'), false);
+
+  // Coordinates and transform
+  const res = stage.updateGhostCaret(0, 2, 0.5);
+  assert.ok(res !== null);
+  assert.strictEqual(typeof res.left, 'number');
+  assert.strictEqual(typeof res.top, 'number');
+  assert.strictEqual(res.isOutOfBounds, false);
+  assert.ok(stage.ghostCaret.style.transform.includes('translate('));
+
+  // Sync ghost directly to caret
+  stage.syncGhostToCaret(0, 0);
+  assert.ok(stage.ghostCaret.style.transform.includes('translate('));
+});
+
 // 2. NestView Tests
 console.log('\n--- 2. NestView ---');
 
@@ -378,6 +424,34 @@ it('HUDView.updateHiddenModeState updates active class and aria-pressed', () => 
   hud.updateHiddenModeState(false);
   assert.strictEqual(hud.hdBtn.classList.contains('active'), false);
   assert.strictEqual(hud.hdBtn.getAttribute('aria-pressed'), 'false');
+});
+
+it('HUDView.updateGhostState updates button, slider, and visibility', () => {
+  const dom = new JSDOM(`
+    <button class="icon-btn" id="ghost-btn" title="Toggle Ghost">Ghost</button>
+    <div id="ghost-slider-pill" style="display: none;">
+      <input type="range" id="ghost-slider" value="50">
+      <span id="ghost-val">50 WPM</span>
+    </div>
+  `);
+  const hud = new HUDView({
+    ghostBtn: dom.window.document.getElementById('ghost-btn'),
+    ghostSliderPill: dom.window.document.getElementById('ghost-slider-pill'),
+    ghostSlider: dom.window.document.getElementById('ghost-slider'),
+    ghostVal: dom.window.document.getElementById('ghost-val')
+  });
+
+  hud.updateGhostState(true, 70);
+  assert.strictEqual(hud.ghostBtn.classList.contains('active'), true);
+  assert.strictEqual(hud.ghostBtn.getAttribute('aria-pressed'), 'true');
+  assert.strictEqual(hud.ghostSliderPill.style.display, 'flex');
+  assert.strictEqual(hud.ghostSlider.value, '70');
+  assert.strictEqual(hud.ghostVal.textContent, '70 WPM');
+
+  hud.updateGhostState(false, 70);
+  assert.strictEqual(hud.ghostBtn.classList.contains('active'), false);
+  assert.strictEqual(hud.ghostBtn.getAttribute('aria-pressed'), 'false');
+  assert.strictEqual(hud.ghostSliderPill.style.display, 'none');
 });
 
 // 4. ModalView Tests

@@ -230,6 +230,36 @@ header {
   font-weight: 600;
   text-transform: uppercase;
 }
+.ghost-slider-pill {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 4px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--sub-color);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.ghost-slider-pill:focus-within {
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
+}
+.ghost-slider-pill .ghost-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--sub-color);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.ghost-slider-pill .ghost-val {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  min-width: 54px;
+  font-weight: 600;
+  color: var(--text-color);
+}
 .level-hud-card {
   display: flex;
   flex-direction: column;
@@ -542,6 +572,27 @@ main {
   z-index: 10;
   opacity: 1;
   transition: transform 0.08s linear;
+}
+.ghost-caret {
+  position: absolute;
+  width: 2.5px;
+  height: 32px;
+  background-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+  border-radius: 2px;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.04s linear;
+}
+.ghost-caret.visible {
+  opacity: 1;
+}
+.ghost-caret.fading {
+  opacity: 0;
+  transition: opacity 0.4s ease;
 }
 .focus-overlay {
   position: absolute;
@@ -1732,6 +1783,16 @@ footer,
         <button class="icon-btn" id="hd-btn" title="Toggle Hidden (HD) Look-Ahead Mode">
           <span>HD</span>
         </button>
+        <button class="icon-btn" id="ghost-btn" title="Toggle Ghost Cursor Pacer" aria-pressed="false">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C7.58 2 4 5.58 4 10v9.5c0 .48.53.77.92.5l2.08-1.4 2.5 1.7c.32.22.75.22 1.07 0l2.43-1.65 2.43 1.65c.32.22.75.22 1.07 0l2.5-1.7 2.08 1.4c.39.27.92-.02.92-.5V10c0-4.42-3.58-8-8-8zm-3 8c-.83 0-1.5-.67-1.5-1.5S8.17 7 9 7s1.5.67 1.5 1.5S9.83 10 9 10zm6 0c-.83 0-1.5-.67-1.5-1.5S14.17 7 15 7s1.5.67 1.5 1.5S15.83 10 15 10z"/>
+          </svg>
+        </button>
+        <div class="ghost-slider-pill" id="ghost-slider-pill" style="display: none;" title="Ghost Cursor Pace (WPM)">
+          <span class="ghost-label">Ghost:</span>
+          <input type="range" id="ghost-slider" class="diff-slider" min="15" max="150" step="5" value="50" aria-label="Ghost Cursor speed slider">
+          <span class="ghost-val" id="ghost-val">50 WPM</span>
+        </div>
         <button class="icon-btn" id="sound-btn" title="Toggle Mechanical Keyboard Sounds">
           <svg id="sound-icon-on" style="display: none;" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
             <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
@@ -1793,6 +1854,7 @@ footer,
         </div>
         <div class="words-box" id="words-box" tabindex="0">
           <div class="caret" id="caret"></div>
+          <div class="ghost-caret" id="ghost-caret" style="display: none;"></div>
           <div class="words-wrapper" id="words-wrapper">
           </div>
           <div class="focus-overlay" id="focus-overlay">
@@ -3428,6 +3490,9 @@ class SessionModel extends _EventEmitter {
           if (!e.fixed) {
             e.fixed = true;
             this.totalFixedErrors++;
+            if (e.second && this.wpmHistory[e.second - 1]) {
+              this.wpmHistory[e.second - 1].fixed++;
+            }
           }
         });
         this.unfixedErrorsByKey.delete(key);
@@ -3494,6 +3559,9 @@ class SessionModel extends _EventEmitter {
             if (!e.fixed) {
               e.fixed = true;
               this.totalFixedErrors++;
+              if (e.second && this.wpmHistory[e.second - 1]) {
+                this.wpmHistory[e.second - 1].fixed++;
+              }
               fixedError = true;
             }
           });
@@ -3509,11 +3577,25 @@ class SessionModel extends _EventEmitter {
             if (!e.fixed) {
               e.fixed = true;
               this.totalFixedErrors++;
+              if (e.second && this.wpmHistory[e.second - 1]) {
+                this.wpmHistory[e.second - 1].fixed++;
+              }
               fixedError = true;
             }
           });
           this.unfixedErrorsByKey.delete(normKey);
         } else {
+          for (let i = this.errorLog.length - 1; i >= 0; i--) {
+            const e = this.errorLog[i];
+            if (!e.fixed) {
+              e.fixed = true;
+              this.totalFixedErrors++;
+              if (e.second && this.wpmHistory[e.second - 1]) {
+                this.wpmHistory[e.second - 1].fixed++;
+              }
+              break;
+            }
+          }
           fixedError = true;
         }
       }
@@ -4026,7 +4108,9 @@ const STORAGE_KEYS = {
   CLASSIC_STATS: 'typeflow_classic_stats_v1',
   GAME_SAVE:     'typeflow_game_save_v2',
   ACTIVE_MODE:   'typeflow_active_mode',
-  HIDDEN_MODE:   'typeflow_hidden_mode'
+  HIDDEN_MODE:   'typeflow_hidden_mode',
+  GHOST_CURSOR:  'typeflow_ghost_cursor',
+  GHOST_SPEED:   'typeflow_ghost_speed'
 };
 const DEFAULT_CLASSIC_STATS = {
   personalBests: {
@@ -4051,7 +4135,9 @@ const DEFAULT_GAME_SAVE = {
   bigramLedger: {},
   lifetimeWords: 0,
   highStreak: 0,
-  hiddenMode: false
+  hiddenMode: false,
+  ghostCursor: false,
+  ghostSpeed: 50
 };
 function safeGetLocalStorage() {
   try {
@@ -4166,6 +4252,12 @@ class StorageService {
       }
       if (typeof state.hiddenMode !== 'boolean') {
         state.hiddenMode = false;
+      }
+      if (typeof state.ghostCursor !== 'boolean') {
+        state.ghostCursor = false;
+      }
+      if (typeof state.ghostSpeed !== 'number' || isNaN(state.ghostSpeed) || state.ghostSpeed <= 0) {
+        state.ghostSpeed = 50;
       }
       return state;
     } catch (e) {
@@ -4478,6 +4570,61 @@ class StorageService {
       return val;
     }
   }
+  getGhostCursor() {
+    try {
+      const s = this._getStorage();
+      if (s) {
+        const val = s.getItem(STORAGE_KEYS.GHOST_CURSOR);
+        if (val !== null) return val === 'true';
+      }
+      const save = this.getGameSave();
+      return !!save.ghostCursor;
+    } catch (e) {
+      return false;
+    }
+  }
+  setGhostCursor(enabled) {
+    const val = !!enabled;
+    try {
+      const s = this._getStorage();
+      if (s) s.setItem(STORAGE_KEYS.GHOST_CURSOR, String(val));
+      const save = this.getGameSave();
+      save.ghostCursor = val;
+      this.saveGameSave(save);
+      return val;
+    } catch (e) {
+      return val;
+    }
+  }
+  getGhostSpeed() {
+    try {
+      const s = this._getStorage();
+      if (s) {
+        const val = s.getItem(STORAGE_KEYS.GHOST_SPEED);
+        if (val !== null) {
+          const num = parseInt(val, 10);
+          if (!isNaN(num) && num > 0) return num;
+        }
+      }
+      const save = this.getGameSave();
+      return (typeof save.ghostSpeed === 'number' && save.ghostSpeed > 0) ? save.ghostSpeed : 50;
+    } catch (e) {
+      return 50;
+    }
+  }
+  setGhostSpeed(speed) {
+    const num = Math.max(15, Math.min(150, parseInt(speed, 10) || 50));
+    try {
+      const s = this._getStorage();
+      if (s) s.setItem(STORAGE_KEYS.GHOST_SPEED, String(num));
+      const save = this.getGameSave();
+      save.ghostSpeed = num;
+      this.saveGameSave(save);
+      return num;
+    } catch (e) {
+      return num;
+    }
+  }
 }
 const storageService = new StorageService();
 const StorageManager = storageService;
@@ -4678,6 +4825,7 @@ class StageView {
     this.wordsBox = elements.wordsBox || (typeof document !== 'undefined' ? document.getElementById('words-box') : null);
     this.wordsWrapper = elements.wordsWrapper || (typeof document !== 'undefined' ? document.getElementById('words-wrapper') : null);
     this.caret = elements.caret || (typeof document !== 'undefined' ? document.getElementById('caret') : null);
+    this.ghostCaret = elements.ghostCaret || (typeof document !== 'undefined' ? document.getElementById('ghost-caret') : null);
     this.focusOverlay = elements.focusOverlay || (typeof document !== 'undefined' ? document.getElementById('focus-overlay') : null);
     this.typingInput = elements.typingInput || (typeof document !== 'undefined' ? document.getElementById('typing-input') : null);
     this.scrollOffset = 0;
@@ -4905,19 +5053,23 @@ class StageView {
       this.wordsWrapper.style.transform = `translateY(-${this.scrollOffset}px)`;
     }
   }
-  updateCaret(currentWordIdx, currentCharIdx) {
-    if (!this.caret || !this.wordsWrapper) return;
-    const currentWordEl = this.wordElements[currentWordIdx];
-    if (!currentWordEl) return;
-    this.checkLineScroll(currentWordEl);
-    const currentWordTop = currentWordEl.offsetTop;
-    const visualTop = currentWordTop - this.scrollOffset;
+  getCursorCoordinates(wordIdx, charIdx) {
+    if (!this.wordElements || this.wordElements.length === 0) {
+      return { left: 0, top: 5, visualTop: 5, valid: false };
+    }
+    const safeWordIdx = Math.max(0, Math.min(this.wordElements.length - 1, wordIdx));
+    const wordEl = this.wordElements[safeWordIdx];
+    if (!wordEl) {
+      return { left: 0, top: 5, visualTop: 5, valid: false };
+    }
+    const wordTop = wordEl.offsetTop;
+    const visualTop = wordTop - this.scrollOffset;
     const targetTop = visualTop + 5;
-    const letterElements = currentWordEl.querySelectorAll('.letter');
+    const letterElements = wordEl.querySelectorAll('.letter');
     const boxRect = this.wordsBox ? this.wordsBox.getBoundingClientRect() : { left: 0, width: 0 };
     let targetLeft = 0;
-    if (currentCharIdx < letterElements.length) {
-      const activeLetter = letterElements[currentCharIdx];
+    if (charIdx < letterElements.length) {
+      const activeLetter = letterElements[charIdx];
       const letterRect = activeLetter.getBoundingClientRect();
       if (boxRect.width > 0 && letterRect.width > 0) {
         targetLeft = letterRect.left - boxRect.left;
@@ -4934,10 +5086,83 @@ class StageView {
           targetLeft = lastLetter.offsetLeft + lastLetter.offsetWidth;
         }
       } else {
-        targetLeft = currentWordEl.offsetLeft;
+        targetLeft = wordEl.offsetLeft;
       }
     }
-    this.caret.style.transform = `translate(${targetLeft}px, ${targetTop}px)`;
+    return {
+      left: targetLeft,
+      top: targetTop,
+      visualTop,
+      valid: true
+    };
+  }
+  updateCaret(currentWordIdx, currentCharIdx) {
+    if (!this.caret || !this.wordsWrapper) return;
+    const currentWordEl = this.wordElements[currentWordIdx];
+    if (!currentWordEl) return;
+    this.checkLineScroll(currentWordEl);
+    const coords = this.getCursorCoordinates(currentWordIdx, currentCharIdx);
+    if (coords.valid) {
+      this.caret.style.transform = `translate(${coords.left}px, ${coords.top}px)`;
+    }
+  }
+  updateGhostCaret(wordIdx, charIdx, fraction = 0) {
+    if (!this.ghostCaret) return null;
+    const coordsA = this.getCursorCoordinates(wordIdx, charIdx);
+    if (!coordsA.valid) return null;
+    let targetLeft = coordsA.left;
+    let targetTop = coordsA.top;
+    const visualTop = coordsA.visualTop;
+    if (fraction > 0) {
+      const wordEl = this.wordElements[wordIdx];
+      const letters = wordEl ? wordEl.querySelectorAll('.letter') : [];
+      let nextWordIdx = wordIdx;
+      let nextCharIdx = charIdx + 1;
+      if (nextCharIdx > letters.length) {
+        nextWordIdx = wordIdx + 1;
+        nextCharIdx = 0;
+      }
+      if (nextWordIdx < this.wordElements.length) {
+        const coordsB = this.getCursorCoordinates(nextWordIdx, nextCharIdx);
+        if (coordsB.top === coordsA.top) {
+          targetLeft = coordsA.left + (coordsB.left - coordsA.left) * fraction;
+        }
+      }
+    }
+    this.ghostCaret.style.transform = `translate(${targetLeft}px, ${targetTop}px)`;
+    const boxHeight = this.wordsBox ? (this.wordsBox.offsetHeight || 140) : 140;
+    const isOutOfBounds = (visualTop > boxHeight - 15) || (wordIdx >= this.wordElements.length - 1 && charIdx >= 999);
+    return {
+      left: targetLeft,
+      top: targetTop,
+      visualTop,
+      isOutOfBounds
+    };
+  }
+  setGhostVisible(visible) {
+    if (!this.ghostCaret) return;
+    if (visible) {
+      this.ghostCaret.style.display = 'block';
+      this.ghostCaret.classList.remove('fading');
+      this.ghostCaret.classList.add('visible');
+    } else {
+      this.ghostCaret.classList.remove('visible', 'fading');
+      this.ghostCaret.style.display = 'none';
+    }
+  }
+  setGhostFading(isFading) {
+    if (!this.ghostCaret) return;
+    this.ghostCaret.classList.toggle('fading', !!isFading);
+    if (isFading) {
+      this.ghostCaret.classList.remove('visible');
+    }
+  }
+  syncGhostToCaret(wordIdx, currentCharIdx) {
+    if (!this.ghostCaret) return;
+    const coords = this.getCursorCoordinates(wordIdx, currentCharIdx);
+    if (coords.valid) {
+      this.ghostCaret.style.transform = `translate(${coords.left}px, ${coords.top}px)`;
+    }
   }
   setCaretRainbow(isApex) {
     if (!this.caret) return;
@@ -5264,6 +5489,10 @@ class HUDView {
     this.soundIconOn = elements.soundIconOn || (typeof document !== 'undefined' ? document.getElementById('sound-icon-on') : null);
     this.soundIconOff = elements.soundIconOff || (typeof document !== 'undefined' ? document.getElementById('sound-icon-off') : null);
     this.hdBtn = elements.hdBtn || (typeof document !== 'undefined' ? document.getElementById('hd-btn') : null);
+    this.ghostBtn = elements.ghostBtn || (typeof document !== 'undefined' ? document.getElementById('ghost-btn') : null);
+    this.ghostSliderPill = elements.ghostSliderPill || (typeof document !== 'undefined' ? document.getElementById('ghost-slider-pill') : null);
+    this.ghostSlider = elements.ghostSlider || (typeof document !== 'undefined' ? document.getElementById('ghost-slider') : null);
+    this.ghostVal = elements.ghostVal || (typeof document !== 'undefined' ? document.getElementById('ghost-val') : null);
     this.timerEl = elements.timerEl || (typeof document !== 'undefined' ? document.getElementById('timer') : null);
     this.restartBtnLabel = elements.restartBtnLabel || (typeof document !== 'undefined' ? document.getElementById('restart-btn-label') : null);
     this.liveStats = elements.liveStats || (typeof document !== 'undefined' ? document.getElementById('live-stats') : null);
@@ -5333,6 +5562,19 @@ class HUDView {
     if (hdBtn) {
       hdBtn.addEventListener('click', () => {
         if (handlers.onHiddenToggle) handlers.onHiddenToggle();
+      });
+    }
+    const ghostBtn = this.ghostBtn || ((typeof document !== 'undefined') ? document.getElementById('ghost-btn') : null);
+    if (ghostBtn) {
+      ghostBtn.addEventListener('click', () => {
+        if (handlers.onGhostToggle) handlers.onGhostToggle();
+      });
+    }
+    const ghostSlider = this.ghostSlider || ((typeof document !== 'undefined') ? document.getElementById('ghost-slider') : null);
+    if (ghostSlider) {
+      ghostSlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        if (handlers.onGhostSpeedChange) handlers.onGhostSpeedChange(val);
       });
     }
     const restartBtn = (typeof document !== 'undefined') ? document.getElementById('restart-btn') : null;
@@ -5507,6 +5749,28 @@ class HUDView {
       btn.title = enabled
         ? 'Hidden (HD) Look-Ahead: ON (Click to disable)'
         : 'Toggle Hidden (HD) Look-Ahead Mode';
+    }
+  }
+  updateGhostState(enabled, speed) {
+    const btn = this.ghostBtn || ((typeof document !== 'undefined') ? document.getElementById('ghost-btn') : null);
+    if (btn) {
+      btn.classList.toggle('active', !!enabled);
+      btn.setAttribute('aria-pressed', String(!!enabled));
+      btn.title = enabled
+        ? `Ghost Cursor Pacer: ON (${speed || 50} WPM) - Click to disable`
+        : 'Toggle Ghost Cursor Pacer';
+    }
+    const pill = this.ghostSliderPill || ((typeof document !== 'undefined') ? document.getElementById('ghost-slider-pill') : null);
+    if (pill) {
+      pill.style.display = enabled ? 'flex' : 'none';
+    }
+    const slider = this.ghostSlider || ((typeof document !== 'undefined') ? document.getElementById('ghost-slider') : null);
+    const valEl = this.ghostVal || ((typeof document !== 'undefined') ? document.getElementById('ghost-val') : null);
+    if (slider) {
+      slider.value = speed || 50;
+    }
+    if (valEl) {
+      valEl.textContent = `${speed || 50} WPM`;
     }
   }
 }
@@ -6244,6 +6508,15 @@ class GameController {
     this.visualMomentum = 0;
     this.lastTestFinishedTime = 0;
     this.currentMode = 'flow';
+    this.ghostEnabled = false;
+    this.ghostSpeed = 50;
+    this.ghostAnimId = null;
+    this.ghostLastFrameTime = null;
+    this.ghostTotalChars = 0;
+    this.ghostPhaseTimer = null;
+    this.ghostResetTimer = null;
+    this.isGhostRunning = false;
+    this.ghostNeedsSync = true;
     const KBClass = deps.keyboardControllerClass || _KeyboardController;
     if (KBClass) {
       this.keyboardController = new KBClass({
@@ -6295,6 +6568,11 @@ class GameController {
     if (this.hudView.updateHiddenModeState) {
       this.hudView.updateHiddenModeState(isHidden);
     }
+    this.ghostEnabled = this.storageService.getGhostCursor ? this.storageService.getGhostCursor() : false;
+    this.ghostSpeed = this.storageService.getGhostSpeed ? this.storageService.getGhostSpeed() : 50;
+    if (this.hudView.updateGhostState) {
+      this.hudView.updateGhostState(this.ghostEnabled, this.ghostSpeed);
+    }
     this.keyboardController.attach(
       typeof window !== 'undefined' ? window : null,
       this.stageView.typingInput,
@@ -6321,6 +6599,8 @@ class GameController {
         }
       },
       onHiddenToggle: () => this.toggleHiddenMode(),
+      onGhostToggle: () => this.toggleGhostCursor(),
+      onGhostSpeedChange: (speed) => this.updateGhostSpeed(speed),
       onRestart: () => this.resetTest()
     });
     this.nestView.bindEvents({
@@ -6426,11 +6706,170 @@ class GameController {
     );
     return next;
   }
+  toggleGhostCursor() {
+    this.ghostEnabled = !this.ghostEnabled;
+    if (this.storageService.setGhostCursor) {
+      this.storageService.setGhostCursor(this.ghostEnabled);
+    }
+    if (this.hudView.updateGhostState) {
+      this.hudView.updateGhostState(this.ghostEnabled, this.ghostSpeed);
+    }
+    if (!this.ghostEnabled) {
+      this.stopGhostPacer(true);
+      if (this.stageView.setGhostVisible) {
+        this.stageView.setGhostVisible(false);
+      }
+    } else {
+      this.ghostNeedsSync = true;
+      this.syncGhostToPlayer();
+    }
+    return this.ghostEnabled;
+  }
+  updateGhostSpeed(speed) {
+    const num = Math.max(15, Math.min(150, parseInt(speed, 10) || 50));
+    this.ghostSpeed = num;
+    if (this.storageService.setGhostSpeed) {
+      this.storageService.setGhostSpeed(num);
+    }
+    if (this.hudView.updateGhostState) {
+      this.hudView.updateGhostState(this.ghostEnabled, this.ghostSpeed);
+    }
+    return num;
+  }
+  getCharCumulativeIndex(wordIdx, charIdx) {
+    const words = this.sessionModel.words || [];
+    let total = 0;
+    for (let i = 0; i < wordIdx && i < words.length; i++) {
+      total += words[i].length + 1;
+    }
+    return total + charIdx;
+  }
+  mapCharsToPosition(totalChars) {
+    const words = this.sessionModel.words || [];
+    let remaining = Math.max(0, totalChars);
+    for (let i = 0; i < words.length; i++) {
+      const wLen = words[i].length;
+      const totalSlot = wLen + 1;
+      if (remaining < totalSlot) {
+        const charIdx = Math.floor(remaining);
+        const fraction = remaining - charIdx;
+        return { wordIdx: i, charIdx: Math.min(charIdx, wLen), fraction, isOutOfBounds: false };
+      }
+      remaining -= totalSlot;
+    }
+    return { wordIdx: Math.max(0, words.length - 1), charIdx: 999, fraction: 0, isOutOfBounds: true };
+  }
+  triggerGhostActivity() {
+    if (!this.ghostEnabled || this.sessionModel.isFinished) return;
+    if (this.eggNestModel && this.eggNestModel.isHatching && this.eggNestModel.isHatching()) return;
+    if (this.ghostPhaseTimer) {
+      clearTimeout(this.ghostPhaseTimer);
+      this.ghostPhaseTimer = null;
+    }
+    if (this.ghostResetTimer) {
+      clearTimeout(this.ghostResetTimer);
+      this.ghostResetTimer = null;
+    }
+    if (this.stageView.setGhostFading) {
+      this.stageView.setGhostFading(false);
+    }
+    if (this.stageView.setGhostVisible) {
+      this.stageView.setGhostVisible(true);
+    }
+    if (!this.isGhostRunning) {
+      if (this.ghostNeedsSync) {
+        this.syncGhostToPlayer();
+        this.ghostNeedsSync = false;
+      }
+      this.startGhostPacer();
+    }
+    this.ghostPhaseTimer = setTimeout(() => {
+      this.stopGhostPacer(false);
+      if (this.stageView.setGhostFading) {
+        this.stageView.setGhostFading(true);
+      }
+    }, 600);
+    this.ghostResetTimer = setTimeout(() => {
+      this.syncGhostToPlayer();
+      this.ghostNeedsSync = true;
+      if (this.stageView.setGhostVisible) {
+        this.stageView.setGhostVisible(false);
+      }
+    }, 1200);
+  }
+  startGhostPacer() {
+    if (this.isGhostRunning) return;
+    this.isGhostRunning = true;
+    this.ghostLastFrameTime = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+    const tick = (now) => {
+      if (!this.isGhostRunning || !this.ghostEnabled) return;
+      const currentTime = now || ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now());
+      const dt = Math.min(100, currentTime - this.ghostLastFrameTime);
+      this.ghostLastFrameTime = currentTime;
+      const v = (this.ghostSpeed * 5) / 60000;
+      this.ghostTotalChars += v * dt;
+      const pos = this.mapCharsToPosition(this.ghostTotalChars);
+      let res = null;
+      if (this.stageView.updateGhostCaret) {
+        res = this.stageView.updateGhostCaret(pos.wordIdx, pos.charIdx, pos.fraction);
+      }
+      if ((res && res.isOutOfBounds) || pos.isOutOfBounds) {
+        this.syncGhostToPlayer();
+        this.ghostNeedsSync = true;
+        if (this.stageView.setGhostVisible) {
+          this.stageView.setGhostVisible(false);
+        }
+        this.stopGhostPacer(false);
+        return;
+      }
+      if (typeof requestAnimationFrame !== 'undefined') {
+        this.ghostAnimId = requestAnimationFrame(tick);
+      }
+    };
+    if (typeof requestAnimationFrame !== 'undefined') {
+      this.ghostAnimId = requestAnimationFrame(tick);
+    }
+  }
+  stopGhostPacer(cancelTimers = false) {
+    this.isGhostRunning = false;
+    if (this.ghostAnimId && typeof cancelAnimationFrame !== 'undefined') {
+      cancelAnimationFrame(this.ghostAnimId);
+      this.ghostAnimId = null;
+    }
+    if (cancelTimers) {
+      if (this.ghostPhaseTimer) {
+        clearTimeout(this.ghostPhaseTimer);
+        this.ghostPhaseTimer = null;
+      }
+      if (this.ghostResetTimer) {
+        clearTimeout(this.ghostResetTimer);
+        this.ghostResetTimer = null;
+      }
+      this.ghostNeedsSync = true;
+    }
+  }
+  syncGhostToPlayer() {
+    this.ghostTotalChars = this.getCharCumulativeIndex(
+      this.sessionModel.currentWordIdx,
+      this.sessionModel.currentCharIdx
+    );
+    if (this.stageView.syncGhostToCaret) {
+      this.stageView.syncGhostToCaret(
+        this.sessionModel.currentWordIdx,
+        this.sessionModel.currentCharIdx
+      );
+    }
+  }
   resetTest() {
     if (this.classicTimerInterval) {
       clearInterval(this.classicTimerInterval);
       this.classicTimerInterval = null;
     }
+    this.stopGhostPacer(true);
+    if (this.stageView.setGhostVisible) {
+      this.stageView.setGhostVisible(false);
+    }
+    this.syncGhostToPlayer();
     this.modalView.hideClassicResults();
     this.stageView.setPacePaused(false);
     this.flowModel.reset();
@@ -6499,6 +6938,10 @@ class GameController {
   endClassicTest() {
     this.lastTestFinishedTime = Date.now();
     const stats = this.sessionModel.calculateFinalStats();
+    this.stopGhostPacer(true);
+    if (this.stageView.setGhostVisible) {
+      this.stageView.setGhostVisible(false);
+    }
     this.storageService.recordClassicTest(
       this.sessionModel.duration,
       stats.wpm,
@@ -6547,6 +6990,7 @@ class GameController {
     const combo = this.getHiddenCombo();
     const hasErr = isExtra || !isCorrect || this.sessionModel.hasErrorInCurrentWord();
     this.stageView.updateHiddenHorizon(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx, combo, hasErr);
+    this.triggerGhostActivity();
     this.audioService.playKey(false, this.currentMode === 'flow' ? this.flowModel.flowStreak : 0);
   }
   handleBackspace() {
@@ -6559,6 +7003,7 @@ class GameController {
         if (reverted) {
           this.stageView.revertWord(prevWordIdx + 1, prevWordIdx);
           this.stageView.updateCaret(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
+          this.triggerGhostActivity();
           this.flowModel.recordKeystroke();
           const combo = this.getHiddenCombo();
           this.stageView.updateHiddenHorizon(
@@ -6577,6 +7022,7 @@ class GameController {
     }
     this.flowModel.recordKeystroke();
     this.stageView.updateCaret(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
+    this.triggerGhostActivity();
     const combo = this.getHiddenCombo();
     this.stageView.updateHiddenHorizon(
       this.sessionModel.currentWordIdx,
@@ -6708,6 +7154,7 @@ class GameController {
     this.stageView.updateCaret(nextIdx, 0);
     const combo = this.getHiddenCombo();
     this.stageView.updateHiddenHorizon(nextIdx, 0, combo, false);
+    this.triggerGhostActivity();
     if (nextIdx >= this.stageView.wordElements.length - 10) {
       const gameState = this.storageService.getGameSave();
       const more = (this.currentMode === 'flow')
@@ -6722,6 +7169,10 @@ class GameController {
     const entered = this.eggNestModel.enterHatchMode(preferredSlot);
     if (entered) {
       this.nestView.render(this.eggNestModel);
+      this.stopGhostPacer(false);
+      if (this.stageView.setGhostFading) {
+        this.stageView.setGhostFading(true);
+      }
     }
     return entered;
   }

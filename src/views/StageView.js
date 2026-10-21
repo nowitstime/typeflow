@@ -10,6 +10,7 @@ class StageView {
     this.wordsBox = elements.wordsBox || (typeof document !== 'undefined' ? document.getElementById('words-box') : null);
     this.wordsWrapper = elements.wordsWrapper || (typeof document !== 'undefined' ? document.getElementById('words-wrapper') : null);
     this.caret = elements.caret || (typeof document !== 'undefined' ? document.getElementById('caret') : null);
+    this.ghostCaret = elements.ghostCaret || (typeof document !== 'undefined' ? document.getElementById('ghost-caret') : null);
     this.focusOverlay = elements.focusOverlay || (typeof document !== 'undefined' ? document.getElementById('focus-overlay') : null);
     this.typingInput = elements.typingInput || (typeof document !== 'undefined' ? document.getElementById('typing-input') : null);
 
@@ -304,25 +305,28 @@ class StageView {
   }
 
   /**
-   * Subpixel horizontal caret tracking and synchronous vertical lock.
+   * Computes subpixel cursor coordinates for a given word and character position.
    */
-  updateCaret(currentWordIdx, currentCharIdx) {
-    if (!this.caret || !this.wordsWrapper) return;
-    const currentWordEl = this.wordElements[currentWordIdx];
-    if (!currentWordEl) return;
+  getCursorCoordinates(wordIdx, charIdx) {
+    if (!this.wordElements || this.wordElements.length === 0) {
+      return { left: 0, top: 5, visualTop: 5, valid: false };
+    }
+    const safeWordIdx = Math.max(0, Math.min(this.wordElements.length - 1, wordIdx));
+    const wordEl = this.wordElements[safeWordIdx];
+    if (!wordEl) {
+      return { left: 0, top: 5, visualTop: 5, valid: false };
+    }
 
-    this.checkLineScroll(currentWordEl);
-
-    const currentWordTop = currentWordEl.offsetTop;
-    const visualTop = currentWordTop - this.scrollOffset;
+    const wordTop = wordEl.offsetTop;
+    const visualTop = wordTop - this.scrollOffset;
     const targetTop = visualTop + 5;
 
-    const letterElements = currentWordEl.querySelectorAll('.letter');
+    const letterElements = wordEl.querySelectorAll('.letter');
     const boxRect = this.wordsBox ? this.wordsBox.getBoundingClientRect() : { left: 0, width: 0 };
     let targetLeft = 0;
 
-    if (currentCharIdx < letterElements.length) {
-      const activeLetter = letterElements[currentCharIdx];
+    if (charIdx < letterElements.length) {
+      const activeLetter = letterElements[charIdx];
       const letterRect = activeLetter.getBoundingClientRect();
       if (boxRect.width > 0 && letterRect.width > 0) {
         targetLeft = letterRect.left - boxRect.left;
@@ -340,11 +344,112 @@ class StageView {
           targetLeft = lastLetter.offsetLeft + lastLetter.offsetWidth;
         }
       } else {
-        targetLeft = currentWordEl.offsetLeft;
+        targetLeft = wordEl.offsetLeft;
       }
     }
 
-    this.caret.style.transform = `translate(${targetLeft}px, ${targetTop}px)`;
+    return {
+      left: targetLeft,
+      top: targetTop,
+      visualTop,
+      valid: true
+    };
+  }
+
+  /**
+   * Subpixel horizontal caret tracking and synchronous vertical lock.
+   */
+  updateCaret(currentWordIdx, currentCharIdx) {
+    if (!this.caret || !this.wordsWrapper) return;
+    const currentWordEl = this.wordElements[currentWordIdx];
+    if (!currentWordEl) return;
+
+    this.checkLineScroll(currentWordEl);
+
+    const coords = this.getCursorCoordinates(currentWordIdx, currentCharIdx);
+    if (coords.valid) {
+      this.caret.style.transform = `translate(${coords.left}px, ${coords.top}px)`;
+    }
+  }
+
+  /**
+   * Updates Ghost Caret (Pace Rabbit) position with optional fractional interpolation.
+   */
+  updateGhostCaret(wordIdx, charIdx, fraction = 0) {
+    if (!this.ghostCaret) return null;
+    const coordsA = this.getCursorCoordinates(wordIdx, charIdx);
+    if (!coordsA.valid) return null;
+
+    let targetLeft = coordsA.left;
+    let targetTop = coordsA.top;
+    const visualTop = coordsA.visualTop;
+
+    if (fraction > 0) {
+      const wordEl = this.wordElements[wordIdx];
+      const letters = wordEl ? wordEl.querySelectorAll('.letter') : [];
+      let nextWordIdx = wordIdx;
+      let nextCharIdx = charIdx + 1;
+      if (nextCharIdx > letters.length) {
+        nextWordIdx = wordIdx + 1;
+        nextCharIdx = 0;
+      }
+      if (nextWordIdx < this.wordElements.length) {
+        const coordsB = this.getCursorCoordinates(nextWordIdx, nextCharIdx);
+        // Only interpolate horizontally if both characters are on the exact same line
+        if (coordsB.top === coordsA.top) {
+          targetLeft = coordsA.left + (coordsB.left - coordsA.left) * fraction;
+        }
+      }
+    }
+
+    this.ghostCaret.style.transform = `translate(${targetLeft}px, ${targetTop}px)`;
+
+    const boxHeight = this.wordsBox ? (this.wordsBox.offsetHeight || 140) : 140;
+    const isOutOfBounds = (visualTop > boxHeight - 15) || (wordIdx >= this.wordElements.length - 1 && charIdx >= 999);
+
+    return {
+      left: targetLeft,
+      top: targetTop,
+      visualTop,
+      isOutOfBounds
+    };
+  }
+
+  /**
+   * Toggles visibility of ghost caret.
+   */
+  setGhostVisible(visible) {
+    if (!this.ghostCaret) return;
+    if (visible) {
+      this.ghostCaret.style.display = 'block';
+      this.ghostCaret.classList.remove('fading');
+      this.ghostCaret.classList.add('visible');
+    } else {
+      this.ghostCaret.classList.remove('visible', 'fading');
+      this.ghostCaret.style.display = 'none';
+    }
+  }
+
+  /**
+   * Starts smooth fade out transition after 0.6s pause.
+   */
+  setGhostFading(isFading) {
+    if (!this.ghostCaret) return;
+    this.ghostCaret.classList.toggle('fading', !!isFading);
+    if (isFading) {
+      this.ghostCaret.classList.remove('visible');
+    }
+  }
+
+  /**
+   * Snaps ghost caret position directly to player's active caret position.
+   */
+  syncGhostToCaret(wordIdx, currentCharIdx) {
+    if (!this.ghostCaret) return;
+    const coords = this.getCursorCoordinates(wordIdx, currentCharIdx);
+    if (coords.valid) {
+      this.ghostCaret.style.transform = `translate(${coords.left}px, ${coords.top}px)`;
+    }
   }
 
   setCaretRainbow(isApex) {

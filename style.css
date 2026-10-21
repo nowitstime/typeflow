@@ -254,6 +254,40 @@ header {
   text-transform: uppercase;
 }
 
+/* Ghost Cursor Speed Slider Pill */
+.ghost-slider-pill {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 4px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--sub-color);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ghost-slider-pill:focus-within {
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
+}
+
+.ghost-slider-pill .ghost-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--sub-color);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.ghost-slider-pill .ghost-val {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  min-width: 54px;
+  font-weight: 600;
+  color: var(--text-color);
+}
 
 /* Level HUD Card */
 .level-hud-card {
@@ -625,6 +659,31 @@ main {
   z-index: 10;
   opacity: 1;
   transition: transform 0.08s linear;
+}
+
+/* Ghost Caret (Pace Rabbit) */
+.ghost-caret {
+  position: absolute;
+  width: 2.5px;
+  height: 32px;
+  background-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+  border-radius: 2px;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.04s linear;
+}
+
+.ghost-caret.visible {
+  opacity: 1;
+}
+
+.ghost-caret.fading {
+  opacity: 0;
+  transition: opacity 0.4s ease;
 }
 
 /* Focus Overlay */

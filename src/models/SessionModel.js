@@ -251,6 +251,9 @@ class SessionModel extends _EventEmitter {
           if (!e.fixed) {
             e.fixed = true;
             this.totalFixedErrors++;
+            if (e.second && this.wpmHistory[e.second - 1]) {
+              this.wpmHistory[e.second - 1].fixed++;
+            }
           }
         });
         this.unfixedErrorsByKey.delete(key);
@@ -331,6 +334,9 @@ class SessionModel extends _EventEmitter {
             if (!e.fixed) {
               e.fixed = true;
               this.totalFixedErrors++;
+              if (e.second && this.wpmHistory[e.second - 1]) {
+                this.wpmHistory[e.second - 1].fixed++;
+              }
               fixedError = true;
             }
           });
@@ -348,11 +354,25 @@ class SessionModel extends _EventEmitter {
             if (!e.fixed) {
               e.fixed = true;
               this.totalFixedErrors++;
+              if (e.second && this.wpmHistory[e.second - 1]) {
+                this.wpmHistory[e.second - 1].fixed++;
+              }
               fixedError = true;
             }
           });
           this.unfixedErrorsByKey.delete(normKey);
         } else {
+          for (let i = this.errorLog.length - 1; i >= 0; i--) {
+            const e = this.errorLog[i];
+            if (!e.fixed) {
+              e.fixed = true;
+              this.totalFixedErrors++;
+              if (e.second && this.wpmHistory[e.second - 1]) {
+                this.wpmHistory[e.second - 1].fixed++;
+              }
+              break;
+            }
+          }
           fixedError = true;
         }
       }
