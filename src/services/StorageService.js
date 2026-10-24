@@ -43,7 +43,18 @@ const DEFAULT_GAME_SAVE = {
   hiddenMethod: 'char',
   hiddenWordDistance: 2,
   ghostCursor: false,
-  ghostSpeed: 50
+  ghostSpeed: 50,
+  achievements: {},
+  achievementCounters: {
+    tests60Wpm: 0,
+    tests100Wpm: 0,
+    tests98Acc: 0,
+    tests100RawAcc: 0,
+    tests85Consistency: 0,
+    tests92Consistency: 0,
+    testsHiddenMode: 0,
+    eggsHatchedTotal: 0
+  }
 };
 
 function safeGetLocalStorage() {
@@ -136,6 +147,19 @@ class StorageService {
     } catch (e) {
       console.error('[StorageService] Failed to save classic stats:', e);
       return null;
+    }
+  }
+
+  saveClassicStats(stats) {
+    try {
+      const s = this._getStorage();
+      if (s) {
+        s.setItem(STORAGE_KEYS.CLASSIC_STATS, JSON.stringify(stats));
+      }
+      return true;
+    } catch (e) {
+      console.error('[StorageService] Failed to save classic stats:', e);
+      return false;
     }
   }
 
@@ -428,6 +452,7 @@ class StorageService {
           bucketColor: mb.color,
           description: mb.description,
           count: 0,
+          masteredWordsCount: 0,
           totalHits: 0,
           totalWpm: 0,
           totalErrors: 0,
@@ -447,9 +472,11 @@ class StorageService {
         if (meta && stats[meta.bucketId]) {
           const b = stats[meta.bucketId];
           const st = (save.wordStats && save.wordStats[rank]) || {};
+          const hits = (st.streak ?? st.cleanHits ?? 0);
           b.count += 1;
           b.isDiscovered = true;
-          b.totalHits += (st.streak ?? st.cleanHits ?? 0);
+          if (hits >= 5) b.masteredWordsCount += 1;
+          b.totalHits += hits;
           b.totalWpm += (st.avgWpm ?? st.lastWpm ?? save.targetWpm ?? 40);
           b.totalErrors += ((st.unfixedErr || 0) + (st.fixedErr || 0)) || (st.errorCount || 0);
         }
@@ -477,11 +504,40 @@ class StorageService {
     return stats;
   }
 
-  resetGameSave() {
+  getMotorMasterySummary(saveState) {
+    let motorBucketsCount = 0;
+    let pentathlonBucketsCount = 0;
+    let allFiveMastered = false;
     try {
+      const bStats = this.getBucketStats(saveState);
+      const bKeys = Object.keys(bStats);
+      if (bKeys.length > 0) {
+        for (const k of bKeys) {
+          const b = bStats[k];
+          if (b.isProficient || b.masteredWordsCount >= 1) {
+            motorBucketsCount++;
+          }
+          if ((b.isProficient && b.count >= 3) || b.masteredWordsCount >= 3) {
+            pentathlonBucketsCount++;
+          }
+        }
+        allFiveMastered = (bKeys.length >= 5 && pentathlonBucketsCount >= 5);
+      }
+    } catch (e) {}
+    return { motorBucketsCount, pentathlonBucketsCount, allFiveMastered };
+  }
+
+  resetGameSave(resetAchievements = false) {
+    try {
+      const prev = this.getGameSave();
       const s = this._getStorage();
       if (s) s.removeItem(STORAGE_KEYS.GAME_SAVE);
       const fresh = JSON.parse(JSON.stringify(DEFAULT_GAME_SAVE));
+      if (!resetAchievements && prev) {
+        if (prev.achievements) fresh.achievements = prev.achievements;
+        if (prev.achievementCounters) fresh.achievementCounters = prev.achievementCounters;
+        if (prev.achievementRetroSynced) fresh.achievementRetroSynced = prev.achievementRetroSynced;
+      }
       this.saveGameSave(fresh);
       return fresh;
     } catch (e) {
@@ -665,6 +721,117 @@ class StorageService {
     } catch (e) {
       return num;
     }
+  }
+
+  // --- Achievement System Persistence ---
+  getAchievements() {
+    const save = this.getGameSave();
+    return (save && typeof save.achievements === 'object' && save.achievements !== null)
+      ? Object.assign({}, save.achievements)
+      : {};
+  }
+
+  unlockAchievement(id, timestamp = Date.now()) {
+    if (!id) return false;
+    const save = this.getGameSave();
+    if (!save.achievements) save.achievements = {};
+    if (!save.achievements[id]) {
+      save.achievements[id] = timestamp;
+      this.saveGameSave(save);
+      return true;
+    }
+    return false;
+  }
+
+  getAchievementCounters() {
+    const save = this.getGameSave();
+    const defaults = {
+      tests60Wpm: 0,
+      tests100Wpm: 0,
+      tests98Acc: 0,
+      tests100RawAcc: 0,
+      tests85Consistency: 0,
+      tests92Consistency: 0,
+      testsHiddenMode: 0,
+      eggsHatchedTotal: 0
+    };
+    return Object.assign({}, defaults, save.achievementCounters || {});
+  }
+
+  updateAchievementCounters(updaterFn) {
+    const save = this.getGameSave();
+    if (!save.achievementCounters) {
+      save.achievementCounters = {
+        tests60Wpm: 0,
+        tests100Wpm: 0,
+        tests98Acc: 0,
+        tests100RawAcc: 0,
+        tests85Consistency: 0,
+        tests92Consistency: 0,
+        testsHiddenMode: 0,
+        eggsHatchedTotal: 0
+      };
+    }
+    if (typeof updaterFn === 'function') {
+      updaterFn(save.achievementCounters);
+    }
+    this.saveGameSave(save);
+    return Object.assign({}, save.achievementCounters);
+  }
+
+  syncRetroactiveAchievements(achievementsModel) {
+    if (!achievementsModel) return [];
+    const save = this.getGameSave();
+    const classicStats = this.getClassicStats();
+    const counters = this.getAchievementCounters();
+
+    // Populate counters from recentHistory & unlockedRanks at most once per save
+    if (!save.achievementRetroSynced) {
+      let modified = false;
+      if (Array.isArray(classicStats.recentHistory) && classicStats.recentHistory.length > 0) {
+        for (const t of classicStats.recentHistory) {
+          if (t.duration >= 30) {
+            const acc = t.accuracy ?? t.acc ?? 0;
+            if (t.wpm >= 60 && acc >= 96) counters.tests60Wpm++;
+            if (t.wpm >= 100 && acc >= 96) counters.tests100Wpm++;
+            if (acc >= 98) counters.tests98Acc++;
+            if (typeof t.incorrectChars === 'number' && t.incorrectChars === 0 && (!t.fixedErrors || t.fixedErrors === 0)) {
+              counters.tests100RawAcc++;
+            }
+            if (t.wpm >= 50 && t.consistency >= 85) counters.tests85Consistency++;
+            if (t.wpm >= 70 && t.consistency >= 92) counters.tests92Consistency++;
+            modified = true;
+          }
+        }
+      }
+
+      const unlockedLen = Array.isArray(save.unlockedRanks) ? save.unlockedRanks.length : 1;
+      if ((counters.eggsHatchedTotal || 0) < unlockedLen - 1) {
+        counters.eggsHatchedTotal = unlockedLen - 1;
+        modified = true;
+      }
+
+      save.achievementRetroSynced = true;
+      if (!save.achievementCounters) save.achievementCounters = {};
+      Object.assign(save.achievementCounters, counters);
+      this.saveGameSave(save);
+    }
+
+    const { motorBucketsCount, pentathlonBucketsCount, allFiveMastered } = this.getMotorMasterySummary(save);
+
+    const newlyUnlocked = achievementsModel.evaluate('sync', {
+      gameSave: save,
+      classicStats,
+      counters,
+      motorBucketsCount,
+      pentathlonBucketsCount,
+      allFiveMastered
+    });
+
+    for (const ach of newlyUnlocked) {
+      this.unlockAchievement(ach.id, ach.unlockedAt);
+    }
+    return newlyUnlocked;
   }
 }
 

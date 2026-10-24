@@ -25,8 +25,19 @@ class ModalView {
     this.statsModal = elements.statsModal || (typeof document !== 'undefined' ? document.getElementById('stats-modal') : null);
     this.tabStatsFlow = elements.tabStatsFlow || (typeof document !== 'undefined' ? document.getElementById('tab-stats-flow') : null);
     this.tabStatsClassic = elements.tabStatsClassic || (typeof document !== 'undefined' ? document.getElementById('tab-stats-classic') : null);
+    this.tabStatsTrophies = elements.tabStatsTrophies || (typeof document !== 'undefined' ? document.getElementById('tab-stats-trophies') : null);
     this.paneStatsFlow = elements.paneStatsFlow || (typeof document !== 'undefined' ? document.getElementById('pane-stats-flow') : null);
     this.paneStatsClassic = elements.paneStatsClassic || (typeof document !== 'undefined' ? document.getElementById('pane-stats-classic') : null);
+    this.paneStatsTrophies = elements.paneStatsTrophies || (typeof document !== 'undefined' ? document.getElementById('pane-stats-trophies') : null);
+
+    // Trophies Elements
+    this.trophiesCountEl = elements.trophiesCountEl || (typeof document !== 'undefined' ? document.getElementById('trophies-count') : null);
+    this.trophiesProgressBar = elements.trophiesProgressBar || (typeof document !== 'undefined' ? document.getElementById('trophies-progress-bar') : null);
+    this.trophiesGrid = elements.trophiesGrid || (typeof document !== 'undefined' ? document.getElementById('trophies-grid') : null);
+    this.trophyFilterBtns = elements.trophyFilterBtns || (typeof document !== 'undefined' ? document.querySelectorAll('.trophy-filter-btn') : []);
+    this.currentTrophyFilter = 'all';
+    this.currentAchievementsModel = null;
+    this.currentStorageService = null;
 
     // RPG Stats Pane Elements
     this.statsRpgLevel = elements.statsRpgLevel || (typeof document !== 'undefined' ? document.getElementById('stats-rpg-level') : null);
@@ -100,10 +111,16 @@ class ModalView {
 
   switchStatsTab(tabName) {
     const isFlow = tabName === 'flow';
+    const isClassic = tabName === 'classic';
+    const isTrophies = tabName === 'trophies';
+
     if (this.tabStatsFlow) this.tabStatsFlow.classList.toggle('active', isFlow);
-    if (this.tabStatsClassic) this.tabStatsClassic.classList.toggle('active', !isFlow);
+    if (this.tabStatsClassic) this.tabStatsClassic.classList.toggle('active', isClassic);
+    if (this.tabStatsTrophies) this.tabStatsTrophies.classList.toggle('active', isTrophies);
+
     if (this.paneStatsFlow) this.paneStatsFlow.style.display = isFlow ? 'flex' : 'none';
-    if (this.paneStatsClassic) this.paneStatsClassic.style.display = isFlow ? 'none' : 'flex';
+    if (this.paneStatsClassic) this.paneStatsClassic.style.display = isClassic ? 'flex' : 'none';
+    if (this.paneStatsTrophies) this.paneStatsTrophies.style.display = isTrophies ? 'flex' : 'none';
   }
   bindEvents(handlers = {}) {
     if (this.tabStatsFlow) {
@@ -111,6 +128,12 @@ class ModalView {
     }
     if (this.tabStatsClassic) {
       this.tabStatsClassic.addEventListener('click', () => this.switchStatsTab('classic'));
+    }
+    if (this.tabStatsTrophies) {
+      this.tabStatsTrophies.addEventListener('click', () => {
+        this.switchStatsTab('trophies');
+        if (handlers.onSelectTrophiesTab) handlers.onSelectTrophiesTab();
+      });
     }
 
     if (this.nextTestBtn) {
@@ -153,6 +176,25 @@ class ModalView {
     }
 
     this.setupDeckFilters();
+    this.setupTrophyFilters();
+  }
+
+  setupTrophyFilters() {
+    const btns = (this.trophyFilterBtns && this.trophyFilterBtns.length > 0)
+      ? this.trophyFilterBtns
+      : (typeof document !== 'undefined' ? document.querySelectorAll('.trophy-filter-btn') : []);
+    if (btns && btns.length > 0) {
+      btns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          btns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          this.currentTrophyFilter = btn.dataset.filter || 'all';
+          if (this.currentAchievementsModel && this.currentStorageService) {
+            this.renderTrophies(this.currentAchievementsModel, this.currentStorageService, this.currentTrophyFilter);
+          }
+        });
+      });
+    }
   }
 
   setupDeckFilters() {
@@ -347,6 +389,101 @@ class ModalView {
         });
       }
     }
+  }
+
+  renderTrophies(achievementsModel, storageService, filter = null) {
+    if (!achievementsModel) return;
+    this.currentAchievementsModel = achievementsModel;
+    this.currentStorageService = storageService;
+    if (filter) this.currentTrophyFilter = filter;
+
+    const all = achievementsModel.listAll();
+    const unlocked = achievementsModel.listUnlocked();
+    const totalCount = all.length;
+    const unlockedCount = unlocked.length;
+    const pct = totalCount > 0 ? Math.round((unlockedCount / totalCount) * 100) : 0;
+
+    if (this.trophiesCountEl) {
+      this.trophiesCountEl.textContent = `${unlockedCount} / ${totalCount} unlocked (${pct}%)`;
+    }
+    if (this.trophiesProgressBar) {
+      this.trophiesProgressBar.style.width = `${pct}%`;
+    }
+
+    if (!this.trophiesGrid) {
+      this.trophiesGrid = (typeof document !== 'undefined') ? document.getElementById('trophies-grid') : null;
+    }
+    if (!this.trophiesGrid) return;
+
+    let items = all;
+    if (this.currentTrophyFilter && this.currentTrophyFilter !== 'all') {
+      items = items.filter(a => a.category === this.currentTrophyFilter);
+    }
+
+    const counters = (storageService && storageService.getAchievementCounters) ? storageService.getAchievementCounters() : {};
+    const gameSave = (storageService && storageService.getGameSave) ? storageService.getGameSave() : {};
+    const motorSummary = (storageService && storageService.getMotorMasterySummary) ? storageService.getMotorMasterySummary(gameSave) : {};
+
+    const tierLabels = {
+      1: 'Tier I',
+      2: 'Tier II',
+      apex: 'Apex',
+      crown: 'Crown Jewel',
+      feat: 'Feat'
+    };
+
+    const doc = (this.trophiesGrid && this.trophiesGrid.ownerDocument)
+      ? this.trophiesGrid.ownerDocument
+      : ((typeof document !== 'undefined') ? document : null);
+    if (!doc) return;
+
+    this.trophiesGrid.innerHTML = '';
+    items.forEach(a => {
+      const isUnlocked = a.unlocked;
+      const prog = achievementsModel.getProgress(a.id, counters, gameSave, motorSummary);
+      const tierClass = `tier-${a.tier}`;
+      const tierLabel = tierLabels[a.tier] || `Tier ${a.tier}`;
+
+      let dateStr = '';
+      if (isUnlocked && a.unlockedAt) {
+        try {
+          const d = new Date(a.unlockedAt);
+          dateStr = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        } catch (e) {
+          dateStr = '';
+        }
+      }
+
+      const card = doc.createElement('div');
+      card.className = `trophy-card ${isUnlocked ? 'unlocked' : 'locked'} ${tierClass}`;
+
+      let footerHtml = '';
+      if (isUnlocked) {
+        footerHtml = `<div class="trophy-status unlocked"><span class="trophy-check">✓</span> Unlocked ${dateStr ? `· ${dateStr}` : ''}</div>`;
+      } else {
+        const miniPct = prog ? Math.min(100, Math.max(0, prog.pct || 0)) : 0;
+        const miniLabel = (prog && prog.label) ? prog.label : 'In Progress';
+        footerHtml = `
+          <div class="trophy-progress-wrap">
+            <div class="trophy-progress-text">${miniLabel}</div>
+            <div class="trophy-mini-bar"><div class="trophy-mini-fill" style="width: ${miniPct}%;"></div></div>
+          </div>
+        `;
+      }
+
+      card.innerHTML = `
+        <div class="trophy-header">
+          <div class="trophy-icon-wrap">${a.icon}</div>
+          <div class="trophy-title-wrap">
+            <div class="trophy-title">${a.title}</div>
+            <div class="trophy-tier-badge">${tierLabel}</div>
+          </div>
+        </div>
+        <div class="trophy-desc">${a.desc}</div>
+        ${footerHtml}
+      `;
+      this.trophiesGrid.appendChild(card);
+    });
   }
 }
 

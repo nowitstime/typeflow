@@ -1,230 +1,240 @@
-# TypeFlow ⚡ v3.0 (Flow RPG & OLED Edition)
+<div align="center">
 
-> 🚀 **Play Live in Browser:** [https://nowitstime.github.io/typeflow/](https://nowitstime.github.io/typeflow/)  
-> 📦 **GitHub Repository:** [https://github.com/nowitstime/typeflow](https://github.com/nowitstime/typeflow)  
-> 🧪 **Test Suite:** 67 / 67 Tests Passing (100% Pass Rate)
+# ⚡ TypeFlow
 
-A clean, minimalist typing trainer and kinetic flow RPG inspired by Monkeytype and Keybr, crafted with an OLED True Black & Electric Sky Blue aesthetic. 
+**The OLED Kinetic Typing Trainer & Incremental Flow-State RPG**
 
-TypeFlow pairs high-precision typing ergonomics with a rhythmic, incremental roguelike progression engine. Players begin at **Ground Zero with a single word (*"the"*)** and progressively unlock a curated deck of the **1,000 most common English words** categorized by physical touch-typing motor patterns.
+[![Live Demo](https://img.shields.io/badge/Play_Live-nowitstime.github.io%2Ftypeflow-38bdf8?style=for-the-badge&logo=googlechrome&logoColor=white)](https://nowitstime.github.io/typeflow/)
+[![Test Suite](https://img.shields.io/badge/Tests-167%20%2F%20167%20Passing-34d399?style=for-the-badge&logo=node.js&logoColor=white)](#-testing--verification)
+[![Dependencies](https://img.shields.io/badge/Dependencies-Zero-a855f7?style=for-the-badge)](#%EF%B8%8F-architecture--engineering)
+[![License: MIT](https://img.shields.io/badge/License-MIT-fbbf24?style=for-the-badge)](LICENSE)
 
----
+*Begin at Ground Zero with a single word (`"the"`). Spin up the momentum flywheel, incubate word eggs directly on the home row, master 5 physical finger-motion buckets, race a 60fps ghost pacer, train working memory in Hidden Horizon mode, and unlock all 1,000 words of the Grand Lexicon.*
 
-## ✨ Game Modes & Core Features
+[**🚀 Launch Live App**](https://nowitstime.github.io/typeflow/) · [**🏛️ Architecture**](#%EF%B8%8F-architecture--engineering) · [**🏆 Achievement System**](#-achievement-system--trophy-case) · [**⌨️ Shortcuts**](#%EF%B8%8F-keyboard-shortcuts)
 
-### 1. ⏱️ Classic Mode (15s / 30s / 60s)
-- **Tier-Weighted Macro Sampling**: Calibrated distribution across the top 1,000 common English words (60% Common, 25% Uncommon, 12% Rare, 3% Epic) with a 20-word anti-clumping buffer, delivering a high-frequency, natural typing cadence while avoiding repetitive clumping on ranks 1–5.
-- **Full Word Revert & Dynamic Error Clearance**:
-  - Hit <kbd>Backspace</kbd> at the start of a word to navigate back across word boundaries into previously submitted words.
-  - Fix typos or missed characters in previous words; upon re-submitting, the red error underline dynamically clears!
-- **Accurate Real-Time Feedback**:
-  - Live cursor tracking with subpixel precision that glides across words and lines as you type.
-  - Character highlighting: correct (crisp white), incorrect (coral red), extra characters, and missed letters.
-  - Deterministic 3-line row anchoring that maintains viewport stability with zero line-jump glitches.
-- **Accidental Restart Protection**:
-  - Spacebar is strictly prevented from triggering new tests on the results screen.
-  - Includes an anti-buffering cooldown for trailing keystrokes.
-- **Advanced Performance Analytics on Chart**:
-  - **Cumulative Average WPM line** (solid electric cyan `#38bdf8`).
-  - **Rolling 3-Second Pace line** (vibrant mint teal `#2dd4bf`) showing instantaneous speed surges and dips.
-  - **Raw WPM line** (muted dashed slate).
-  - **Fixed vs. Unfixed Error Markers**: Emerald markers (`#34d399`) denote mistakes you successfully backspaced and fixed; coral markers (`#f87171`) denote unfixed errors.
-  - **Interactive Hover Tooltip & Header Stats**: Hover or tap points on the graph to inspect exact second, Average Speed, 3s Pace, Raw Speed, and Error Fix Status.
-- **Persistent Lifetime Records**: Automatically saves Personal Bests (15s, 30s, 60s), total words typed, total keystrokes, and recent test histories in browser `localStorage`. Click the 📊 bar chart icon in the header to view.
+</div>
 
 ---
 
-### 2. 🎮 Flow RPG Game Mode (Active Skill Building)
-- **Ground Zero (1-Word Start)**:
-  - You begin your journey with literally **1 word** (*"the"*).
-  - Eliminates overwhelm and establishes baseline rhythm, hand placement, and cadence.
-- **Word Revert Across Boundaries**:
-  - Full backspace navigation into previous completed words is supported in Flow Mode, allowing you to salvage stumbles before submitting.
-- **Spaced Repetition System (SRS)**:
-  - Memory and performance are tracked continuously per word.
-  - Words with typos or typed below Target WPM reappear frequently until mastered cleanly at pace.
-  - Mastered words gradually decay in frequency to make room for new vocabulary.
-- **Granular Target WPM Difficulty Control**:
-  - **Analog OLED Slider**: Adjust your target pace from **15 to 120 WPM** with single-WPM precision.
-  - **Direct Number Input Box**: Type custom values beyond 120 WPM (up to 300 WPM) with bidirectional sync.
-  - **Keystroke Isolation**: Typing inside the target input box cleanly isolates keys without triggering board inputs.
-- **Calibrated Cadence Pace Formula**:
-  - Computes pace across the full inter-word cycle ($\Delta t_{\text{cycle}} = \max(0.20, (t_{\text{now}} - t_{\text{lastWordEnd}})/1000)$), penalizing hesitation between words and preventing artificial speed inflation on short words.
-- **Weighted "Flywheel" Flow State Engine (0%–120%)**:
-  - **Analog Rotational Inertia**: Replaces rigid binary streak resets with continuous momentum.
-  - **Weighted Ramp-Up (~10 Words to 100%)**: Starts at $+6.0\%$ on word 1 and smoothly accelerates to $+16.0\%$ as the wheel spins.
-  - **Apex Cushion (100%–120%)**: Continuing your cadence banks an extra $20\%$ over-spin buffer.
-  - **Stumble Damping**: Hesitations at the top only drop $-8\%$. If you have banked cushion (e.g. $115\%$), a stumble drops you to $107\%$, keeping you at $\ge 100\%$ Max Flow with your rainbow caret unbroken!
-  - **Kinetic Resting Inertia (3.0s Grace Period)**: At $\ge 100\%$, decay waits for a full 3.0-second grace period before convex friction ($-3.5\%/\text{sec}$ gentle bleed) begins.
-  - **Continuous Analog Physics Ticker (`requestAnimationFrame`)**:
-    - Smooth critically damped spring interpolation eliminates stepped visual jumps.
-    - **Continuous Focus Dimming**: Peripheral UI dims continuously from $100\%$ down to $32\%$ via `--focus-opacity` like an analog dimmer dial.
-    - **Pre-Flow Caret Bloom ($85\%–99\%$)**: Cyan cursor radiates an intense cyan/magenta chromatic aura before locking into the full iridescent prism at $100\%$.
-    - **Overdrive Badge Pulse**: Multiplier badge lightning bolt pulses with energetic heartbeat inside the $100\%–120\%$ cushion.
-- **XP, Flow Multipliers & Level HUD**:
-  - Every word typed rewards Base XP based on its tier:
-    - **Common (#1–100)**: +10 Base XP
-    - **Uncommon (#101–350)**: +25 Base XP
-    - **Rare (#351–700)**: +60 Base XP
-    - **Epic (#701–1000)**: +150 Base XP
-  - Flow Momentum scales the multiplier seamlessly (1.0x $\rightarrow$ 1.2x $\rightarrow$ 2.0x $\rightarrow$ 2.5x $\rightarrow$ 3.0x max).
-  - Header **Level HUD** displays Level, Title (*Novice Typist*, *Rhythm Apprentice*, *Velocity Adept*, *Flow Master*, *Grandmaster of Keys*), and smooth progress bar.
-  - Leveling up triggers a triumphant fanfare and drops a **Guaranteed Bonus Egg**!
-- **Flow Mistake Punishment (Typos ≠ Flow)**:
-  - Uncorrected errors on <kbd>Space</kbd> immediately wipe the Apex Cushion to 0, inflict a **$-25\%$ momentum penalty**, extinguish the prismatic rainbow caret, and reset clean word streaks.
-- **In-Situ 3-Slot Egg Nest (Zero Modals, Hands on Home Row)**:
-  - Replaces detached modal popups with **3 physical nest slots directly on the active typing stage** (`#flow-gauge`).
-  - **Hard Inventory Cap (Max 3 Eggs)**: Stops egg hoarding. When all 3 slots are occupied (`[🥚][🥚][🥚]`), no more eggs will roll until a slot is cracked open.
-  - **Keyboard-Native Hatching**:
-    - Hit <kbd>Tab</kbd> anytime during flow to activate the nest.
-    - Active egg focuses with a glowing prompt: `e g g`.
-    - Type **`e`** (fracture wobble + crack sound), **`g`** (deep crack + wobble), **`g`** (shatter chime + word revealed!).
-    - Hands never leave the home row, and zero popups interrupt your vision.
-    - Press <kbd>Tab</kbd> or <kbd>Esc</kbd> to return to active typing.
-  - **Fluid Pending-Clear**: Freshly cracked words show directly in the nest slot (`✨ [word]`) and reset to empty automatically once you resume typing on the board.
-- **Mastery-Gated Egg Drop Rate (Earned Pacing)**:
-  - Out of Flow ($< 100\%$ momentum): Egg drop chance is strictly **$0.0\%$**.
-  - In Flow ($\ge 100\%$ momentum): Drop chance scales from **$0.5\%$** to **$3.5\%$** with consecutive clean words.
-  - **Dynamic Rarity Shift**: Common eggs dominate early (~85%). As Common words are completed, Uncommon smoothly becomes dominant (~80%), naturally advancing into Rare and Epic as tiers are completed.
-- **Keybr-Inspired Touch-Typing Motor Buckets**:
-  - 100% real English words categorized across 5 distinct physical hand-motion buckets:
-    - **Home Core Flow** (`T, H, E, A, O, I, N, S`): Baseline index/middle rhythm (*the, that, this, state, together*).
-    - **Hand Alternators ⚡**: Strict Left $\leftrightarrow$ Right hand drumrolls (*hand, down, form, city, fuel, island*).
-    - **Suffix Curls 🌀**: Smooth finger sweeps (*thing, right, night, action, question*).
-    - **Lateral Reach 🎯**: Pinky and corner extensions (*word, very, have, place, family*).
-    - **Double Bounce 💥**: Single-finger tap cadences (*see, good, look, call, little, keep*).
-- **Keybr Motor Mastery Matrix & Active Deck Explorer (Stats Modal)**:
-  - Accessible via the 📊 button in the header.
-  - **Dual Tabs**: Seamlessly switch between `🎮 Flow RPG & Mastery` and `⏱️ Classic Records`.
-  - **5-Pattern Neuromuscular Matrix**: Displays active status (`⚡ Flowing / Proficient`, `🌱 Developing`, `🔒 Undiscovered`), words unlocked, average burst speed, and clean hits across all 5 physical finger patterns.
-  - **Active Deck Explorer**: Scroll through every unlocked word in your vocabulary, filter by motor bucket, and view spaced repetition health (⭐ Mastered, ⚡ In Flow, ⚠️ Needs Practice).
-  - **Clean Board Reset**: Entering and exiting the Stats menu automatically resets the board to the first word, weaving newly unlocked words into the stream.
-  - **Instant Reset Option**: `Reset RPG ↺` button allows instant reset back to Ground Zero anytime.
-- **Melodic Keyboard Audio & Persistence**:
-  - Key clicks harmonically climb up musical semitones as your flow streak grows.
-  - Crisp crack and sparkly shatter sound effects during egg hatching.
-  - Sound preference toggle is persistently remembered across browser refreshes via `localStorage`.
+## 📖 Table of Contents
+
+- [Overview](#-overview)
+- [Core Game Modes](#-core-game-modes)
+  - [🎮 Flow RPG Mode (Incremental Skill Engine)](#-1-flow-rpg-mode-incremental-skill-engine)
+  - [⏱️ Classic Mode (15s / 30s / 60s Time Trials)](#%EF%B8%8F-2-classic-mode-15s--30s--60s-time-trials)
+- [Advanced Training Modifiers](#-advanced-training-modifiers)
+  - [🕶️ Dual-Mode Hidden Horizon](#%EF%B8%8F-hidden-horizon-working-memory--blind-touch-typing)
+  - [👻 60fps Ghost Cursor Pacer](#-60fps-ghost-cursor-pacer)
+- [🏆 Achievement System & Trophy Case](#-achievement-system--trophy-case)
+- [🏛️ Architecture & Engineering](#%EF%B8%8F-architecture--engineering)
+- [🧪 Testing & Verification](#-testing--verification)
+- [🛠️ Quick Start & Building](#%EF%B8%8F-quick-start--building)
+- [⌨️ Keyboard Shortcuts](#%EF%B8%8F-keyboard-shortcuts)
+- [🗺️ Roadmap](#%EF%B8%8F-roadmap)
 
 ---
 
-## 🏛️ Architecture & Codebase Design (v3.0)
+## 🌟 Overview
 
-TypeFlow v3.0 has undergone a complete architectural refactoring into a **decoupled Observable Model-View-Controller (MVC)** design with zero external runtime dependencies.
+**TypeFlow** fuses the precision telemetry of **Monkeytype**, the biomechanical training of **Keybr**, and the tactile progression of an incremental roguelike—wrapped in an **OLED True Black (`#000000`) & Electric Sky Blue (`#38bdf8`)** interface.
 
+Built from the ground up in **vanilla ES6 JavaScript** with **zero external runtime dependencies**, the entire application—including a 1,000-word categorized lexicon, procedural Web Audio API sound synthesizer, canvas telemetry charts, and observable MVC engine—compiles into a single portable `index.html` (~341 KB) that runs anywhere offline or online.
+
+---
+
+## ✨ Core Game Modes
+
+### 🎮 1. Flow RPG Mode (Incremental Skill Engine)
+
+| Mechanic | How It Works |
+| :--- | :--- |
+| **Ground Zero Start** | Begin your journey at Level 1 with **a single word (`"the"`)**. Zero cognitive overload—establish pure baseline rhythm and posture first. |
+| **Weighted Flywheel Physics (`0%–120%`)** | Replaces brittle binary streak resets with rotational inertia. Clean paced hits accelerate the flywheel to **100% Flow** (~10 words) and bank up to **120% Apex Cushion**. |
+| **Apex Cushion & Stumble Damping** | Operating in the `100%–120%` overspin buffer dampens pace stumbles from `-12%` down to `-8%`, absorbing brief hesitations without breaking your prismatic rainbow caret. |
+| **Deterministic Egg Incubation** | Typing in Flow (`≥100%`) charges an under-stage incubation bar with bonus surges for clean streaks (`5+`, `10+`, `15+`), Apex overspin, and velocity bursts (`≥1.25×` target WPM). |
+| **In-Situ 3-Slot Egg Nest** | Up to 3 eggs materialize directly on the stage (`[🥚][🥚][🥚]`). Press <kbd>Tab</kbd> anytime to focus a slot and type **`e` · `g` · `g`** to fracture the shell and hatch a new word without lifting your hands from the home row. |
+| **Sandwiched Word Induction** | Newly hatched words are woven into your active typing stream inside a `[Familiar Anchor, New Word, Familiar Anchor]` triad so your fingers practice transitions in context. |
+| **5 Keybr Motor Buckets & N-Gram Ledger** | All 1,000 words are classified across 5 physical touch-typing patterns (**Home Core**, **Hand Alternators ⚡**, **Suffix Curls 🌀**, **Lateral Reach 🎯**, **Double Bounce 💥**) paired with a rolling **Exponential Moving Average (EMA) Bigram Ledger** that targets your weakest two-letter transitions. |
+| **Spaced Repetition System (SRS)** | Per-word telemetry tracks clean streak, average WPM, fixed backspaces, and unfixed errors—automatically scheduling struggling words more frequently until mastered. |
+
+### ⏱️ 2. Classic Mode (15s / 30s / 60s Time Trials)
+
+- **Tier-Weighted Macro Sampling**: Draws from the 1,000-word lexicon (60% Common, 25% Uncommon, 12% Rare, 3% Epic) with a 20-word anti-clumping ring buffer and a 60-word lookahead stage buffer that eliminates third-line layout gaps.
+- **Cross-Word Backspace Revert**: Press <kbd>Backspace</kbd> at index `0` of the current word to step back into previously submitted words, fix typos, and dynamically clear error underlines.
+- **Multi-Curve Canvas Telemetry**:
+  - **Cumulative Average WPM** (solid electric cyan `#38bdf8`)
+  - **Rolling 3-Second Instantaneous Pace** (mint teal `#2dd4bf`)
+  - **Raw Keystroke WPM** (dashed slate)
+  - **Fixed vs. Unfixed Error Markers**: Emerald (`#34d399`) vs. coral (`#f87171`) point indicators with interactive hover tooltips.
+
+---
+
+## 🔥 Advanced Training Modifiers
+
+### 🕶️ Hidden Horizon (Working Memory & Blind Touch-Typing)
+Toggle **Hidden Mode** in the top bar to train visual lookahead and muscle memory across two distinct sub-modes:
+1. **Character Horizon (`Char`)**: A progressive fog curtain follows your caret. As your consecutive character combo climbs, the visibility horizon tightens toward zero, challenging you to trust pure proprioception.
+2. **Word Vanish (`Words: 1–6`)**: Masks upcoming words beyond a configurable lookahead window (`1` to `6` words ahead), training your eyes to read ahead and buffer whole words in working memory while your fingers execute the current word.
+
+### 👻 60fps Ghost Cursor Pacer
+Enable the **Ghost Cursor** (`15–200 WPM`) to summon a subpixel-interpolated rival caret that glides smoothly across words at your target cadence:
+- **Dynamic Activity Lifecycle**: Starts on your first keystroke, pauses gracefully after `400ms` of hesitation, and resets cleanly to your caret after `1.2s` of idle time.
+- **Mid-Stream Induction Sync**: Automatically adjusts cumulative character offsets when new RPG word sandwiches are spliced into the active stage.
+
+---
+
+## 🏆 Achievement System & Trophy Case
+
+TypeFlow features **35 hand-crafted achievements** across **7 categories**, designed around **Tier I (Entry)** and **Tier II (Mastery)** pairings and multi-test consistency counters to reward genuine skill milestones without notification spam.
+
+| Category | Tier I (Entry) Examples | Tier II (Mastery) & Special Milestones |
+| :--- | :--- | :--- |
+| **⚡ Speed & Cadence** | **Cruising Altitude** (`5` tests at `≥60 WPM`)<br>**Steady Cadence** (`3` tests at `≥85%` consistency) | **Triple Digit Club** (`5` tests at `≥100 WPM`)<br>**Human Metronome** (`5` tests at `≥92%` consistency)<br>**Terminal Velocity** (`130+ WPM` burst in `120%` Apex) |
+| **🌊 Flow & Flywheel** | **Sustained Current** (`30s` continuous Flow)<br>**Redline Runner** (`10` words at `120%` Apex)<br>**Silver Stream** (`50` clean Flow streak) | **Zen Master** (`120s` continuous Flow)<br>**Overclocked** (`30` words at `120%` Apex)<br>**Unbroken Stream** (`100` clean Flow streak) |
+| **🎯 Precision & Recovery** | **Marksman** (`5` tests at `≥98%` accuracy)<br>**Quick Patch** (Fix `3+` typos, finish with `0` unfixed) | **Surgical Precision** (`3` tests at **100% True Raw** accuracy — `0` typos, `0` backspaces)<br>**Clutch Recovery** (Fix `6+` typos, finish with `0` unfixed) |
+| **🕶️ Hidden Horizon** | **Vanishing Act** (`20` words, distance `2+`)<br>**Shadow Walker** (`35` char combo)<br>**Blind Typist** (`3` tests or `75` Flow words) | **Mind Palace** (`25` words, distance `4+`)<br>**Into the Fog** (`70` char combo)<br>**True Sight** (`60s` test at `≥98%` acc or `150` Flow words) |
+| **👻 Ghost Pacer** | **Rabbit Chaser** (Outpace `60+ WPM` Ghost across `30s` test or `35` Flow words) | **Shadow Boxer** (Outpace `85+ WPM` Ghost across `30s` test or `50` Flow words) |
+| **🥚 Lexicon & RPG** | **Nest Tender** (`15` eggs hatched)<br>**Lexicon Explorer** (`50` words unlocked)<br>**Golden Discovery** (Hatch a Rare word)<br>**Tri-Core Flow** (Master `3` motor buckets) | **Grand Incubator** (`60` eggs hatched)<br>**Lexicon Architect** (`250` words unlocked)<br>**Mythic Discovery** (Hatch an Epic word)<br>**Five-Finger Pentathlon** (Master all `5` motor buckets) |
+| **🌟 Signature Feats & Crown Jewel** | 🛡️ **Shock Absorber** (Absorb an Apex stumble into the `85%–99%` buffer and recover back to `100%`)<br>⚡ **In-Stride Crack** (Crack an egg via `Tab` $\rightarrow$ `e-g-g` and resume typing without dropping below `85%` Flow) | 🔮 **Sixth Sense** (Hatch an egg in Hidden Mode while maintaining an active combo)<br>🏛️ **The Grand Lexicon** (**Crown Jewel** — Unlock all **1,000 words** in the TypeFlow dictionary) |
+
+- **Anti-Spam FIFO Toast Queue**: Displays at most one non-blocking micro-toast at a time (`3.5s` duration) in the top-right corner—never stealing focus or obscuring the word stage.
+- **Procedural Web Audio Chimes**: Synthesizes a 3-note major triad for Tier I unlocks and a 5-note resonant arpeggio for Tier II, Signature Feats, and the Crown Jewel.
+- **Retroactive Synchronization**: Automatically credits milestones earned in existing saves upon boot.
+
+---
+
+## 🏛️ Architecture & Engineering
+
+TypeFlow uses a clean, decoupled **Observable Model-View-Controller (MVC)** architecture where all domain models are 100% headless and DOM-independent.
+
+```mermaid
+flowchart LR
+    KC["KeyboardController<br/>(Home-Row Input & Hotkeys)"] --> GC["GameController<br/>(Orchestrator)"]
+    GC --> SM["SessionModel<br/>(Keystrokes, WPM, Horizon)"]
+    GC --> FM["FlowModel<br/>(Flywheel Physics & Incubation)"]
+    GC --> WM["WordsModel & BigramLedger<br/>(1,000 Words, 5 Buckets, SRS)"]
+    GC --> ENM["EggNestModel<br/>(3-Slot Hatch State Machine)"]
+    GC --> AM["AchievementsModel<br/>(35 Milestones & Feats)"]
+    GC --> SV["StageView / NestView / HUDView / ChartView / ModalView"]
+    GC --> SS["StorageService & AudioService"]
 ```
+
+### Repository Structure
+
+```text
 lively-nobel/
 ├── src/
 │   ├── core/
-│   │   ├── Constants.js          # Shared enums, tiers, thresholds & configuration
-│   │   └── EventEmitter.js       # Lightweight publish/subscribe event bus
+│   │   ├── Constants.js          # Enums, motor bucket metadata & configuration
+│   │   └── EventEmitter.js       # Lightweight pub/sub event bus
 │   ├── models/
-│   │   ├── WordsModel.js         # 1,000-word dictionary, Keybr motor buckets & SRS
-│   │   ├── FlowModel.js          # Kinetic flywheel physics, momentum & XP multiplier
-│   │   ├── SessionModel.js       # Autonomous keystroke engine & live metrics
-│   │   └── EggNestModel.js       # 3-slot in-situ egg nest & hatching state machine
+│   │   ├── WordsModel.js         # 1,000-word lexicon, motor buckets, SRS & sandwiching
+│   │   ├── BigramLedger.js       # Rolling EMA character-transition mastery ledger
+│   │   ├── FlowModel.js          # Kinetic flywheel physics, Apex cushion & egg charge
+│   │   ├── SessionModel.js       # Keystroke engine, cross-word revert & live WPM
+│   │   ├── EggNestModel.js       # 3-slot in-situ egg nest & 'e-g-g' fracture state machine
+│   │   └── AchievementsModel.js  # 35 achievements, Tier I/II math & progress evaluator
 │   ├── services/
-│   │   ├── StorageService.js     # Persistent localStorage with safe memory fallback
-│   │   └── AudioService.js       # Web Audio API harmonic sound synthesizers
+│   │   ├── StorageService.js     # Resilient localStorage persistence + memory fallback
+│   │   └── AudioService.js       # Web Audio API harmonic key clicks & unlock synthesizers
 │   ├── views/
-│   │   ├── StageView.js          # Passive DOM text stage, caret tracking & error styling
-│   │   ├── NestView.js           # Physical 3-slot egg nest & fracture animations
-│   │   ├── HUDView.js            # Atmosphere dimmer, level bar & pace controls
-│   │   ├── ChartView.js          # Canvas analytics graph, pace curves & error markers
-│   │   └── ModalView.js          # Lifetime stats, motor matrix & active deck view
+│   │   ├── StageView.js          # 3-line word viewport, subpixel caret & ghost pacer
+│   │   ├── NestView.js           # 3-slot egg nest UI, incubation bar & fracture FX
+│   │   ├── HUDView.js            # Atmosphere vignette, mode bar & FIFO achievement toasts
+│   │   ├── ChartView.js          # Multi-curve canvas telemetry graph & hover tooltips
+│   │   └── ModalView.js          # 3-tab Lifetime Stats modal (Flow RPG, Classic, Trophies)
 │   ├── controllers/
-│   │   ├── KeyboardController.js # Home-row key routing & hotkey mappings
-│   │   └── GameController.js     # Orchestrator & dependency injection wiring
-│   └── bootstrap.js              # Runtime instantiation & application lifecycle
+│   │   ├── KeyboardController.js # Keystroke routing, input isolation & shortcuts
+│   │   └── GameController.js     # Central coordinator, physics ticker & telemetry wiring
+│   └── bootstrap.js              # Dependency injection & startup lifecycle
 ├── tests/
-│   ├── unit_models_test.js       # Pure headless unit tests for models & event bus
-│   ├── services_test.js          # Storage fallback & audio service tests
-│   ├── views_test.js             # View rendering & DOM-isolation tests
-│   ├── controllers_test.js       # GameController state machine & event wiring tests
-│   ├── edge_cases_stress_test.js # High-speed typing bursts & storage edge cases
-│   └── recent_bugfixes_test.js   # Regression tests for timer, revert & deck views
-├── build.py                      # Standalone compiler (bundles src/ into index.html)
-├── index.html                    # Single-file distributable (browser & WebView ready)
-├── style.css                     # OLED Black styling & responsive layouts
-└── README.md                     # Documentation
+│   ├── unit_models_test.js       # Headless unit tests for core models (54 tests)
+│   ├── services_test.js          # Storage fallback, SRS & audio synth tests (16 tests)
+│   ├── views_test.js             # DOM-isolated view rendering tests (16 tests)
+│   ├── controllers_test.js       # Controller state machine & integration tests (23 tests)
+│   ├── ghost_cursor_test.js      # 60fps ghost pacer & sandwich sync tests (12 tests)
+│   ├── bug_fixes_test.js         # Cross-mode & edge-case verification (12 tests)
+│   ├── recent_bugfixes_test.js   # Timer, word revert & deck explorer tests (9 tests)
+│   ├── edge_cases_stress_test.js # High-velocity burst & storage corruption tests (8 tests)
+│   └── achievements_test.js      # Achievements, toasts, trophies & retro-sync (17 tests)
+├── build.py                      # Zero-dependency single-file bundler -> index.html
+├── index.html                    # Standalone distributable (~341 KB, works via file://)
+├── style.css                     # OLED True Black theme, animations & responsive HUD
+└── README.md                     # Project documentation
 ```
-
-### Key Architectural Principles
-1. **Headless Models**: All business logic (keystroke evaluation, SRS weights, flywheel momentum physics, and egg cracking) lives in pure JavaScript models with zero DOM dependencies. Models are 100% testable in Node.js.
-2. **Passive Views**: Views handle DOM rendering, canvas drawing, CSS transitions, and local element events, exposing clean semantic methods to the controller.
-3. **Unidirectional Event Flow**: Components communicate via an `EventEmitter` pub/sub bus rather than direct tight coupling.
-4. **Offline Resilience**: `StorageService` wraps `localStorage` in safe `try/catch` handlers with an automated in-memory fallback, allowing TypeFlow to run flawlessly inside sandboxed webviews, `file:///` URLs, and restricted Android `content://` providers.
 
 ---
 
 ## 🧪 Testing & Verification
 
-TypeFlow features automated test suites covering pure logic, services, view isolation, controllers, and edge cases.
+TypeFlow is backed by **9 automated headless test suites** (**167 assertions total, 100% pass rate**) running directly in Node.js with zero external test runner dependencies.
 
-### Running Tests
-Execute individual suites using Node.js:
 ```bash
-# Run headless unit tests (Models & Event Bus)
-node tests/unit_models_test.js
-
-# Run services tests (Storage & Audio)
-node tests/services_test.js
-
-# Run view isolation tests
-node tests/views_test.js
-
-# Run controller lifecycle tests
-node tests/controllers_test.js
-
-# Run stress & edge case tests
-node tests/edge_cases_stress_test.js
-
-# Run recent regression bug fixes test suite
-node tests/recent_bugfixes_test.js
-```
-
-Or run all 6 suites at once:
-```bash
+# Run all 9 test suites at once
 for test in tests/*_test.js; do node "$test"; done
 ```
 
-**Current Suite Status:** `67 / 67 tests passing (100%)`.
+Or run individual suites:
+
+```bash
+node tests/unit_models_test.js       # 54 tests — Words, Flow, Session, EggNest & Bigram models
+node tests/services_test.js          # 16 tests — StorageService & Web Audio synthesis
+node tests/views_test.js             # 16 tests — Stage, Nest, HUD, Chart & Modal views
+node tests/controllers_test.js       # 23 tests — GameController & KeyboardController
+node tests/ghost_cursor_test.js      # 12 tests — Ghost pacer physics & sandwich offset sync
+node tests/bug_fixes_test.js         # 12 tests — Cross-mode & boundary regressions
+node tests/recent_bugfixes_test.js   #  9 tests — Classic timer, revert & deck filters
+node tests/edge_cases_stress_test.js #  8 tests — 300 WPM stress bursts & storage resilience
+node tests/achievements_test.js      # 17 tests — 35 achievements, FIFO toasts & Trophy Case
+```
 
 ---
 
-## 🛠️ Building & Bundling
+## 🛠️ Quick Start & Building
 
-TypeFlow compiles from modular ES6 source files into a **zero-dependency, single-file `index.html`** that runs anywhere without an npm/Node build step.
+### 1. Run Immediately
+Because `index.html` is pre-bundled with all CSS and JavaScript inline, you can open it directly in any modern browser (`file:///...`) or serve it locally:
 
-### Rebuilding `index.html`
-Whenever you modify files in `src/` or `style.css`, rebuild the distributable:
+```bash
+python3 -m http.server 8080
+# Open http://localhost:8080
+```
+
+### 2. Rebuild Single-File Bundle
+After editing any file under `src/` or `style.css`, regenerate the standalone `index.html`:
+
 ```bash
 python3 build.py
 ```
-This script combines `style.css` and all 16 modules from `src/` into `index.html`.
-
-### Running Locally
-You can open `index.html` directly in any web browser or start a local HTTP server:
-```bash
-python3 -m http.server 8080
-```
-Then navigate to `http://localhost:8080` in your browser.
 
 ---
 
-## ⌨️ Keyboard Shortcuts Reference
+## ⌨️ Keyboard Shortcuts
 
-| Key | Context | Action |
-|---|---|---|
-| <kbd>Char</kbd> | Typing Stage | Type character / advance cursor |
-| <kbd>Space</kbd> | Typing Stage | Submit word and evaluate accuracy |
-| <kbd>Backspace</kbd> | Typing Stage | Delete character or backspace across word boundary into previous word |
-| <kbd>Tab</kbd> | Active Flow Mode | Focus active egg in nest (Hatch Mode) |
-| <kbd>e</kbd> <kbd>g</kbd> <kbd>g</kbd> | Egg Nest Active | Crack active egg and reveal word |
-| <kbd>Tab</kbd> / <kbd>Esc</kbd> | Egg Nest Active | Exit Hatch Mode and return to active typing stage |
-| <kbd>Tab</kbd> | Classic Mode | Quick-restart current test |
-| <kbd>Esc</kbd> | Any Modal Open | Close Stats Modal or dialog |
+| Shortcut | Context | Action |
+| :--- | :--- | :--- |
+| <kbd>Char</kbd> | Typing Stage | Type character & advance subpixel caret |
+| <kbd>Space</kbd> | Typing Stage | Submit current word & evaluate Flow / SRS telemetry |
+| <kbd>Backspace</kbd> | Typing Stage | Delete character, or step back into previous word at index `0` |
+| <kbd>Tab</kbd> | Flow Mode (Eggs in Nest) | Enter **Hatch Mode** and focus the first available egg slot |
+| <kbd>e</kbd> $\rightarrow$ <kbd>g</kbd> $\rightarrow$ <kbd>g</kbd> | Hatch Mode Active | Fracture and hatch the focused egg to unlock a new word |
+| <kbd>Tab</kbd> / <kbd>Esc</kbd> | Hatch Mode Active | Exit Hatch Mode and return to the typing stage |
+| <kbd>Tab</kbd> | Classic Mode / Empty Nest | Quick-restart the current typing session |
+| <kbd>Esc</kbd> | Modal Open | Close the Lifetime Stats / Trophy Case modal |
+
+---
+
+## 🗺️ Roadmap
+
+- [x] **v1.0 — Core Classic & Flow RPG Engine**: 1,000-word lexicon, flywheel momentum, and OLED theme.
+- [x] **v2.0 — Keybr Motor Buckets & In-Situ Egg Nest**: 5 physical finger-pattern buckets, 3-slot keyboard-native hatching (`e-g-g`), and cross-word backspace revert.
+- [x] **v3.0 — Observable MVC Refactor & Deterministic Incubation**: 15 modular ES6 classes, N-Gram Bigram EMA ledger, and sandwiched word induction.
+- [x] **v3.5 — Dual-Mode Hidden Horizon, 60fps Ghost Pacer & 35-Trophy Achievement System**: Character Horizon, Word Vanish (`1–6` words), virtual pacer rival, and multi-tier Trophy Case.
+- [ ] **v4.0 — Visual Polish & Level-Gated Cosmetic Unlocks**: Unlockable caret trails, custom mechanical key-click synth profiles, and OLED accent themes earned through RPG levels and Trophy milestones.
 
 ---
 
 ## 📄 License
-MIT License. Open source for typing enthusiasts and developers.
+
+Released under the **MIT License**. Crafted for typing enthusiasts, rhythm gamers, and developers.

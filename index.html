@@ -1825,9 +1825,292 @@ footer,
   0%, 100% { opacity: 0.45; }
   50% { opacity: 1; color: #38bdf8; }
 }
+.achievement-toast {
+  position: fixed;
+  top: -90px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(14, 18, 26, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 10px 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 20px rgba(255, 215, 0, 0.2);
+  pointer-events: none;
+  opacity: 0;
+  transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease-out;
+  min-width: 260px;
+  max-width: 90vw;
+  backdrop-filter: blur(8px);
+}
+.achievement-toast.visible {
+  top: 24px;
+  opacity: 1;
+}
+.achievement-toast .toast-icon-wrap {
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.achievement-toast .toast-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.achievement-toast .toast-tier {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+.achievement-toast .toast-tier.tier-1 { color: #38bdf8; }
+.achievement-toast .toast-tier.tier-2 { color: #fbbf24; }
+.achievement-toast .toast-tier.tier-apex { color: #f43f5e; text-shadow: 0 0 8px rgba(244, 63, 94, 0.6); }
+.achievement-toast .toast-tier.tier-crown { color: #ec4899; text-shadow: 0 0 10px rgba(236, 72, 153, 0.8); }
+.achievement-toast .toast-tier.tier-feat { color: #a855f7; text-shadow: 0 0 8px rgba(168, 85, 247, 0.6); }
+.achievement-toast.tier-1 { border-color: rgba(56, 189, 248, 0.4); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 20px rgba(56, 189, 248, 0.25); }
+.achievement-toast.tier-2 { border-color: rgba(251, 191, 36, 0.5); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 22px rgba(251, 191, 36, 0.3); }
+.achievement-toast.tier-apex { border-color: rgba(244, 63, 94, 0.6); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 24px rgba(244, 63, 94, 0.35); }
+.achievement-toast.tier-crown { border-color: rgba(236, 72, 153, 0.7); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 30px rgba(236, 72, 153, 0.45); }
+.achievement-toast.tier-feat { border-color: rgba(168, 85, 247, 0.5); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 22px rgba(168, 85, 247, 0.3); }
+.achievement-toast .toast-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+.achievement-toast .toast-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: #94a3b8;
+  max-width: 280px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#stats-btn.has-badge {
+  position: relative;
+}
+#stats-btn.has-badge::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  background: #f59e0b;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.9);
+  animation: badgePulse 2s infinite ease-in-out;
+}
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.35); opacity: 1; box-shadow: 0 0 10px rgba(245, 158, 11, 1); }
+}
+.trophy-summary-bar {
+  background: var(--card-bg, #11141c);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.trophy-summary-left {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.trophy-summary-title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: #f8fafc;
+}
+.trophy-summary-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--accent, #38bdf8);
+}
+.trophy-summary-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.trophy-summary-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8, #818cf8, #f59e0b);
+  border-radius: 3px;
+  transition: width 0.4s ease-out;
+}
+.trophy-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.trophy-filter-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--sub-color, #94a3b8);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.trophy-filter-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+}
+.trophy-filter-btn.active {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+  font-weight: 600;
+}
+.trophies-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.trophy-card {
+  background: var(--card-bg, #11141c);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  position: relative;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.trophy-card.locked {
+  opacity: 0.65;
+}
+.trophy-card.locked:hover {
+  opacity: 0.9;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.trophy-card.unlocked {
+  background: rgba(255, 255, 255, 0.03);
+}
+.trophy-card.tier-1.unlocked {
+  border-color: rgba(56, 189, 248, 0.35);
+}
+.trophy-card.tier-2.unlocked {
+  border-color: rgba(251, 191, 36, 0.4);
+}
+.trophy-card.tier-apex.unlocked {
+  border-color: rgba(244, 63, 94, 0.5);
+  box-shadow: 0 0 14px rgba(244, 63, 94, 0.15);
+}
+.trophy-card.tier-crown.unlocked {
+  border-color: rgba(236, 72, 153, 0.55);
+  box-shadow: 0 0 18px rgba(236, 72, 153, 0.2);
+}
+.trophy-card.tier-feat.unlocked {
+  border-color: rgba(168, 85, 247, 0.45);
+}
+.trophy-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.trophy-icon-wrap {
+  font-size: 20px;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+.trophy-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-grow: 1;
+}
+.trophy-title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: #f8fafc;
+}
+.trophy-tier-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #94a3b8;
+}
+.trophy-card.tier-1 .trophy-tier-badge { color: #38bdf8; }
+.trophy-card.tier-2 .trophy-tier-badge { color: #fbbf24; }
+.trophy-card.tier-apex .trophy-tier-badge { color: #f43f5e; }
+.trophy-card.tier-crown .trophy-tier-badge { color: #ec4899; }
+.trophy-card.tier-feat .trophy-tier-badge { color: #a855f7; }
+.trophy-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--sub-color, #94a3b8);
+}
+.trophy-status.unlocked {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: #22c55e;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.trophy-check {
+  font-weight: 700;
+}
+.trophy-progress-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.trophy-progress-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: #94a3b8;
+}
+.trophy-mini-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.trophy-mini-fill {
+  height: 100%;
+  background: var(--accent, #38bdf8);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
   </style>
 </head>
 <body>
+  <div class="achievement-toast" id="achievement-toast"></div>
   <div class="flow-vignette-overlay" id="flow-vignette-overlay"></div>
   <div class="app-container">
     <header>
@@ -2065,6 +2348,7 @@ footer,
               <div class="stats-modal-tabs">
                 <button class="stats-tab active" id="tab-stats-flow" data-tab="flow">🎮 Flow RPG & Mastery</button>
                 <button class="stats-tab" id="tab-stats-classic" data-tab="classic">⏱️ Classic Records</button>
+                <button class="stats-tab" id="tab-stats-trophies" data-tab="trophies">🏆 Trophies</button>
               </div>
             </div>
             <button class="icon-btn close-modal-btn" id="close-stats-btn" title="Close Stats">✕</button>
@@ -2177,6 +2461,29 @@ footer,
                 <tbody id="stats-history-tbody">
                 </tbody>
               </table>
+            </div>
+          </div>
+          <div class="stats-pane" id="pane-stats-trophies" style="display: none;">
+            <div class="trophy-summary-bar">
+              <div class="trophy-summary-left">
+                <span class="trophy-summary-title">Trophy Case</span>
+                <span class="trophy-summary-count" id="trophies-count">0 / 35 unlocked (0%)</span>
+              </div>
+              <div class="trophy-summary-track">
+                <div class="trophy-summary-fill" id="trophies-progress-bar" style="width: 0%;"></div>
+              </div>
+            </div>
+            <div class="trophy-filters" id="trophy-filters">
+              <button class="trophy-filter-btn active" data-filter="all">All</button>
+              <button class="trophy-filter-btn" data-filter="speed">Speed</button>
+              <button class="trophy-filter-btn" data-filter="flow">Flow</button>
+              <button class="trophy-filter-btn" data-filter="precision">Precision</button>
+              <button class="trophy-filter-btn" data-filter="hidden">Hidden</button>
+              <button class="trophy-filter-btn" data-filter="ghost">Ghost</button>
+              <button class="trophy-filter-btn" data-filter="rpg">RPG & Deck</button>
+              <button class="trophy-filter-btn" data-filter="feats">Feats</button>
+            </div>
+            <div class="trophies-grid" id="trophies-grid">
             </div>
           </div>
           <div class="modal-footer space-between" style="margin-top: 18px;">
@@ -4274,6 +4581,566 @@ if (typeof window !== 'undefined') {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { EggNestModel };
 }
+const ACHIEVEMENTS = {
+  cruising_60: {
+    id: 'cruising_60',
+    groupId: 'velocity',
+    tier: 1,
+    title: 'Cruising Altitude',
+    icon: '✈️',
+    desc: 'Complete 5 Classic tests (30s+) at 60+ WPM with ≥96% accuracy.',
+    category: 'speed',
+    target: 5
+  },
+  triple_digits: {
+    id: 'triple_digits',
+    groupId: 'velocity',
+    tier: 2,
+    title: 'Triple Digits',
+    icon: '🚀',
+    desc: 'Complete 5 Classic tests (30s+) at 100+ WPM with ≥96% accuracy.',
+    category: 'speed',
+    target: 5
+  },
+  steady_cadence: {
+    id: 'steady_cadence',
+    groupId: 'consistency',
+    tier: 1,
+    title: 'Steady Cadence',
+    icon: '⏱️',
+    desc: 'Complete 3 Classic tests at 50+ WPM with ≥85% consistency.',
+    category: 'speed',
+    target: 3
+  },
+  human_metronome: {
+    id: 'human_metronome',
+    groupId: 'consistency',
+    tier: 2,
+    title: 'Human Metronome',
+    icon: '🎵',
+    desc: 'Complete 5 Classic tests at 70+ WPM with ≥92% consistency.',
+    category: 'speed',
+    target: 5
+  },
+  terminal_velocity: {
+    id: 'terminal_velocity',
+    groupId: 'burst',
+    tier: 'apex',
+    title: 'Terminal Velocity',
+    icon: '⚡',
+    desc: 'Hit 130+ Instantaneous Burst WPM on a word of 5+ letters while in Apex Flow.',
+    category: 'speed'
+  },
+  sustained_current: {
+    id: 'sustained_current',
+    groupId: 'flow_duration',
+    tier: 1,
+    title: 'Sustained Current',
+    icon: '🌊',
+    desc: 'Maintain uninterrupted Flow (≥85% momentum) for 30 consecutive seconds.',
+    category: 'flow',
+    target: 30
+  },
+  zen_master: {
+    id: 'zen_master',
+    groupId: 'flow_duration',
+    tier: 2,
+    title: 'Zen Master',
+    icon: '🧘',
+    desc: 'Maintain uninterrupted Flow (≥85% momentum) for 120 consecutive seconds (2 minutes).',
+    category: 'flow',
+    target: 120
+  },
+  redline_runner: {
+    id: 'redline_runner',
+    groupId: 'overspin',
+    tier: 1,
+    title: 'Redline Runner',
+    icon: '🏎️',
+    desc: 'Charge to 120% Apex Overspin and hold it for 10 consecutive words.',
+    category: 'flow',
+    target: 10
+  },
+  overclocked: {
+    id: 'overclocked',
+    groupId: 'overspin',
+    tier: 2,
+    title: 'Overclocked',
+    icon: '🔥',
+    desc: 'Sustain 120% Apex Overspin for 30 consecutive words without slipping.',
+    category: 'flow',
+    target: 30
+  },
+  silver_stream: {
+    id: 'silver_stream',
+    groupId: 'stream',
+    tier: 1,
+    title: 'Silver Stream',
+    icon: '🥈',
+    desc: 'Achieve a 50-word clean streak in Flow Mode without a single typo.',
+    category: 'flow',
+    target: 50
+  },
+  unbroken_stream: {
+    id: 'unbroken_stream',
+    groupId: 'stream',
+    tier: 2,
+    title: 'Unbroken Stream',
+    icon: '💎',
+    desc: 'Achieve a 100-word clean streak in Flow Mode without a single typo.',
+    category: 'flow',
+    target: 100
+  },
+  marksman: {
+    id: 'marksman',
+    groupId: 'raw_precision',
+    tier: 1,
+    title: 'Marksman',
+    icon: '🎯',
+    desc: 'Complete 5 Classic tests (30s+) with ≥98% accuracy.',
+    category: 'precision',
+    target: 5
+  },
+  surgical_precision: {
+    id: 'surgical_precision',
+    groupId: 'raw_precision',
+    tier: 2,
+    title: 'Surgical Precision',
+    icon: '🔬',
+    desc: 'Complete 3 Classic tests (30s+) with 100% True Raw accuracy (0 typos, 0 backspaces).',
+    category: 'precision',
+    target: 3
+  },
+  quick_patch: {
+    id: 'quick_patch',
+    groupId: 'recovery',
+    tier: 1,
+    title: 'Quick Patch',
+    icon: '🛠️',
+    desc: 'Fix 3+ typos with Backspace in a Classic test and finish with 0 uncorrected errors.',
+    category: 'precision',
+    target: 3
+  },
+  clutch_recovery: {
+    id: 'clutch_recovery',
+    groupId: 'recovery',
+    tier: 2,
+    title: 'Clutch Recovery',
+    icon: '🔧',
+    desc: 'Fix 6+ typos with Backspace in a Classic test and finish with 0 uncorrected errors.',
+    category: 'precision',
+    target: 6
+  },
+  vanishing_act: {
+    id: 'vanishing_act',
+    groupId: 'word_vanish',
+    tier: 1,
+    title: 'Vanishing Act',
+    icon: '🕶️',
+    desc: 'Type 20 consecutive clean words with Word Vanish distance set to 2 words.',
+    category: 'hidden',
+    target: 20
+  },
+  mind_palace: {
+    id: 'mind_palace',
+    groupId: 'word_vanish',
+    tier: 2,
+    title: 'Mind Palace',
+    icon: '🧠',
+    desc: 'Type 25 consecutive clean words with Word Vanish distance set to 4+ words.',
+    category: 'hidden',
+    target: 25
+  },
+  shadow_walker: {
+    id: 'shadow_walker',
+    groupId: 'char_horizon',
+    tier: 1,
+    title: 'Shadow Walker',
+    icon: '🌫️',
+    desc: 'Reach a 35-character combo in Character Horizon mode.',
+    category: 'hidden',
+    target: 35
+  },
+  into_the_fog: {
+    id: 'into_the_fog',
+    groupId: 'char_horizon',
+    tier: 2,
+    title: 'Into the Fog',
+    icon: '🌌',
+    desc: 'Reach a 70-character combo in Character Horizon mode.',
+    category: 'hidden',
+    target: 70
+  },
+  blind_typist: {
+    id: 'blind_typist',
+    groupId: 'hidden_volume',
+    tier: 1,
+    title: 'Blind Typist',
+    icon: '🙈',
+    desc: 'Complete 3 Classic tests (30s+) or 75 Flow words in Hidden Mode with ≥96% accuracy.',
+    category: 'hidden',
+    target: 3
+  },
+  true_sight: {
+    id: 'true_sight',
+    groupId: 'hidden_volume',
+    tier: 2,
+    title: 'True Sight',
+    icon: '👁️‍🗨️',
+    desc: 'Complete a 60s Classic test or 150 Flow words in Hidden Mode with ≥98% accuracy.',
+    category: 'hidden'
+  },
+  rabbit_chaser: {
+    id: 'rabbit_chaser',
+    groupId: 'ghost_race',
+    tier: 1,
+    title: 'Rabbit Chaser',
+    icon: '🐇',
+    desc: 'Enable Ghost Cursor at 60+ WPM and finish a 30s test or 35 Flow words without falling behind.',
+    category: 'ghost',
+    target: 35
+  },
+  shadow_boxer: {
+    id: 'shadow_boxer',
+    groupId: 'ghost_race',
+    tier: 2,
+    title: 'Shadow Boxer',
+    icon: '👻',
+    desc: 'Enable Ghost Cursor at 85+ WPM and finish a 30s test or 50 Flow words without falling behind.',
+    category: 'ghost',
+    target: 50
+  },
+  nest_tender: {
+    id: 'nest_tender',
+    groupId: 'hatchery',
+    tier: 1,
+    title: 'Nest Tender',
+    icon: '🪺',
+    desc: 'Incubate and hatch 15 word eggs.',
+    category: 'rpg',
+    target: 15
+  },
+  grand_incubator: {
+    id: 'grand_incubator',
+    groupId: 'hatchery',
+    tier: 2,
+    title: 'Grand Incubator',
+    icon: '🌟',
+    desc: 'Incubate and hatch 60 word eggs.',
+    category: 'rpg',
+    target: 60
+  },
+  lexicon_explorer: {
+    id: 'lexicon_explorer',
+    groupId: 'lexicon_ranks',
+    tier: 1,
+    title: 'Lexicon Explorer',
+    icon: '🗺️',
+    desc: 'Unlock 50 unique words in your Flow RPG deck.',
+    category: 'rpg',
+    target: 50
+  },
+  lexicon_architect: {
+    id: 'lexicon_architect',
+    groupId: 'lexicon_ranks',
+    tier: 2,
+    title: 'Lexicon Architect',
+    icon: '📚',
+    desc: 'Unlock 250 unique words in your Flow RPG deck.',
+    category: 'rpg',
+    target: 250
+  },
+  golden_discovery: {
+    id: 'golden_discovery',
+    groupId: 'rarity',
+    tier: 1,
+    title: 'Golden Discovery',
+    icon: '🔮',
+    desc: 'Incubate and hatch a Rare-tier word (Rank 601–850).',
+    category: 'rpg'
+  },
+  mythic_discovery: {
+    id: 'mythic_discovery',
+    groupId: 'rarity',
+    tier: 2,
+    title: 'Mythic Discovery',
+    icon: '👑',
+    desc: 'Incubate and hatch an Epic-tier word (Rank 851–1000).',
+    category: 'rpg'
+  },
+  tri_core_flow: {
+    id: 'tri_core_flow',
+    groupId: 'motor_buckets',
+    tier: 1,
+    title: 'Tri-Core Flow',
+    icon: '🧩',
+    desc: 'Master words (streak ≥5) in at least 3 different motor buckets.',
+    category: 'rpg',
+    target: 3
+  },
+  five_finger_pentathlon: {
+    id: 'five_finger_pentathlon',
+    groupId: 'motor_buckets',
+    tier: 2,
+    title: 'Five-Finger Pentathlon',
+    icon: '🖐️',
+    desc: 'Master at least 3 words in all 5 motor buckets (Home Core, Alternator, Suffix, Pinky, Bounce).',
+    category: 'rpg',
+    target: 5
+  },
+  lexicon_1000: {
+    id: 'lexicon_1000',
+    groupId: 'crown_jewel',
+    tier: 'crown',
+    title: 'The Grand Lexicon',
+    icon: '🏛️',
+    desc: 'Unlock all 1,000 words in the TypeFlow frequency dictionary.',
+    category: 'rpg',
+    target: 1000
+  },
+  shock_absorber: {
+    id: 'shock_absorber',
+    groupId: 'feats',
+    tier: 'feat',
+    title: 'Shock Absorber',
+    icon: '🛡️',
+    desc: 'Absorb a typo above 100% Apex using the Cushion Buffer without dropping below 85% Flow, and recover back to 100%.',
+    category: 'feats'
+  },
+  in_stride_crack: {
+    id: 'in_stride_crack',
+    groupId: 'feats',
+    tier: 'feat',
+    title: 'In-Stride Crack',
+    icon: '⚡',
+    desc: 'Enter Hatch Mode (Tab), crack an egg (e-g-g), and resume typing into the sandwich without dropping below 85% Flow.',
+    category: 'feats'
+  },
+  sixth_sense: {
+    id: 'sixth_sense',
+    groupId: 'feats',
+    tier: 'feat',
+    title: 'Sixth Sense',
+    icon: '🔮',
+    desc: 'Hatch an egg and complete the sandwich in Hidden Mode without breaking combo.',
+    category: 'feats'
+  }
+};
+class AchievementsModel {
+  constructor(unlocked = {}) {
+    this.definitions = ACHIEVEMENTS;
+    this.unlocked = Object.assign({}, unlocked);
+  }
+  getDefinitions() {
+    return this.definitions;
+  }
+  isUnlocked(id) {
+    return Boolean(this.unlocked[id]);
+  }
+  getUnlockedMap() {
+    return Object.assign({}, this.unlocked);
+  }
+  getUnlockedCount() {
+    return Object.keys(this.unlocked).length;
+  }
+  getTotalCount() {
+    return Object.keys(this.definitions).length;
+  }
+  listAll() {
+    return Object.values(this.definitions).map(def => Object.assign({}, def, {
+      unlocked: Boolean(this.unlocked[def.id]),
+      unlockedAt: this.unlocked[def.id] || null
+    }));
+  }
+  listUnlocked() {
+    return this.listAll().filter(a => a.unlocked);
+  }
+  evaluate(eventType, context = {}) {
+    const newlyUnlocked = [];
+    const tryUnlock = (id) => {
+      if (!this.unlocked[id] && this.definitions[id]) {
+        const timestamp = Date.now();
+        this.unlocked[id] = timestamp;
+        newlyUnlocked.push(Object.assign({ unlockedAt: timestamp }, this.definitions[id]));
+      }
+    };
+    const counters = context.counters || {};
+    const gameSave = context.gameSave || {};
+    const classicStats = context.classicStats || {};
+    if (eventType === 'test_finished' || eventType === 'sync') {
+      const {
+        wpm = 0,
+        accuracy = 0,
+        consistency = 0,
+        fixedErrors = 0,
+        incorrectChars = 0,
+        duration = 0,
+        isHidden = false,
+        beatGhost = false,
+        ghostSpeed = 0
+      } = context;
+      const uncorrectedErrors = Math.max(0, incorrectChars - fixedErrors);
+      if (counters.tests60Wpm >= 5) tryUnlock('cruising_60');
+      if (counters.tests100Wpm >= 5) tryUnlock('triple_digits');
+      if (counters.tests85Consistency >= 3) tryUnlock('steady_cadence');
+      if (counters.tests92Consistency >= 5) tryUnlock('human_metronome');
+      if (counters.tests98Acc >= 5) tryUnlock('marksman');
+      if (counters.tests100RawAcc >= 3) tryUnlock('surgical_precision');
+      if (counters.testsHiddenMode >= 3) tryUnlock('blind_typist');
+      if (eventType === 'sync') {
+        const highStreak = gameSave.highStreak || 0;
+        if (highStreak >= 50) tryUnlock('silver_stream');
+        if (highStreak >= 100) tryUnlock('unbroken_stream');
+        if (counters.eggsHatchedTotal >= 15) tryUnlock('nest_tender');
+        if (counters.eggsHatchedTotal >= 60) tryUnlock('grand_incubator');
+      }
+      if (eventType === 'test_finished') {
+        if (fixedErrors >= 3 && uncorrectedErrors === 0) tryUnlock('quick_patch');
+        if (fixedErrors >= 6 && uncorrectedErrors === 0) tryUnlock('clutch_recovery');
+        if (duration >= 60 && isHidden && accuracy >= 98 && uncorrectedErrors === 0) {
+          tryUnlock('true_sight');
+        }
+        if (duration >= 30 && beatGhost) {
+          if (ghostSpeed >= 60) tryUnlock('rabbit_chaser');
+          if (ghostSpeed >= 85) tryUnlock('shadow_boxer');
+        }
+      }
+    }
+    if (eventType === 'word_completed') {
+      const {
+        flowStreak = 0,
+        burstWpm = 0,
+        wordLength = 0,
+        momentum = 0,
+        consecutiveApexWords = 0,
+        flowSeconds = 0,
+        isHidden = false,
+        hiddenMethod = 'char',
+        hiddenWordDistance = 2,
+        hiddenCombo = 0,
+        hiddenStreak = 0,
+        beatGhost = false,
+        ghostConsecutiveWords = 0,
+        ghostSpeed = 0
+      } = context;
+      if (burstWpm >= 130 && wordLength >= 5 && momentum >= 118) {
+        tryUnlock('terminal_velocity');
+      }
+      if (flowSeconds >= 30) tryUnlock('sustained_current');
+      if (flowSeconds >= 120) tryUnlock('zen_master');
+      if (consecutiveApexWords >= 10) tryUnlock('redline_runner');
+      if (consecutiveApexWords >= 30) tryUnlock('overclocked');
+      if (flowStreak >= 50) tryUnlock('silver_stream');
+      if (flowStreak >= 100) tryUnlock('unbroken_stream');
+      if (isHidden && hiddenMethod === 'word') {
+        if (hiddenWordDistance >= 2 && hiddenStreak >= 20) tryUnlock('vanishing_act');
+        if (hiddenWordDistance >= 4 && hiddenStreak >= 25) tryUnlock('mind_palace');
+      }
+      if (isHidden && hiddenMethod === 'char') {
+        if (hiddenCombo >= 35) tryUnlock('shadow_walker');
+        if (hiddenCombo >= 70) tryUnlock('into_the_fog');
+      }
+      if (isHidden && hiddenStreak >= 75) tryUnlock('blind_typist');
+      if (isHidden && hiddenStreak >= 150) tryUnlock('true_sight');
+      if (beatGhost) {
+        if (ghostSpeed >= 60 && ghostConsecutiveWords >= 35) tryUnlock('rabbit_chaser');
+        if (ghostSpeed >= 85 && ghostConsecutiveWords >= 50) tryUnlock('shadow_boxer');
+      }
+    }
+    if (eventType === 'egg_hatched') {
+      const {
+        totalHatched = 0,
+        rarityTier = 'STARTER',
+        isHidden = false,
+        hiddenCombo = 0
+      } = context;
+      if (totalHatched >= 15) tryUnlock('nest_tender');
+      if (totalHatched >= 60) tryUnlock('grand_incubator');
+      if (rarityTier === 'RARE') tryUnlock('golden_discovery');
+      if (rarityTier === 'EPIC') tryUnlock('mythic_discovery');
+      if (isHidden && hiddenCombo > 0) {
+        tryUnlock('sixth_sense');
+      }
+    }
+    if (eventType === 'cushion_recovered') {
+      tryUnlock('shock_absorber');
+    }
+    if (eventType === 'in_stride_crack') {
+      tryUnlock('in_stride_crack');
+    }
+    if (eventType === 'lexicon_updated' || eventType === 'sync') {
+      const ranks = gameSave.unlockedRanks || [];
+      const unlockedCount = ranks.length;
+      if (unlockedCount >= 50) tryUnlock('lexicon_explorer');
+      if (unlockedCount >= 250) tryUnlock('lexicon_architect');
+      if (unlockedCount >= 1000) tryUnlock('lexicon_1000');
+      if (eventType === 'sync') {
+        if (ranks.some(r => r >= 601 && r <= 850)) tryUnlock('golden_discovery');
+        if (ranks.some(r => r >= 851 && r <= 1000)) tryUnlock('mythic_discovery');
+      }
+      const motorBuckets = context.motorBucketsCount || 0;
+      const allFiveMastered = context.allFiveMastered || false;
+      if (motorBuckets >= 3) tryUnlock('tri_core_flow');
+      if (allFiveMastered) tryUnlock('five_finger_pentathlon');
+    }
+    return newlyUnlocked;
+  }
+  getProgress(id, counters = {}, gameSave = {}, extraContext = {}) {
+    const def = this.definitions[id];
+    if (!def) return null;
+    if (this.isUnlocked(id)) {
+      return { current: def.target || 1, target: def.target || 1, pct: 100, label: 'Completed' };
+    }
+    switch (id) {
+      case 'cruising_60':
+        return { current: Math.min(5, counters.tests60Wpm || 0), target: 5, pct: Math.min(100, Math.round(((counters.tests60Wpm || 0) / 5) * 100)), label: `${counters.tests60Wpm || 0} / 5 tests` };
+      case 'triple_digits':
+        return { current: Math.min(5, counters.tests100Wpm || 0), target: 5, pct: Math.min(100, Math.round(((counters.tests100Wpm || 0) / 5) * 100)), label: `${counters.tests100Wpm || 0} / 5 tests` };
+      case 'steady_cadence':
+        return { current: Math.min(3, counters.tests85Consistency || 0), target: 3, pct: Math.min(100, Math.round(((counters.tests85Consistency || 0) / 3) * 100)), label: `${counters.tests85Consistency || 0} / 3 tests` };
+      case 'human_metronome':
+        return { current: Math.min(5, counters.tests92Consistency || 0), target: 5, pct: Math.min(100, Math.round(((counters.tests92Consistency || 0) / 5) * 100)), label: `${counters.tests92Consistency || 0} / 5 tests` };
+      case 'marksman':
+        return { current: Math.min(5, counters.tests98Acc || 0), target: 5, pct: Math.min(100, Math.round(((counters.tests98Acc || 0) / 5) * 100)), label: `${counters.tests98Acc || 0} / 5 tests` };
+      case 'surgical_precision':
+        return { current: Math.min(3, counters.tests100RawAcc || 0), target: 3, pct: Math.min(100, Math.round(((counters.tests100RawAcc || 0) / 3) * 100)), label: `${counters.tests100RawAcc || 0} / 3 tests` };
+      case 'blind_typist':
+        return { current: Math.min(3, counters.testsHiddenMode || 0), target: 3, pct: Math.min(100, Math.round(((counters.testsHiddenMode || 0) / 3) * 100)), label: `${counters.testsHiddenMode || 0} / 3 tests` };
+      case 'silver_stream':
+        return { current: Math.min(50, gameSave.highStreak || 0), target: 50, pct: Math.min(100, Math.round(((gameSave.highStreak || 0) / 50) * 100)), label: `${gameSave.highStreak || 0} / 50 words` };
+      case 'unbroken_stream':
+        return { current: Math.min(100, gameSave.highStreak || 0), target: 100, pct: Math.min(100, Math.round(((gameSave.highStreak || 0) / 100) * 100)), label: `${gameSave.highStreak || 0} / 100 words` };
+      case 'nest_tender':
+        return { current: Math.min(15, counters.eggsHatchedTotal || 0), target: 15, pct: Math.min(100, Math.round(((counters.eggsHatchedTotal || 0) / 15) * 100)), label: `${counters.eggsHatchedTotal || 0} / 15 eggs` };
+      case 'grand_incubator':
+        return { current: Math.min(60, counters.eggsHatchedTotal || 0), target: 60, pct: Math.min(100, Math.round(((counters.eggsHatchedTotal || 0) / 60) * 100)), label: `${counters.eggsHatchedTotal || 0} / 60 eggs` };
+      case 'lexicon_explorer':
+        const len50 = (gameSave.unlockedRanks || []).length;
+        return { current: Math.min(50, len50), target: 50, pct: Math.min(100, Math.round((len50 / 50) * 100)), label: `${len50} / 50 words` };
+      case 'lexicon_architect':
+        const len250 = (gameSave.unlockedRanks || []).length;
+        return { current: Math.min(250, len250), target: 250, pct: Math.min(100, Math.round((len250 / 250) * 100)), label: `${len250} / 250 words` };
+      case 'lexicon_1000':
+        const len1000 = (gameSave.unlockedRanks || []).length;
+        return { current: Math.min(1000, len1000), target: 1000, pct: Math.min(100, Math.round((len1000 / 1000) * 100)), label: `${len1000} / 1000 words` };
+      case 'tri_core_flow':
+        const mb3 = extraContext.motorBucketsCount || 0;
+        return { current: Math.min(3, mb3), target: 3, pct: Math.min(100, Math.round((mb3 / 3) * 100)), label: `${mb3} / 3 buckets` };
+      case 'five_finger_pentathlon':
+        const mb5 = extraContext.pentathlonBucketsCount || 0;
+        return { current: Math.min(5, mb5), target: 5, pct: Math.min(100, Math.round((mb5 / 5) * 100)), label: `${mb5} / 5 buckets` };
+      default:
+        return { current: 0, target: 1, pct: 0, label: 'In Progress' };
+    }
+  }
+}
+if (typeof window !== 'undefined') {
+  window.AchievementsModel = AchievementsModel;
+  window.ACHIEVEMENTS = ACHIEVEMENTS;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { AchievementsModel, ACHIEVEMENTS };
+}
 const STORAGE_KEYS = {
   CLASSIC_STATS: 'typeflow_classic_stats_v1',
   GAME_SAVE:     'typeflow_game_save_v2',
@@ -4311,7 +5178,18 @@ const DEFAULT_GAME_SAVE = {
   hiddenMethod: 'char',
   hiddenWordDistance: 2,
   ghostCursor: false,
-  ghostSpeed: 50
+  ghostSpeed: 50,
+  achievements: {},
+  achievementCounters: {
+    tests60Wpm: 0,
+    tests100Wpm: 0,
+    tests98Acc: 0,
+    tests100RawAcc: 0,
+    tests85Consistency: 0,
+    tests92Consistency: 0,
+    testsHiddenMode: 0,
+    eggsHatchedTotal: 0
+  }
 };
 function safeGetLocalStorage() {
   try {
@@ -4393,6 +5271,18 @@ class StorageService {
     } catch (e) {
       console.error('[StorageService] Failed to save classic stats:', e);
       return null;
+    }
+  }
+  saveClassicStats(stats) {
+    try {
+      const s = this._getStorage();
+      if (s) {
+        s.setItem(STORAGE_KEYS.CLASSIC_STATS, JSON.stringify(stats));
+      }
+      return true;
+    } catch (e) {
+      console.error('[StorageService] Failed to save classic stats:', e);
+      return false;
     }
   }
   getXpForLevel(level) {
@@ -4644,6 +5534,7 @@ class StorageService {
           bucketColor: mb.color,
           description: mb.description,
           count: 0,
+          masteredWordsCount: 0,
           totalHits: 0,
           totalWpm: 0,
           totalErrors: 0,
@@ -4661,9 +5552,11 @@ class StorageService {
         if (meta && stats[meta.bucketId]) {
           const b = stats[meta.bucketId];
           const st = (save.wordStats && save.wordStats[rank]) || {};
+          const hits = (st.streak ?? st.cleanHits ?? 0);
           b.count += 1;
           b.isDiscovered = true;
-          b.totalHits += (st.streak ?? st.cleanHits ?? 0);
+          if (hits >= 5) b.masteredWordsCount += 1;
+          b.totalHits += hits;
           b.totalWpm += (st.avgWpm ?? st.lastWpm ?? save.targetWpm ?? 40);
           b.totalErrors += ((st.unfixedErr || 0) + (st.fixedErr || 0)) || (st.errorCount || 0);
         }
@@ -4688,11 +5581,39 @@ class StorageService {
     });
     return stats;
   }
-  resetGameSave() {
+  getMotorMasterySummary(saveState) {
+    let motorBucketsCount = 0;
+    let pentathlonBucketsCount = 0;
+    let allFiveMastered = false;
     try {
+      const bStats = this.getBucketStats(saveState);
+      const bKeys = Object.keys(bStats);
+      if (bKeys.length > 0) {
+        for (const k of bKeys) {
+          const b = bStats[k];
+          if (b.isProficient || b.masteredWordsCount >= 1) {
+            motorBucketsCount++;
+          }
+          if ((b.isProficient && b.count >= 3) || b.masteredWordsCount >= 3) {
+            pentathlonBucketsCount++;
+          }
+        }
+        allFiveMastered = (bKeys.length >= 5 && pentathlonBucketsCount >= 5);
+      }
+    } catch (e) {}
+    return { motorBucketsCount, pentathlonBucketsCount, allFiveMastered };
+  }
+  resetGameSave(resetAchievements = false) {
+    try {
+      const prev = this.getGameSave();
       const s = this._getStorage();
       if (s) s.removeItem(STORAGE_KEYS.GAME_SAVE);
       const fresh = JSON.parse(JSON.stringify(DEFAULT_GAME_SAVE));
+      if (!resetAchievements && prev) {
+        if (prev.achievements) fresh.achievements = prev.achievements;
+        if (prev.achievementCounters) fresh.achievementCounters = prev.achievementCounters;
+        if (prev.achievementRetroSynced) fresh.achievementRetroSynced = prev.achievementRetroSynced;
+      }
       this.saveGameSave(fresh);
       return fresh;
     } catch (e) {
@@ -4863,6 +5784,104 @@ class StorageService {
     } catch (e) {
       return num;
     }
+  }
+  getAchievements() {
+    const save = this.getGameSave();
+    return (save && typeof save.achievements === 'object' && save.achievements !== null)
+      ? Object.assign({}, save.achievements)
+      : {};
+  }
+  unlockAchievement(id, timestamp = Date.now()) {
+    if (!id) return false;
+    const save = this.getGameSave();
+    if (!save.achievements) save.achievements = {};
+    if (!save.achievements[id]) {
+      save.achievements[id] = timestamp;
+      this.saveGameSave(save);
+      return true;
+    }
+    return false;
+  }
+  getAchievementCounters() {
+    const save = this.getGameSave();
+    const defaults = {
+      tests60Wpm: 0,
+      tests100Wpm: 0,
+      tests98Acc: 0,
+      tests100RawAcc: 0,
+      tests85Consistency: 0,
+      tests92Consistency: 0,
+      testsHiddenMode: 0,
+      eggsHatchedTotal: 0
+    };
+    return Object.assign({}, defaults, save.achievementCounters || {});
+  }
+  updateAchievementCounters(updaterFn) {
+    const save = this.getGameSave();
+    if (!save.achievementCounters) {
+      save.achievementCounters = {
+        tests60Wpm: 0,
+        tests100Wpm: 0,
+        tests98Acc: 0,
+        tests100RawAcc: 0,
+        tests85Consistency: 0,
+        tests92Consistency: 0,
+        testsHiddenMode: 0,
+        eggsHatchedTotal: 0
+      };
+    }
+    if (typeof updaterFn === 'function') {
+      updaterFn(save.achievementCounters);
+    }
+    this.saveGameSave(save);
+    return Object.assign({}, save.achievementCounters);
+  }
+  syncRetroactiveAchievements(achievementsModel) {
+    if (!achievementsModel) return [];
+    const save = this.getGameSave();
+    const classicStats = this.getClassicStats();
+    const counters = this.getAchievementCounters();
+    if (!save.achievementRetroSynced) {
+      let modified = false;
+      if (Array.isArray(classicStats.recentHistory) && classicStats.recentHistory.length > 0) {
+        for (const t of classicStats.recentHistory) {
+          if (t.duration >= 30) {
+            const acc = t.accuracy ?? t.acc ?? 0;
+            if (t.wpm >= 60 && acc >= 96) counters.tests60Wpm++;
+            if (t.wpm >= 100 && acc >= 96) counters.tests100Wpm++;
+            if (acc >= 98) counters.tests98Acc++;
+            if (typeof t.incorrectChars === 'number' && t.incorrectChars === 0 && (!t.fixedErrors || t.fixedErrors === 0)) {
+              counters.tests100RawAcc++;
+            }
+            if (t.wpm >= 50 && t.consistency >= 85) counters.tests85Consistency++;
+            if (t.wpm >= 70 && t.consistency >= 92) counters.tests92Consistency++;
+            modified = true;
+          }
+        }
+      }
+      const unlockedLen = Array.isArray(save.unlockedRanks) ? save.unlockedRanks.length : 1;
+      if ((counters.eggsHatchedTotal || 0) < unlockedLen - 1) {
+        counters.eggsHatchedTotal = unlockedLen - 1;
+        modified = true;
+      }
+      save.achievementRetroSynced = true;
+      if (!save.achievementCounters) save.achievementCounters = {};
+      Object.assign(save.achievementCounters, counters);
+      this.saveGameSave(save);
+    }
+    const { motorBucketsCount, pentathlonBucketsCount, allFiveMastered } = this.getMotorMasterySummary(save);
+    const newlyUnlocked = achievementsModel.evaluate('sync', {
+      gameSave: save,
+      classicStats,
+      counters,
+      motorBucketsCount,
+      pentathlonBucketsCount,
+      allFiveMastered
+    });
+    for (const ach of newlyUnlocked) {
+      this.unlockAchievement(ach.id, ach.unlockedAt);
+    }
+    return newlyUnlocked;
   }
 }
 const storageService = new StorageService();
@@ -5048,6 +6067,32 @@ class AudioService {
       gain.connect(ctx.destination);
       osc.start();
       osc.stop(ctx.currentTime + 0.07);
+    } catch (e) {}
+  }
+  playAchievementUnlock(tier = 1) {
+    if (!this.soundEnabled) return;
+    try {
+      this.init();
+      if (!this.audioCtx) return;
+      const ctx = this.audioCtx;
+      const now = ctx.currentTime;
+      const isGrand = tier === 2 || tier === 'crown' || tier === 'feat' || tier === 'apex';
+      const notes = isGrand
+        ? [523.25, 659.25, 783.99, 987.77, 1046.50]
+        : [587.33, 739.99, 880.00];
+      const noteDelay = isGrand ? 0.07 : 0.08;
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = isGrand ? 'triangle' : 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * noteDelay);
+        gain.gain.setValueAtTime(isGrand ? 0.12 : 0.10, now + idx * noteDelay);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * noteDelay + (isGrand ? 0.35 : 0.25));
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + idx * noteDelay);
+        osc.stop(now + idx * noteDelay + (isGrand ? 0.38 : 0.28));
+      });
     } catch (e) {}
   }
 }
@@ -5861,6 +6906,11 @@ class HUDView {
     this.momentumBarFill = elements.momentumBarFill || (typeof document !== 'undefined' ? document.getElementById('momentum-bar-fill') : null);
     this.flowVignetteOverlay = elements.flowVignetteOverlay || (typeof document !== 'undefined' ? document.getElementById('flow-vignette-overlay') : null);
     this.xpToastLayer = elements.xpToastLayer || (typeof document !== 'undefined' ? document.getElementById('xp-toast-layer') : null);
+    this.achievementToast = elements.achievementToast || (typeof document !== 'undefined' ? document.getElementById('achievement-toast') : null);
+    this.statsBtn = elements.statsBtn || (typeof document !== 'undefined' ? document.getElementById('stats-btn') : null);
+    this.toastQueue = [];
+    this.isToastShowing = false;
+    this.toastTimeout = null;
     this.lastRenderedMomentum = -1;
   }
   bindEvents(handlers = {}) {
@@ -6099,8 +7149,8 @@ class HUDView {
       }
     }
     toast.textContent = msg;
-    let posX = window.innerWidth / 2;
-    let posY = window.innerHeight / 2 - 80;
+    let posX = (typeof window !== 'undefined' ? window.innerWidth : 800) / 2;
+    let posY = (typeof window !== 'undefined' ? window.innerHeight : 600) / 2 - 80;
     if (anchorEl) {
       const rect = anchorEl.getBoundingClientRect();
       if (rect.width > 0 && rect.top > 0) {
@@ -6165,6 +7215,50 @@ class HUDView {
     }
     if (valEl) {
       valEl.textContent = `${speed || 50} WPM`;
+    }
+  }
+  showAchievementToast(achievement) {
+    if (!achievement) return;
+    this.toastQueue.push(achievement);
+    this._processToastQueue();
+  }
+  _processToastQueue() {
+    if (this.isToastShowing || this.toastQueue.length === 0) return;
+    const toast = this.achievementToast || ((typeof document !== 'undefined') ? document.getElementById('achievement-toast') : null);
+    if (!toast) return;
+    const ach = this.toastQueue.shift();
+    this.isToastShowing = true;
+    const tierLabel = ach.tier === 1
+      ? 'TIER I UNLOCKED'
+      : (ach.tier === 2
+          ? 'TIER II MASTERY'
+          : (ach.tier === 'crown'
+              ? '👑 CROWN JEWEL'
+              : (ach.tier === 'apex' ? '⚡ APEX FEAT' : '🌟 SIGNATURE FEAT')));
+    const tierClass = `tier-${ach.tier}`;
+    toast.className = `achievement-toast visible ${tierClass}`;
+    toast.innerHTML = `
+      <div class="toast-icon-wrap">${ach.icon || '🏆'}</div>
+      <div class="toast-body">
+        <span class="toast-tier ${tierClass}">${tierLabel}</span>
+        <div class="toast-title">${ach.title}</div>
+        <div class="toast-desc">${ach.desc}</div>
+      </div>
+    `;
+    if (this.toastTimeout) clearTimeout(this.toastTimeout);
+    if (this.toastFadeTimeout) clearTimeout(this.toastFadeTimeout);
+    this.toastTimeout = setTimeout(() => {
+      toast.classList.remove('visible');
+      this.toastFadeTimeout = setTimeout(() => {
+        this.isToastShowing = false;
+        this._processToastQueue();
+      }, 400);
+    }, 3500);
+  }
+  setStatsBadgeVisible(visible) {
+    const btn = this.statsBtn || ((typeof document !== 'undefined') ? document.getElementById('stats-btn') : null);
+    if (btn) {
+      btn.classList.toggle('has-badge', Boolean(visible));
     }
   }
 }
@@ -6413,8 +7507,17 @@ class ModalView {
     this.statsModal = elements.statsModal || (typeof document !== 'undefined' ? document.getElementById('stats-modal') : null);
     this.tabStatsFlow = elements.tabStatsFlow || (typeof document !== 'undefined' ? document.getElementById('tab-stats-flow') : null);
     this.tabStatsClassic = elements.tabStatsClassic || (typeof document !== 'undefined' ? document.getElementById('tab-stats-classic') : null);
+    this.tabStatsTrophies = elements.tabStatsTrophies || (typeof document !== 'undefined' ? document.getElementById('tab-stats-trophies') : null);
     this.paneStatsFlow = elements.paneStatsFlow || (typeof document !== 'undefined' ? document.getElementById('pane-stats-flow') : null);
     this.paneStatsClassic = elements.paneStatsClassic || (typeof document !== 'undefined' ? document.getElementById('pane-stats-classic') : null);
+    this.paneStatsTrophies = elements.paneStatsTrophies || (typeof document !== 'undefined' ? document.getElementById('pane-stats-trophies') : null);
+    this.trophiesCountEl = elements.trophiesCountEl || (typeof document !== 'undefined' ? document.getElementById('trophies-count') : null);
+    this.trophiesProgressBar = elements.trophiesProgressBar || (typeof document !== 'undefined' ? document.getElementById('trophies-progress-bar') : null);
+    this.trophiesGrid = elements.trophiesGrid || (typeof document !== 'undefined' ? document.getElementById('trophies-grid') : null);
+    this.trophyFilterBtns = elements.trophyFilterBtns || (typeof document !== 'undefined' ? document.querySelectorAll('.trophy-filter-btn') : []);
+    this.currentTrophyFilter = 'all';
+    this.currentAchievementsModel = null;
+    this.currentStorageService = null;
     this.statsRpgLevel = elements.statsRpgLevel || (typeof document !== 'undefined' ? document.getElementById('stats-rpg-level') : null);
     this.statsRpgTitle = elements.statsRpgTitle || (typeof document !== 'undefined' ? document.getElementById('stats-rpg-title') : null);
     this.statsRpgXp = elements.statsRpgXp || (typeof document !== 'undefined' ? document.getElementById('stats-rpg-xp') : null);
@@ -6478,10 +7581,14 @@ class ModalView {
   }
   switchStatsTab(tabName) {
     const isFlow = tabName === 'flow';
+    const isClassic = tabName === 'classic';
+    const isTrophies = tabName === 'trophies';
     if (this.tabStatsFlow) this.tabStatsFlow.classList.toggle('active', isFlow);
-    if (this.tabStatsClassic) this.tabStatsClassic.classList.toggle('active', !isFlow);
+    if (this.tabStatsClassic) this.tabStatsClassic.classList.toggle('active', isClassic);
+    if (this.tabStatsTrophies) this.tabStatsTrophies.classList.toggle('active', isTrophies);
     if (this.paneStatsFlow) this.paneStatsFlow.style.display = isFlow ? 'flex' : 'none';
-    if (this.paneStatsClassic) this.paneStatsClassic.style.display = isFlow ? 'none' : 'flex';
+    if (this.paneStatsClassic) this.paneStatsClassic.style.display = isClassic ? 'flex' : 'none';
+    if (this.paneStatsTrophies) this.paneStatsTrophies.style.display = isTrophies ? 'flex' : 'none';
   }
   bindEvents(handlers = {}) {
     if (this.tabStatsFlow) {
@@ -6489,6 +7596,12 @@ class ModalView {
     }
     if (this.tabStatsClassic) {
       this.tabStatsClassic.addEventListener('click', () => this.switchStatsTab('classic'));
+    }
+    if (this.tabStatsTrophies) {
+      this.tabStatsTrophies.addEventListener('click', () => {
+        this.switchStatsTab('trophies');
+        if (handlers.onSelectTrophiesTab) handlers.onSelectTrophiesTab();
+      });
     }
     if (this.nextTestBtn) {
       this.nextTestBtn.addEventListener('click', () => {
@@ -6526,6 +7639,24 @@ class ModalView {
       });
     }
     this.setupDeckFilters();
+    this.setupTrophyFilters();
+  }
+  setupTrophyFilters() {
+    const btns = (this.trophyFilterBtns && this.trophyFilterBtns.length > 0)
+      ? this.trophyFilterBtns
+      : (typeof document !== 'undefined' ? document.querySelectorAll('.trophy-filter-btn') : []);
+    if (btns && btns.length > 0) {
+      btns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          btns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          this.currentTrophyFilter = btn.dataset.filter || 'all';
+          if (this.currentAchievementsModel && this.currentStorageService) {
+            this.renderTrophies(this.currentAchievementsModel, this.currentStorageService, this.currentTrophyFilter);
+          }
+        });
+      });
+    }
   }
   setupDeckFilters() {
     if (this.deckFilterBtns && this.deckFilterBtns.length > 0) {
@@ -6696,6 +7827,88 @@ class ModalView {
         });
       }
     }
+  }
+  renderTrophies(achievementsModel, storageService, filter = null) {
+    if (!achievementsModel) return;
+    this.currentAchievementsModel = achievementsModel;
+    this.currentStorageService = storageService;
+    if (filter) this.currentTrophyFilter = filter;
+    const all = achievementsModel.listAll();
+    const unlocked = achievementsModel.listUnlocked();
+    const totalCount = all.length;
+    const unlockedCount = unlocked.length;
+    const pct = totalCount > 0 ? Math.round((unlockedCount / totalCount) * 100) : 0;
+    if (this.trophiesCountEl) {
+      this.trophiesCountEl.textContent = `${unlockedCount} / ${totalCount} unlocked (${pct}%)`;
+    }
+    if (this.trophiesProgressBar) {
+      this.trophiesProgressBar.style.width = `${pct}%`;
+    }
+    if (!this.trophiesGrid) {
+      this.trophiesGrid = (typeof document !== 'undefined') ? document.getElementById('trophies-grid') : null;
+    }
+    if (!this.trophiesGrid) return;
+    let items = all;
+    if (this.currentTrophyFilter && this.currentTrophyFilter !== 'all') {
+      items = items.filter(a => a.category === this.currentTrophyFilter);
+    }
+    const counters = (storageService && storageService.getAchievementCounters) ? storageService.getAchievementCounters() : {};
+    const gameSave = (storageService && storageService.getGameSave) ? storageService.getGameSave() : {};
+    const motorSummary = (storageService && storageService.getMotorMasterySummary) ? storageService.getMotorMasterySummary(gameSave) : {};
+    const tierLabels = {
+      1: 'Tier I',
+      2: 'Tier II',
+      apex: 'Apex',
+      crown: 'Crown Jewel',
+      feat: 'Feat'
+    };
+    const doc = (this.trophiesGrid && this.trophiesGrid.ownerDocument)
+      ? this.trophiesGrid.ownerDocument
+      : ((typeof document !== 'undefined') ? document : null);
+    if (!doc) return;
+    this.trophiesGrid.innerHTML = '';
+    items.forEach(a => {
+      const isUnlocked = a.unlocked;
+      const prog = achievementsModel.getProgress(a.id, counters, gameSave, motorSummary);
+      const tierClass = `tier-${a.tier}`;
+      const tierLabel = tierLabels[a.tier] || `Tier ${a.tier}`;
+      let dateStr = '';
+      if (isUnlocked && a.unlockedAt) {
+        try {
+          const d = new Date(a.unlockedAt);
+          dateStr = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        } catch (e) {
+          dateStr = '';
+        }
+      }
+      const card = doc.createElement('div');
+      card.className = `trophy-card ${isUnlocked ? 'unlocked' : 'locked'} ${tierClass}`;
+      let footerHtml = '';
+      if (isUnlocked) {
+        footerHtml = `<div class="trophy-status unlocked"><span class="trophy-check">✓</span> Unlocked ${dateStr ? `· ${dateStr}` : ''}</div>`;
+      } else {
+        const miniPct = prog ? Math.min(100, Math.max(0, prog.pct || 0)) : 0;
+        const miniLabel = (prog && prog.label) ? prog.label : 'In Progress';
+        footerHtml = `
+          <div class="trophy-progress-wrap">
+            <div class="trophy-progress-text">${miniLabel}</div>
+            <div class="trophy-mini-bar"><div class="trophy-mini-fill" style="width: ${miniPct}%;"></div></div>
+          </div>
+        `;
+      }
+      card.innerHTML = `
+        <div class="trophy-header">
+          <div class="trophy-icon-wrap">${a.icon}</div>
+          <div class="trophy-title-wrap">
+            <div class="trophy-title">${a.title}</div>
+            <div class="trophy-tier-badge">${tierLabel}</div>
+          </div>
+        </div>
+        <div class="trophy-desc">${a.desc}</div>
+        ${footerHtml}
+      `;
+      this.trophiesGrid.appendChild(card);
+    });
   }
 }
 if (typeof window !== 'undefined') {
@@ -6876,6 +8089,12 @@ if (!_Constants && typeof require !== 'undefined') {
     _Constants = require('../core/Constants.js').CONSTANTS;
   } catch (e) {}
 }
+var _AchievementsModel = (typeof AchievementsModel !== 'undefined') ? AchievementsModel : null;
+if (!_AchievementsModel && typeof require !== 'undefined') {
+  try {
+    _AchievementsModel = require('../models/AchievementsModel.js').AchievementsModel;
+  } catch (e) {}
+}
 class GameController {
   constructor(deps = {}) {
     this.wordsModel = deps.wordsModel || new WordsModel();
@@ -6884,6 +8103,20 @@ class GameController {
     this.eggNestModel = deps.eggNestModel || new EggNestModel();
     this.storageService = deps.storageService || (typeof StorageManager !== 'undefined' ? StorageManager : new StorageService());
     this.audioService = deps.audioService || (typeof audioService !== 'undefined' ? audioService : new AudioService());
+    const AMClass = deps.achievementsModelClass || _AchievementsModel || (typeof AchievementsModel !== 'undefined' ? AchievementsModel : null);
+    if (deps.achievementsModel) {
+      this.achievementsModel = deps.achievementsModel;
+    } else if (AMClass) {
+      const savedAchievements = (this.storageService && this.storageService.getAchievements) ? this.storageService.getAchievements() : {};
+      this.achievementsModel = new AMClass(savedAchievements);
+    } else {
+      this.achievementsModel = null;
+    }
+    this.flowStartTime = null;
+    this.consecutiveApexWords = 0;
+    this.cushionAbsorbedState = false;
+    this.hatchModeEnteredMomentum = null;
+    this.ghostConsecutiveWords = 0;
     const BLClass = deps.bigramLedgerClass || _BigramLedger || (typeof BigramLedger !== 'undefined' ? BigramLedger : null);
     if (deps.bigramLedger) {
       this.bigramLedger = deps.bigramLedger;
@@ -7074,6 +8307,11 @@ class GameController {
           this.storageService.resetClassicStats();
           this.modalView.renderClassicStats(this.storageService.getClassicStats());
         }
+      },
+      onSelectTrophiesTab: () => {
+        if (this.achievementsModel) {
+          this.modalView.renderTrophies(this.achievementsModel, this.storageService);
+        }
       }
     });
     this.chartView.bindEvents();
@@ -7087,6 +8325,43 @@ class GameController {
         }
       };
       window.addEventListener('resize', this._onWindowResize);
+    }
+    if (this.achievementsModel && this.storageService.syncRetroactiveAchievements) {
+      const newRetroUnlocks = this.storageService.syncRetroactiveAchievements(this.achievementsModel);
+      if (newRetroUnlocks && newRetroUnlocks.length > 0) {
+        if (this.hudView && this.hudView.setStatsBadgeVisible) {
+          this.hudView.setStatsBadgeVisible(true);
+        }
+      }
+    }
+  }
+  triggerAchievementEvent(eventType, payload = {}) {
+    if (!this.achievementsModel) return;
+    const gameSave = this.storageService.getGameSave ? this.storageService.getGameSave() : {};
+    const motorSummary = (eventType === 'lexicon_updated' && this.storageService.getMotorMasterySummary)
+      ? this.storageService.getMotorMasterySummary(gameSave)
+      : {};
+    const ctx = Object.assign({
+      counters: this.storageService.getAchievementCounters ? this.storageService.getAchievementCounters() : {},
+      gameSave,
+      classicStats: this.storageService.getClassicStats ? this.storageService.getClassicStats() : {}
+    }, motorSummary, payload);
+    const newlyUnlocked = this.achievementsModel.evaluate(eventType, ctx);
+    if (newlyUnlocked && newlyUnlocked.length > 0) {
+      for (const ach of newlyUnlocked) {
+        if (this.storageService.unlockAchievement) {
+          this.storageService.unlockAchievement(ach.id, ach.unlockedAt);
+        }
+        if (this.hudView && this.hudView.showAchievementToast) {
+          this.hudView.showAchievementToast(ach);
+        }
+        if (this.audioService && this.audioService.playAchievementUnlock) {
+          this.audioService.playAchievementUnlock(ach.tier);
+        }
+      }
+      if (this.hudView && this.hudView.setStatsBadgeVisible) {
+        this.hudView.setStatsBadgeVisible(true);
+      }
     }
   }
   updateTargetWpm(wpm) {
@@ -7359,6 +8634,11 @@ class GameController {
     this.visualMomentum = 0;
     this.wordsModel.resetHistory();
     this.lastKeystrokeTime = null;
+    this.flowStartTime = null;
+    this.consecutiveApexWords = 0;
+    this.cushionAbsorbedState = false;
+    this.hatchModeEnteredMomentum = null;
+    this.ghostConsecutiveWords = 0;
     const gameState = this.storageService.getGameSave();
     this.eggNestModel.syncBasket(gameState.eggBasket || []);
     const count = this.bufferConfig.initialWordCount;
@@ -7439,6 +8719,39 @@ class GameController {
     if (this.bigramLedger) {
       this.storageService.saveBigramLedger(this.bigramLedger.toJSON());
     }
+    const isHidden = (this.sessionModel && this.sessionModel.hiddenMode) || (this.storageService && this.storageService.getHiddenMode && this.storageService.getHiddenMode());
+    const duration = this.sessionModel.duration;
+    let beatGhost = false;
+    if (this.ghostEnabled) {
+      const playerChars = (stats.correctChars || 0) + (stats.incorrectChars || 0);
+      beatGhost = (playerChars > this.ghostTotalChars) && (stats.wpm > this.ghostSpeed);
+    }
+    if (this.storageService.updateAchievementCounters) {
+      this.storageService.updateAchievementCounters(c => {
+        if (duration >= 30) {
+          if (stats.wpm >= 60 && stats.accuracy >= 96) c.tests60Wpm = (c.tests60Wpm || 0) + 1;
+          if (stats.wpm >= 100 && stats.accuracy >= 96) c.tests100Wpm = (c.tests100Wpm || 0) + 1;
+          if (stats.wpm >= 50 && stats.consistency >= 85) c.tests85Consistency = (c.tests85Consistency || 0) + 1;
+          if (stats.wpm >= 70 && stats.consistency >= 92) c.tests92Consistency = (c.tests92Consistency || 0) + 1;
+          if (stats.accuracy >= 98 && stats.wpm >= 50) c.tests98Acc = (c.tests98Acc || 0) + 1;
+          if (stats.incorrectChars === 0 && (!stats.fixedErrors || stats.fixedErrors === 0) && stats.wpm >= 50) c.tests100RawAcc = (c.tests100RawAcc || 0) + 1;
+        }
+        if (isHidden && stats.accuracy >= 96 && duration >= 30) {
+          c.testsHiddenMode = (c.testsHiddenMode || 0) + 1;
+        }
+      });
+    }
+    this.triggerAchievementEvent('test_finished', {
+      wpm: stats.wpm,
+      accuracy: stats.accuracy,
+      consistency: stats.consistency,
+      fixedErrors: stats.fixedErrors || 0,
+      incorrectChars: stats.incorrectChars || 0,
+      duration: duration,
+      isHidden: Boolean(isHidden),
+      beatGhost,
+      ghostSpeed: this.ghostSpeed
+    });
     this.modalView.showClassicResults(stats);
     this.chartView.render(this.sessionModel.wpmHistory);
   }
@@ -7570,8 +8883,67 @@ class GameController {
       if (this.storageService.getHiddenMode && this.storageService.getHiddenMode()) {
         baseXp = Math.round(baseXp * 1.15);
       }
+      const prevMomentum = this.flowModel.momentum;
       const evalRes = this.flowModel.evaluateWord(hasUncorrectedErrors, liveWpm, isHadBackspace, basketCount, baseXp);
       const earnedXp = evalRes.earnedXp;
+      if (this.cushionAbsorbedState && this.flowModel.momentum >= 100) {
+        this.triggerAchievementEvent('cushion_recovered');
+        this.cushionAbsorbedState = false;
+      }
+      if ((isHadBackspace || liveWpm < this.flowModel.targetWpm) && prevMomentum >= 100 && this.flowModel.momentum >= 85 && this.flowModel.momentum < 100) {
+        this.cushionAbsorbedState = true;
+      }
+      if (this.flowModel.momentum < 85) {
+        this.cushionAbsorbedState = false;
+      }
+      if (this.hatchModeEnteredMomentum !== null) {
+        if (this.flowModel.momentum >= 85 && this.hatchModeEnteredMomentum >= 85) {
+          this.triggerAchievementEvent('in_stride_crack');
+        }
+        this.hatchModeEnteredMomentum = null;
+      }
+      const nowMs = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+      let flowSeconds = 0;
+      if (this.flowModel.momentum >= 85) {
+        if (!this.flowStartTime) this.flowStartTime = nowMs;
+        flowSeconds = Math.round((nowMs - this.flowStartTime) / 1000);
+      } else {
+        this.flowStartTime = null;
+      }
+      if (this.flowModel.momentum >= 118) {
+        this.consecutiveApexWords = (this.consecutiveApexWords || 0) + 1;
+      } else {
+        this.consecutiveApexWords = 0;
+      }
+      if (this.ghostEnabled && this.isGhostRunning) {
+        const playerChars = this.getCharCumulativeIndex(this.sessionModel.currentWordIdx, 0);
+        if (playerChars > this.ghostTotalChars && liveWpm > this.ghostSpeed) {
+          this.ghostConsecutiveWords = (this.ghostConsecutiveWords || 0) + 1;
+        } else {
+          this.ghostConsecutiveWords = 0;
+        }
+      }
+      const isHiddenMode = (this.sessionModel && this.sessionModel.hiddenMode) || (this.storageService && this.storageService.getHiddenMode && this.storageService.getHiddenMode());
+      const hiddenMethod = (this.storageService && this.storageService.getHiddenMethod) ? this.storageService.getHiddenMethod() : 'char';
+      const hiddenWordDist = (this.storageService && this.storageService.getHiddenWordDistance) ? this.storageService.getHiddenWordDistance() : 2;
+      const hiddenCombo = this.getHiddenCombo();
+      const hiddenStreak = this.sessionModel ? this.sessionModel.wordStreak : 0;
+      this.triggerAchievementEvent('word_completed', {
+        flowStreak: evalRes.flowStreak,
+        burstWpm: liveWpm,
+        wordLength: currentWordText.length,
+        momentum: this.flowModel.momentum,
+        consecutiveApexWords: this.consecutiveApexWords,
+        flowSeconds: flowSeconds,
+        isHidden: Boolean(isHiddenMode),
+        hiddenMethod: hiddenMethod,
+        hiddenWordDistance: hiddenWordDist,
+        hiddenCombo: hiddenCombo,
+        hiddenStreak: hiddenStreak,
+        beatGhost: this.ghostConsecutiveWords > 0,
+        ghostConsecutiveWords: this.ghostConsecutiveWords,
+        ghostSpeed: this.ghostSpeed
+      });
       this.storageService.updateHighStreak(evalRes.highStreak);
       const xpRes = this.storageService.addXp(earnedXp);
       this.updateLevelHud();
@@ -7631,6 +9003,7 @@ class GameController {
       } else {
         this.wordsModel.recordPatternHit(wordMeta.tags);
       }
+      this.triggerAchievementEvent('lexicon_updated');
       if (this.bigramLedger) {
         this.storageService.saveBigramLedger(this.bigramLedger.toJSON());
       }
@@ -7665,6 +9038,19 @@ class GameController {
           this.ghostTotalChars += addedChars;
         }
       }
+    } else {
+      const isHiddenMode = (this.sessionModel && this.sessionModel.hiddenMode) || (this.storageService && this.storageService.getHiddenMode && this.storageService.getHiddenMode());
+      if (isHiddenMode) {
+        const hiddenMethod = (this.storageService && this.storageService.getHiddenMethod) ? this.storageService.getHiddenMethod() : 'char';
+        const hiddenWordDist = (this.storageService && this.storageService.getHiddenWordDistance) ? this.storageService.getHiddenWordDistance() : 2;
+        this.triggerAchievementEvent('word_completed', {
+          isHidden: true,
+          hiddenMethod,
+          hiddenWordDistance: hiddenWordDist,
+          hiddenCombo: this.getHiddenCombo(),
+          hiddenStreak: this.sessionModel ? this.sessionModel.wordStreak : 0
+        });
+      }
     }
     const prevIdx = this.sessionModel.currentWordIdx - 1;
     const nextIdx = this.sessionModel.currentWordIdx;
@@ -7691,6 +9077,11 @@ class GameController {
   }
   enterHatchMode(preferredSlot = -1) {
     this.audioService.init();
+    if (this.currentMode === 'flow' && this.flowModel && this.flowModel.momentum >= 85) {
+      this.hatchModeEnteredMomentum = this.flowModel.momentum;
+    } else {
+      this.hatchModeEnteredMomentum = null;
+    }
     const entered = this.eggNestModel.enterHatchMode(preferredSlot);
     if (entered) {
       this.nestView.render(this.eggNestModel);
@@ -7735,6 +9126,21 @@ class GameController {
         this.nestView.render(this.eggNestModel);
         this.updateLevelHud();
         this.hudView.spawnXpToast(`✨ Hatched: ${hatchedWord}!`, 1.0, null, true);
+        if (this.storageService.updateAchievementCounters) {
+          this.storageService.updateAchievementCounters(c => {
+            c.eggsHatchedTotal = (c.eggsHatchedTotal || 0) + 1;
+          });
+        }
+        const isHidden = (this.sessionModel && this.sessionModel.hiddenMode) || (this.storageService && this.storageService.getHiddenMode && this.storageService.getHiddenMode());
+        const hiddenCombo = this.getHiddenCombo();
+        const counters = this.storageService.getAchievementCounters ? this.storageService.getAchievementCounters() : {};
+        this.triggerAchievementEvent('egg_hatched', {
+          totalHatched: counters.eggsHatchedTotal || 1,
+          rarityTier: (hatchedRarity || 'common').toUpperCase(),
+          isHidden: Boolean(isHidden),
+          hiddenCombo
+        });
+        this.triggerAchievementEvent('lexicon_updated');
         this.queueHatchedWord(hatchedWord, hatchedRarity);
         if (!this.eggNestModel.isHatching()) {
           if (this.hatchExitTimeout) clearTimeout(this.hatchExitTimeout);
@@ -7794,6 +9200,12 @@ class GameController {
     this.modalView.openStatsModal(tab);
     this.modalView.renderFlowStats(gameState, bucketStats, (r) => this.wordsModel.getWord(r), this.storageService);
     this.modalView.renderClassicStats(this.storageService.getClassicStats());
+    if (this.achievementsModel && this.modalView.renderTrophies) {
+      this.modalView.renderTrophies(this.achievementsModel, this.storageService);
+    }
+    if (this.hudView && this.hudView.setStatsBadgeVisible) {
+      this.hudView.setStatsBadgeVisible(false);
+    }
   }
   closeStats() {
     this.modalView.closeStatsModal();

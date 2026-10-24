@@ -210,6 +210,38 @@ class AudioService {
       osc.stop(ctx.currentTime + 0.07);
     } catch (e) {}
   }
+
+  /**
+   * Procedural chime for achievement unlock
+   * tier: 1 (crisp 3-note chime) | 2 | 'crown' | 'feat' (resonant major 7th arpeggio)
+   */
+  playAchievementUnlock(tier = 1) {
+    if (!this.soundEnabled) return;
+    try {
+      this.init();
+      if (!this.audioCtx) return;
+      const ctx = this.audioCtx;
+      const now = ctx.currentTime;
+      const isGrand = tier === 2 || tier === 'crown' || tier === 'feat' || tier === 'apex';
+      const notes = isGrand
+        ? [523.25, 659.25, 783.99, 987.77, 1046.50] // C5, E5, G5, B5, C6
+        : [587.33, 739.99, 880.00];                // D5, F#5, A5
+      const noteDelay = isGrand ? 0.07 : 0.08;
+
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = isGrand ? 'triangle' : 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * noteDelay);
+        gain.gain.setValueAtTime(isGrand ? 0.12 : 0.10, now + idx * noteDelay);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * noteDelay + (isGrand ? 0.35 : 0.25));
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + idx * noteDelay);
+        osc.stop(now + idx * noteDelay + (isGrand ? 0.38 : 0.28));
+      });
+    } catch (e) {}
+  }
 }
 
 // Singleton instance

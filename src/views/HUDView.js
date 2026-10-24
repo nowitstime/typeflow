@@ -57,6 +57,11 @@ class HUDView {
     this.momentumBarFill = elements.momentumBarFill || (typeof document !== 'undefined' ? document.getElementById('momentum-bar-fill') : null);
     this.flowVignetteOverlay = elements.flowVignetteOverlay || (typeof document !== 'undefined' ? document.getElementById('flow-vignette-overlay') : null);
     this.xpToastLayer = elements.xpToastLayer || (typeof document !== 'undefined' ? document.getElementById('xp-toast-layer') : null);
+    this.achievementToast = elements.achievementToast || (typeof document !== 'undefined' ? document.getElementById('achievement-toast') : null);
+    this.statsBtn = elements.statsBtn || (typeof document !== 'undefined' ? document.getElementById('stats-btn') : null);
+    this.toastQueue = [];
+    this.isToastShowing = false;
+    this.toastTimeout = null;
 
     this.lastRenderedMomentum = -1;
   }
@@ -354,8 +359,8 @@ class HUDView {
     }
     toast.textContent = msg;
 
-    let posX = window.innerWidth / 2;
-    let posY = window.innerHeight / 2 - 80;
+    let posX = (typeof window !== 'undefined' ? window.innerWidth : 800) / 2;
+    let posY = (typeof window !== 'undefined' ? window.innerHeight : 600) / 2 - 80;
 
     if (anchorEl) {
       const rect = anchorEl.getBoundingClientRect();
@@ -430,6 +435,60 @@ class HUDView {
     }
     if (valEl) {
       valEl.textContent = `${speed || 50} WPM`;
+    }
+  }
+
+  /**
+   * Pushes unlocked achievement into FIFO queue and displays non-blocking toast
+   */
+  showAchievementToast(achievement) {
+    if (!achievement) return;
+    this.toastQueue.push(achievement);
+    this._processToastQueue();
+  }
+
+  _processToastQueue() {
+    if (this.isToastShowing || this.toastQueue.length === 0) return;
+    const toast = this.achievementToast || ((typeof document !== 'undefined') ? document.getElementById('achievement-toast') : null);
+    if (!toast) return;
+
+    const ach = this.toastQueue.shift();
+    this.isToastShowing = true;
+
+    const tierLabel = ach.tier === 1
+      ? 'TIER I UNLOCKED'
+      : (ach.tier === 2
+          ? 'TIER II MASTERY'
+          : (ach.tier === 'crown'
+              ? '👑 CROWN JEWEL'
+              : (ach.tier === 'apex' ? '⚡ APEX FEAT' : '🌟 SIGNATURE FEAT')));
+    const tierClass = `tier-${ach.tier}`;
+
+    toast.className = `achievement-toast visible ${tierClass}`;
+    toast.innerHTML = `
+      <div class="toast-icon-wrap">${ach.icon || '🏆'}</div>
+      <div class="toast-body">
+        <span class="toast-tier ${tierClass}">${tierLabel}</span>
+        <div class="toast-title">${ach.title}</div>
+        <div class="toast-desc">${ach.desc}</div>
+      </div>
+    `;
+
+    if (this.toastTimeout) clearTimeout(this.toastTimeout);
+    if (this.toastFadeTimeout) clearTimeout(this.toastFadeTimeout);
+    this.toastTimeout = setTimeout(() => {
+      toast.classList.remove('visible');
+      this.toastFadeTimeout = setTimeout(() => {
+        this.isToastShowing = false;
+        this._processToastQueue();
+      }, 400);
+    }, 3500);
+  }
+
+  setStatsBadgeVisible(visible) {
+    const btn = this.statsBtn || ((typeof document !== 'undefined') ? document.getElementById('stats-btn') : null);
+    if (btn) {
+      btn.classList.toggle('has-badge', Boolean(visible));
     }
   }
 }

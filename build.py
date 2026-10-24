@@ -53,6 +53,7 @@ def build():
         "src/models/FlowModel.js",
         "src/models/SessionModel.js",
         "src/models/EggNestModel.js",
+        "src/models/AchievementsModel.js",
         "src/services/StorageService.js",
         "src/services/AudioService.js",
         "src/views/StageView.js",
@@ -90,6 +91,9 @@ def build():
   </style>
 </head>
 <body>
+  <!-- Micro-Toast Achievement Notification -->
+  <div class="achievement-toast" id="achievement-toast"></div>
+
   <!-- Flow Atmosphere Vignette Overlay -->
   <div class="flow-vignette-overlay" id="flow-vignette-overlay"></div>
   <div class="app-container">
@@ -378,6 +382,7 @@ def build():
               <div class="stats-modal-tabs">
                 <button class="stats-tab active" id="tab-stats-flow" data-tab="flow">🎮 Flow RPG & Mastery</button>
                 <button class="stats-tab" id="tab-stats-classic" data-tab="classic">⏱️ Classic Records</button>
+                <button class="stats-tab" id="tab-stats-trophies" data-tab="trophies">🏆 Trophies</button>
               </div>
             </div>
             <button class="icon-btn close-modal-btn" id="close-stats-btn" title="Close Stats">✕</button>
@@ -505,6 +510,34 @@ def build():
                   <!-- Dynamically populated -->
                 </tbody>
               </table>
+            </div>
+          </div>
+
+          <!-- Trophies & Achievements Pane -->
+          <div class="stats-pane" id="pane-stats-trophies" style="display: none;">
+            <div class="trophy-summary-bar">
+              <div class="trophy-summary-left">
+                <span class="trophy-summary-title">Trophy Case</span>
+                <span class="trophy-summary-count" id="trophies-count">0 / 35 unlocked (0%)</span>
+              </div>
+              <div class="trophy-summary-track">
+                <div class="trophy-summary-fill" id="trophies-progress-bar" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <div class="trophy-filters" id="trophy-filters">
+              <button class="trophy-filter-btn active" data-filter="all">All</button>
+              <button class="trophy-filter-btn" data-filter="speed">Speed</button>
+              <button class="trophy-filter-btn" data-filter="flow">Flow</button>
+              <button class="trophy-filter-btn" data-filter="precision">Precision</button>
+              <button class="trophy-filter-btn" data-filter="hidden">Hidden</button>
+              <button class="trophy-filter-btn" data-filter="ghost">Ghost</button>
+              <button class="trophy-filter-btn" data-filter="rpg">RPG & Deck</button>
+              <button class="trophy-filter-btn" data-filter="feats">Feats</button>
+            </div>
+
+            <div class="trophies-grid" id="trophies-grid">
+              <!-- Dynamically populated trophy cards -->
             </div>
           </div>
 

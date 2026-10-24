@@ -26,6 +26,13 @@ if (!_Constants && typeof require !== 'undefined') {
   } catch (e) {}
 }
 
+var _AchievementsModel = (typeof AchievementsModel !== 'undefined') ? AchievementsModel : null;
+if (!_AchievementsModel && typeof require !== 'undefined') {
+  try {
+    _AchievementsModel = require('../models/AchievementsModel.js').AchievementsModel;
+  } catch (e) {}
+}
+
 class GameController {
   constructor(deps = {}) {
     // Models
@@ -37,6 +44,24 @@ class GameController {
     // Services
     this.storageService = deps.storageService || (typeof StorageManager !== 'undefined' ? StorageManager : new StorageService());
     this.audioService = deps.audioService || (typeof audioService !== 'undefined' ? audioService : new AudioService());
+
+    // Achievements Model
+    const AMClass = deps.achievementsModelClass || _AchievementsModel || (typeof AchievementsModel !== 'undefined' ? AchievementsModel : null);
+    if (deps.achievementsModel) {
+      this.achievementsModel = deps.achievementsModel;
+    } else if (AMClass) {
+      const savedAchievements = (this.storageService && this.storageService.getAchievements) ? this.storageService.getAchievements() : {};
+      this.achievementsModel = new AMClass(savedAchievements);
+    } else {
+      this.achievementsModel = null;
+    }
+
+    // Achievements tracking telemetry
+    this.flowStartTime = null;
+    this.consecutiveApexWords = 0;
+    this.cushionAbsorbedState = false;
+    this.hatchModeEnteredMomentum = null;
+    this.ghostConsecutiveWords = 0;
 
     // Bigram Ledger
     const BLClass = deps.bigramLedgerClass || _BigramLedger || (typeof BigramLedger !== 'undefined' ? BigramLedger : null);
@@ -262,6 +287,11 @@ class GameController {
           this.storageService.resetClassicStats();
           this.modalView.renderClassicStats(this.storageService.getClassicStats());
         }
+      },
+      onSelectTrophiesTab: () => {
+        if (this.achievementsModel) {
+          this.modalView.renderTrophies(this.achievementsModel, this.storageService);
+        }
       }
     });
 
@@ -279,6 +309,47 @@ class GameController {
         }
       };
       window.addEventListener('resize', this._onWindowResize);
+    }
+
+    // 7. Retroactive sync of achievements from history/save
+    if (this.achievementsModel && this.storageService.syncRetroactiveAchievements) {
+      const newRetroUnlocks = this.storageService.syncRetroactiveAchievements(this.achievementsModel);
+      if (newRetroUnlocks && newRetroUnlocks.length > 0) {
+        if (this.hudView && this.hudView.setStatsBadgeVisible) {
+          this.hudView.setStatsBadgeVisible(true);
+        }
+      }
+    }
+  }
+
+  triggerAchievementEvent(eventType, payload = {}) {
+    if (!this.achievementsModel) return;
+    const gameSave = this.storageService.getGameSave ? this.storageService.getGameSave() : {};
+    const motorSummary = (eventType === 'lexicon_updated' && this.storageService.getMotorMasterySummary)
+      ? this.storageService.getMotorMasterySummary(gameSave)
+      : {};
+    const ctx = Object.assign({
+      counters: this.storageService.getAchievementCounters ? this.storageService.getAchievementCounters() : {},
+      gameSave,
+      classicStats: this.storageService.getClassicStats ? this.storageService.getClassicStats() : {}
+    }, motorSummary, payload);
+
+    const newlyUnlocked = this.achievementsModel.evaluate(eventType, ctx);
+    if (newlyUnlocked && newlyUnlocked.length > 0) {
+      for (const ach of newlyUnlocked) {
+        if (this.storageService.unlockAchievement) {
+          this.storageService.unlockAchievement(ach.id, ach.unlockedAt);
+        }
+        if (this.hudView && this.hudView.showAchievementToast) {
+          this.hudView.showAchievementToast(ach);
+        }
+        if (this.audioService && this.audioService.playAchievementUnlock) {
+          this.audioService.playAchievementUnlock(ach.tier);
+        }
+      }
+      if (this.hudView && this.hudView.setStatsBadgeVisible) {
+        this.hudView.setStatsBadgeVisible(true);
+      }
     }
   }
 
@@ -583,6 +654,11 @@ class GameController {
     this.visualMomentum = 0;
     this.wordsModel.resetHistory();
     this.lastKeystrokeTime = null;
+    this.flowStartTime = null;
+    this.consecutiveApexWords = 0;
+    this.cushionAbsorbedState = false;
+    this.hatchModeEnteredMomentum = null;
+    this.ghostConsecutiveWords = 0;
 
     const gameState = this.storageService.getGameSave();
     this.eggNestModel.syncBasket(gameState.eggBasket || []);
@@ -677,6 +753,43 @@ class GameController {
     if (this.bigramLedger) {
       this.storageService.saveBigramLedger(this.bigramLedger.toJSON());
     }
+
+    const isHidden = (this.sessionModel && this.sessionModel.hiddenMode) || (this.storageService && this.storageService.getHiddenMode && this.storageService.getHiddenMode());
+    const duration = this.sessionModel.duration;
+
+    let beatGhost = false;
+    if (this.ghostEnabled) {
+      const playerChars = (stats.correctChars || 0) + (stats.incorrectChars || 0);
+      beatGhost = (playerChars > this.ghostTotalChars) && (stats.wpm > this.ghostSpeed);
+    }
+
+    if (this.storageService.updateAchievementCounters) {
+      this.storageService.updateAchievementCounters(c => {
+        if (duration >= 30) {
+          if (stats.wpm >= 60 && stats.accuracy >= 96) c.tests60Wpm = (c.tests60Wpm || 0) + 1;
+          if (stats.wpm >= 100 && stats.accuracy >= 96) c.tests100Wpm = (c.tests100Wpm || 0) + 1;
+          if (stats.wpm >= 50 && stats.consistency >= 85) c.tests85Consistency = (c.tests85Consistency || 0) + 1;
+          if (stats.wpm >= 70 && stats.consistency >= 92) c.tests92Consistency = (c.tests92Consistency || 0) + 1;
+          if (stats.accuracy >= 98 && stats.wpm >= 50) c.tests98Acc = (c.tests98Acc || 0) + 1;
+          if (stats.incorrectChars === 0 && (!stats.fixedErrors || stats.fixedErrors === 0) && stats.wpm >= 50) c.tests100RawAcc = (c.tests100RawAcc || 0) + 1;
+        }
+        if (isHidden && stats.accuracy >= 96 && duration >= 30) {
+          c.testsHiddenMode = (c.testsHiddenMode || 0) + 1;
+        }
+      });
+    }
+
+    this.triggerAchievementEvent('test_finished', {
+      wpm: stats.wpm,
+      accuracy: stats.accuracy,
+      consistency: stats.consistency,
+      fixedErrors: stats.fixedErrors || 0,
+      incorrectChars: stats.incorrectChars || 0,
+      duration: duration,
+      isHidden: Boolean(isHidden),
+      beatGhost,
+      ghostSpeed: this.ghostSpeed
+    });
 
     this.modalView.showClassicResults(stats);
     this.chartView.render(this.sessionModel.wpmHistory);
@@ -832,8 +945,78 @@ class GameController {
       if (this.storageService.getHiddenMode && this.storageService.getHiddenMode()) {
         baseXp = Math.round(baseXp * 1.15);
       }
+      const prevMomentum = this.flowModel.momentum;
       const evalRes = this.flowModel.evaluateWord(hasUncorrectedErrors, liveWpm, isHadBackspace, basketCount, baseXp);
       const earnedXp = evalRes.earnedXp;
+
+      // Cushion & Feat tracking: absorbed a typo / pace stumble in Apex without dropping below 85%
+      if (this.cushionAbsorbedState && this.flowModel.momentum >= 100) {
+        this.triggerAchievementEvent('cushion_recovered');
+        this.cushionAbsorbedState = false;
+      }
+      if ((isHadBackspace || liveWpm < this.flowModel.targetWpm) && prevMomentum >= 100 && this.flowModel.momentum >= 85 && this.flowModel.momentum < 100) {
+        this.cushionAbsorbedState = true;
+      }
+      if (this.flowModel.momentum < 85) {
+        this.cushionAbsorbedState = false;
+      }
+
+      if (this.hatchModeEnteredMomentum !== null) {
+        if (this.flowModel.momentum >= 85 && this.hatchModeEnteredMomentum >= 85) {
+          this.triggerAchievementEvent('in_stride_crack');
+        }
+        this.hatchModeEnteredMomentum = null;
+      }
+
+      // Flow duration tracking
+      const nowMs = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+      let flowSeconds = 0;
+      if (this.flowModel.momentum >= 85) {
+        if (!this.flowStartTime) this.flowStartTime = nowMs;
+        flowSeconds = Math.round((nowMs - this.flowStartTime) / 1000);
+      } else {
+        this.flowStartTime = null;
+      }
+
+      // Apex overspin words tracking
+      if (this.flowModel.momentum >= 118) {
+        this.consecutiveApexWords = (this.consecutiveApexWords || 0) + 1;
+      } else {
+        this.consecutiveApexWords = 0;
+      }
+
+      // Ghost pacer flow race tracking
+      if (this.ghostEnabled && this.isGhostRunning) {
+        const playerChars = this.getCharCumulativeIndex(this.sessionModel.currentWordIdx, 0);
+        if (playerChars > this.ghostTotalChars && liveWpm > this.ghostSpeed) {
+          this.ghostConsecutiveWords = (this.ghostConsecutiveWords || 0) + 1;
+        } else {
+          this.ghostConsecutiveWords = 0;
+        }
+      }
+
+      const isHiddenMode = (this.sessionModel && this.sessionModel.hiddenMode) || (this.storageService && this.storageService.getHiddenMode && this.storageService.getHiddenMode());
+      const hiddenMethod = (this.storageService && this.storageService.getHiddenMethod) ? this.storageService.getHiddenMethod() : 'char';
+      const hiddenWordDist = (this.storageService && this.storageService.getHiddenWordDistance) ? this.storageService.getHiddenWordDistance() : 2;
+      const hiddenCombo = this.getHiddenCombo();
+      const hiddenStreak = this.sessionModel ? this.sessionModel.wordStreak : 0;
+
+      this.triggerAchievementEvent('word_completed', {
+        flowStreak: evalRes.flowStreak,
+        burstWpm: liveWpm,
+        wordLength: currentWordText.length,
+        momentum: this.flowModel.momentum,
+        consecutiveApexWords: this.consecutiveApexWords,
+        flowSeconds: flowSeconds,
+        isHidden: Boolean(isHiddenMode),
+        hiddenMethod: hiddenMethod,
+        hiddenWordDistance: hiddenWordDist,
+        hiddenCombo: hiddenCombo,
+        hiddenStreak: hiddenStreak,
+        beatGhost: this.ghostConsecutiveWords > 0,
+        ghostConsecutiveWords: this.ghostConsecutiveWords,
+        ghostSpeed: this.ghostSpeed
+      });
 
       // Persist high streak if improved
       this.storageService.updateHighStreak(evalRes.highStreak);
@@ -905,6 +1088,7 @@ class GameController {
       } else {
         this.wordsModel.recordPatternHit(wordMeta.tags);
       }
+      this.triggerAchievementEvent('lexicon_updated');
 
       // Persist Bigram Ledger
       if (this.bigramLedger) {
@@ -946,6 +1130,20 @@ class GameController {
           this.ghostTotalChars += addedChars;
         }
       }
+    } else {
+      // Classic Mode: evaluate Hidden Mode horizon combos & streaks on word completion
+      const isHiddenMode = (this.sessionModel && this.sessionModel.hiddenMode) || (this.storageService && this.storageService.getHiddenMode && this.storageService.getHiddenMode());
+      if (isHiddenMode) {
+        const hiddenMethod = (this.storageService && this.storageService.getHiddenMethod) ? this.storageService.getHiddenMethod() : 'char';
+        const hiddenWordDist = (this.storageService && this.storageService.getHiddenWordDistance) ? this.storageService.getHiddenWordDistance() : 2;
+        this.triggerAchievementEvent('word_completed', {
+          isHidden: true,
+          hiddenMethod,
+          hiddenWordDistance: hiddenWordDist,
+          hiddenCombo: this.getHiddenCombo(),
+          hiddenStreak: this.sessionModel ? this.sessionModel.wordStreak : 0
+        });
+      }
     }
 
     const prevIdx = this.sessionModel.currentWordIdx - 1;
@@ -982,6 +1180,11 @@ class GameController {
   // Hatch Mode in-situ actions
   enterHatchMode(preferredSlot = -1) {
     this.audioService.init();
+    if (this.currentMode === 'flow' && this.flowModel && this.flowModel.momentum >= 85) {
+      this.hatchModeEnteredMomentum = this.flowModel.momentum;
+    } else {
+      this.hatchModeEnteredMomentum = null;
+    }
     const entered = this.eggNestModel.enterHatchMode(preferredSlot);
     if (entered) {
       this.nestView.render(this.eggNestModel);
@@ -1029,6 +1232,24 @@ class GameController {
         this.nestView.render(this.eggNestModel);
         this.updateLevelHud();
         this.hudView.spawnXpToast(`✨ Hatched: ${hatchedWord}!`, 1.0, null, true);
+
+        // Update achievement counters and evaluate egg hatched feats
+        if (this.storageService.updateAchievementCounters) {
+          this.storageService.updateAchievementCounters(c => {
+            c.eggsHatchedTotal = (c.eggsHatchedTotal || 0) + 1;
+          });
+        }
+        const isHidden = (this.sessionModel && this.sessionModel.hiddenMode) || (this.storageService && this.storageService.getHiddenMode && this.storageService.getHiddenMode());
+        const hiddenCombo = this.getHiddenCombo();
+        const counters = this.storageService.getAchievementCounters ? this.storageService.getAchievementCounters() : {};
+
+        this.triggerAchievementEvent('egg_hatched', {
+          totalHatched: counters.eggsHatchedTotal || 1,
+          rarityTier: (hatchedRarity || 'common').toUpperCase(),
+          isHidden: Boolean(isHidden),
+          hiddenCombo
+        });
+        this.triggerAchievementEvent('lexicon_updated');
 
         // Queue newly hatched word for Sandwiched Induction
         this.queueHatchedWord(hatchedWord, hatchedRarity);
@@ -1100,6 +1321,12 @@ class GameController {
     this.modalView.openStatsModal(tab);
     this.modalView.renderFlowStats(gameState, bucketStats, (r) => this.wordsModel.getWord(r), this.storageService);
     this.modalView.renderClassicStats(this.storageService.getClassicStats());
+    if (this.achievementsModel && this.modalView.renderTrophies) {
+      this.modalView.renderTrophies(this.achievementsModel, this.storageService);
+    }
+    if (this.hudView && this.hudView.setStatsBadgeVisible) {
+      this.hudView.setStatsBadgeVisible(false);
+    }
   }
 
   closeStats() {
