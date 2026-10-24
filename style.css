@@ -55,13 +55,14 @@ header {
   align-items: center;
   padding-bottom: 12px;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px 14px;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
+  flex-shrink: 0;
 }
 
 .logo-area {
@@ -134,7 +135,24 @@ header {
 .header-controls {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  margin-left: auto;
+}
+
+.header-tool-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 /* Flow Difficulty Slider & Custom Input Control */
@@ -285,6 +303,80 @@ header {
   font-size: 12px;
   font-variant-numeric: tabular-nums;
   min-width: 54px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+/* Hidden Mode Config Pill */
+.hd-config-pill {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 3px 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--sub-color);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hd-config-pill:focus-within {
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
+}
+
+.hd-mode-toggle {
+  display: flex;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 7px;
+  padding: 2px;
+}
+
+.hd-mode-btn {
+  background: none;
+  border: none;
+  color: var(--sub-color);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.hd-mode-btn:hover {
+  color: var(--text-color);
+}
+
+.hd-mode-btn.active {
+  background: var(--sub-alt-color);
+  color: var(--main-color);
+  box-shadow: 0 0 6px rgba(56, 189, 248, 0.2);
+}
+
+.hd-word-slider-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 6px;
+  border-left: 1px solid var(--border-color);
+}
+
+.hd-word-slider-group .hd-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--sub-color);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.hd-word-slider-group .hd-val {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  min-width: 80px;
   font-weight: 600;
   color: var(--text-color);
 }
@@ -634,13 +726,24 @@ main {
   will-change: opacity;
 }
 
+.words-box.hidden-mode .word {
+  transition: opacity 0.22s cubic-bezier(0.2, 0.0, 0.2, 1);
+  will-change: opacity;
+}
+
 .words-box.hidden-mode .letter.hd-past {
+  opacity: 0;
+}
+
+.words-box.hidden-mode .word.hd-word-vanished {
   opacity: 0;
 }
 
 /* Safety brake: errors and typos restore full opacity instantly */
 .words-box.hidden-mode .letter.incorrect,
 .words-box.hidden-mode .letter.extra,
+.words-box.hidden-mode .word.error,
+.words-box.hidden-mode .word.error.hd-word-vanished,
 .words-box.hidden-mode .word.error .letter {
   opacity: 1 !important;
 }
@@ -1692,6 +1795,7 @@ footer {
 /* Focus Mode Ambient Dimming (Continuous Analog Dimmer) */
 header .header-left,
 header .header-controls,
+header .header-actions,
 footer,
 #brand-logo {
   opacity: var(--focus-opacity, 1);

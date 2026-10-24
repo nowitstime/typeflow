@@ -137,7 +137,10 @@ def build():
             <div class="hud-level-bar-fill" id="hud-level-bar-fill"></div>
           </div>
         </div>
+      </div>
 
+      <!-- Action Tools (Wraps on the right when expanded) -->
+      <div class="header-actions">
         <!-- Stats Modal Toggle Button -->
         <button class="icon-btn" id="stats-btn" title="View Lifetime Stats & Personal Bests">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -145,23 +148,40 @@ def build():
           </svg>
         </button>
 
-        <!-- Hidden Mode Toggle Button -->
-        <button class="icon-btn" id="hd-btn" title="Toggle Hidden (HD) Look-Ahead Mode">
-          <span>HD</span>
-        </button>
+        <!-- Hidden Mode Tool Group -->
+        <div class="header-tool-group">
+          <button class="icon-btn" id="hd-btn" title="Toggle Hidden (HD) Look-Ahead Mode">
+            <span>HD</span>
+          </button>
 
-        <!-- Ghost Cursor Toggle Button -->
-        <button class="icon-btn" id="ghost-btn" title="Toggle Ghost Cursor Pacer" aria-pressed="false">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C7.58 2 4 5.58 4 10v9.5c0 .48.53.77.92.5l2.08-1.4 2.5 1.7c.32.22.75.22 1.07 0l2.43-1.65 2.43 1.65c.32.22.75.22 1.07 0l2.5-1.7 2.08 1.4c.39.27.92-.02.92-.5V10c0-4.42-3.58-8-8-8zm-3 8c-.83 0-1.5-.67-1.5-1.5S8.17 7 9 7s1.5.67 1.5 1.5S9.83 10 9 10zm6 0c-.83 0-1.5-.67-1.5-1.5S14.17 7 15 7s1.5.67 1.5 1.5S15.83 10 15 10z"/>
-          </svg>
-        </button>
+          <!-- Hidden Mode Config Pill (Revealed when HD is active) -->
+          <div class="hd-config-pill" id="hd-config-pill" style="display: none;" title="Hidden Words Count">
+            <div class="hd-mode-toggle" id="hd-mode-toggle">
+              <button type="button" class="hd-mode-btn active" id="hd-mode-char" data-mode="char" title="Character Horizon">Char</button>
+              <button type="button" class="hd-mode-btn" id="hd-mode-word" data-mode="word" title="Word Vanish">Word</button>
+            </div>
+            <div class="hd-word-slider-group" id="hd-word-slider-group" style="display: none;" title="Hidden Words Count">
+              <span class="hd-label">Hide:</span>
+              <input type="range" id="hd-words-slider" class="diff-slider" min="1" max="6" step="1" value="2" aria-label="Hidden words count slider">
+              <span class="hd-val" id="hd-words-val">2 words</span>
+            </div>
+          </div>
+        </div>
 
-        <!-- Ghost Cursor Speed Slider Pill (Revealed when Ghost is active) -->
-        <div class="ghost-slider-pill" id="ghost-slider-pill" style="display: none;" title="Ghost Cursor Pace (WPM)">
-          <span class="ghost-label">Ghost:</span>
-          <input type="range" id="ghost-slider" class="diff-slider" min="15" max="150" step="5" value="50" aria-label="Ghost Cursor speed slider">
-          <span class="ghost-val" id="ghost-val">50 WPM</span>
+        <!-- Ghost Cursor Tool Group -->
+        <div class="header-tool-group">
+          <button class="icon-btn" id="ghost-btn" title="Toggle Ghost Cursor Pacer" aria-pressed="false">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C7.58 2 4 5.58 4 10v9.5c0 .48.53.77.92.5l2.08-1.4 2.5 1.7c.32.22.75.22 1.07 0l2.43-1.65 2.43 1.65c.32.22.75.22 1.07 0l2.5-1.7 2.08 1.4c.39.27.92-.02.92-.5V10c0-4.42-3.58-8-8-8zm-3 8c-.83 0-1.5-.67-1.5-1.5S8.17 7 9 7s1.5.67 1.5 1.5S9.83 10 9 10zm6 0c-.83 0-1.5-.67-1.5-1.5S14.17 7 15 7s1.5.67 1.5 1.5S15.83 10 15 10z"/>
+            </svg>
+          </button>
+
+          <!-- Ghost Cursor Speed Slider Pill (Revealed when Ghost is active) -->
+          <div class="ghost-slider-pill" id="ghost-slider-pill" style="display: none;" title="Ghost Cursor Pace (WPM)">
+            <span class="ghost-label">Ghost:</span>
+            <input type="range" id="ghost-slider" class="diff-slider" min="15" max="150" step="5" value="50" aria-label="Ghost Cursor speed slider">
+            <span class="ghost-val" id="ghost-val">50 WPM</span>
+          </div>
         </div>
 
         <!-- Sound Button -->

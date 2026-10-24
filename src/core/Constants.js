@@ -71,6 +71,14 @@ const CONSTANTS = {
     STREAK_BONUS_INTERVAL: 15
   },
 
+  // Stage Runway Buffer Configs (Dynamic Stream with Live Flow Adaptation)
+  // Keeps ~60 words total at any given time (~25-50 visible words + offscreen buffer)
+  STREAM_BUFFER: {
+    INITIAL_WORD_COUNT: 60,
+    REFILL_THRESHOLD: 24,
+    REFILL_BATCH_SIZE: 30
+  },
+
   // Storage Keys
   STORAGE_KEYS: {
     CLASSIC_STATS: 'typeflow_classic_stats_v1',

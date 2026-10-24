@@ -34,16 +34,19 @@ class FlowModel extends _EventEmitter {
     this.lastKeystrokeTime = 0;
   }
 
-  reset(preserveEggCharge = true) {
+  reset(preserveEggCharge = true, resetHighStreak = false) {
     this.momentum = 0.0;
     this.flowStreak = 0;
     this.consecutiveCleanWords = 0;
     if (!preserveEggCharge) {
       this.eggCharge = 0.0;
     }
+    if (resetHighStreak) {
+      this.highStreak = 0;
+    }
     this.eggChance = 0.0;
     this.lastKeystrokeTime = 0;
-    this.emit('reset', { momentum: 0.0, eggCharge: this.eggCharge });
+    this.emit('reset', { momentum: 0.0, eggCharge: this.eggCharge, highStreak: this.highStreak });
   }
 
   setTargetWpm(wpm) {

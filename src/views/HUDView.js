@@ -30,6 +30,12 @@ class HUDView {
     this.soundIconOn = elements.soundIconOn || (typeof document !== 'undefined' ? document.getElementById('sound-icon-on') : null);
     this.soundIconOff = elements.soundIconOff || (typeof document !== 'undefined' ? document.getElementById('sound-icon-off') : null);
     this.hdBtn = elements.hdBtn || (typeof document !== 'undefined' ? document.getElementById('hd-btn') : null);
+    this.hdConfigPill = elements.hdConfigPill || (typeof document !== 'undefined' ? document.getElementById('hd-config-pill') : null);
+    this.hdModeChar = elements.hdModeChar || (typeof document !== 'undefined' ? document.getElementById('hd-mode-char') : null);
+    this.hdModeWord = elements.hdModeWord || (typeof document !== 'undefined' ? document.getElementById('hd-mode-word') : null);
+    this.hdWordSliderGroup = elements.hdWordSliderGroup || (typeof document !== 'undefined' ? document.getElementById('hd-word-slider-group') : null);
+    this.hdWordsSlider = elements.hdWordsSlider || (typeof document !== 'undefined' ? document.getElementById('hd-words-slider') : null);
+    this.hdWordsVal = elements.hdWordsVal || (typeof document !== 'undefined' ? document.getElementById('hd-words-val') : null);
     this.ghostBtn = elements.ghostBtn || (typeof document !== 'undefined' ? document.getElementById('ghost-btn') : null);
     this.ghostSliderPill = elements.ghostSliderPill || (typeof document !== 'undefined' ? document.getElementById('ghost-slider-pill') : null);
     this.ghostSlider = elements.ghostSlider || (typeof document !== 'undefined' ? document.getElementById('ghost-slider') : null);
@@ -115,6 +121,28 @@ class HUDView {
     if (hdBtn) {
       hdBtn.addEventListener('click', () => {
         if (handlers.onHiddenToggle) handlers.onHiddenToggle();
+      });
+    }
+
+    const hdModeChar = this.hdModeChar || ((typeof document !== 'undefined') ? document.getElementById('hd-mode-char') : null);
+    if (hdModeChar) {
+      hdModeChar.addEventListener('click', () => {
+        if (handlers.onHiddenMethodChange) handlers.onHiddenMethodChange('char');
+      });
+    }
+
+    const hdModeWord = this.hdModeWord || ((typeof document !== 'undefined') ? document.getElementById('hd-mode-word') : null);
+    if (hdModeWord) {
+      hdModeWord.addEventListener('click', () => {
+        if (handlers.onHiddenMethodChange) handlers.onHiddenMethodChange('word');
+      });
+    }
+
+    const hdWordsSlider = this.hdWordsSlider || ((typeof document !== 'undefined') ? document.getElementById('hd-words-slider') : null);
+    if (hdWordsSlider) {
+      hdWordsSlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        if (handlers.onHiddenWordDistanceChange) handlers.onHiddenWordDistanceChange(val);
       });
     }
 
@@ -346,14 +374,39 @@ class HUDView {
     }, 950);
   }
 
-  updateHiddenModeState(enabled) {
+  updateHiddenModeState(enabled, method = 'char', distance = 2) {
     const btn = this.hdBtn || ((typeof document !== 'undefined') ? document.getElementById('hd-btn') : null);
     if (btn) {
       btn.classList.toggle('active', !!enabled);
       btn.setAttribute('aria-pressed', String(!!enabled));
       btn.title = enabled
-        ? 'Hidden (HD) Look-Ahead: ON (Click to disable)'
+        ? `Hidden (HD) Mode: ON (${method === 'word' ? 'Word Vanish' : 'Character Horizon'}) - Click to disable`
         : 'Toggle Hidden (HD) Look-Ahead Mode';
+    }
+
+    const pill = this.hdConfigPill || ((typeof document !== 'undefined') ? document.getElementById('hd-config-pill') : null);
+    if (pill) {
+      pill.style.display = enabled ? 'flex' : 'none';
+    }
+
+    const charBtn = this.hdModeChar || ((typeof document !== 'undefined') ? document.getElementById('hd-mode-char') : null);
+    const wordBtn = this.hdModeWord || ((typeof document !== 'undefined') ? document.getElementById('hd-mode-word') : null);
+    if (charBtn) charBtn.classList.toggle('active', method === 'char');
+    if (wordBtn) wordBtn.classList.toggle('active', method === 'word');
+
+    const sliderGroup = this.hdWordSliderGroup || ((typeof document !== 'undefined') ? document.getElementById('hd-word-slider-group') : null);
+    if (sliderGroup) {
+      sliderGroup.style.display = (method === 'word') ? 'flex' : 'none';
+    }
+
+    const slider = this.hdWordsSlider || ((typeof document !== 'undefined') ? document.getElementById('hd-words-slider') : null);
+    if (slider) {
+      slider.value = distance;
+    }
+
+    const valEl = this.hdWordsVal || ((typeof document !== 'undefined') ? document.getElementById('hd-words-val') : null);
+    if (valEl) {
+      valEl.textContent = `${distance} ${distance === 1 ? 'word' : 'words'}`;
     }
   }
 

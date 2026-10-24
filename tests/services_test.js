@@ -255,6 +255,34 @@ it('persists and retrieves Hidden (HD) mode preference', () => {
   assert.strictEqual(reloaded2.getHiddenMode(), false);
 });
 
+it('persists and retrieves Hidden mode method and word distance preferences', () => {
+  const mock = new LocalStorageMock();
+  const service = new StorageService(mock);
+
+  assert.strictEqual(service.getHiddenMethod(), 'char');
+  assert.strictEqual(service.getHiddenWordDistance(), 2);
+
+  service.setHiddenMethod('word');
+  service.setHiddenWordDistance(4);
+  assert.strictEqual(service.getHiddenMethod(), 'word');
+  assert.strictEqual(service.getHiddenWordDistance(), 4);
+
+  // Re-instantiate to verify storage persistence
+  const reloaded = new StorageService(mock);
+  assert.strictEqual(reloaded.getHiddenMethod(), 'word');
+  assert.strictEqual(reloaded.getHiddenWordDistance(), 4);
+
+  // Clamps word distance (1 to 6)
+  service.setHiddenWordDistance(0);
+  assert.strictEqual(service.getHiddenWordDistance(), 1);
+  service.setHiddenWordDistance(10);
+  assert.strictEqual(service.getHiddenWordDistance(), 6);
+
+  // Invalid method defaults to char
+  service.setHiddenMethod('invalid');
+  assert.strictEqual(service.getHiddenMethod(), 'char');
+});
+
 it('persists and retrieves Ghost Cursor preference and speed', () => {
   const mock = new LocalStorageMock();
   const service = new StorageService(mock);

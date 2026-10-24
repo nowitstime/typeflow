@@ -621,30 +621,29 @@ it('typing keystrokes in Hidden Mode updates stage horizon and safety brake trig
   controller.handleChar('e');
   controller.handleSpace();
 
-  // Since typo reset combo, the 3 subsequent correct keystrokes ('h', 'e', space) result in combo = 3, M = 0.75
+  // In Hidden mode, an error on word 0 breaks combo and taints the word.
+  // Backspacing and finishing word 0 does NOT award combo or increment streak.
   assert.strictEqual(controller.sessionModel.currentWordIdx, 1);
-  assert.strictEqual(controller.sessionModel.wordStreak, 1);
-  assert.strictEqual(controller.getHiddenCombo(), 3);
-  assert.strictEqual(controller.sessionModel.getBlindfoldMask(), 0.75);
+  assert.strictEqual(controller.sessionModel.wordStreak, 0);
+  assert.strictEqual(controller.getHiddenCombo(), 0);
+  assert.strictEqual(controller.sessionModel.getBlindfoldMask(), 0.0);
 
-  // Word 1 now exhibits blindfold mask:
-  // k=0 (letter at cursor) dims to 0.25 opacity (penetration = 0.75 - 0 = 0.75 -> raw = 0.25)
-  // k=1 and k=2 are 1.0 (unaffected)
-  assert.strictEqual(word1.children[0].style.opacity, '0.25');
+  // Word 1 starts at combo 0: all untyped letters are fully visible (1.0 opacity)
+  assert.strictEqual(word1.children[0].style.opacity, '');
   assert.strictEqual(word1.children[1].style.opacity, '');
   assert.strictEqual(word1.children[2].style.opacity, '');
 
-  // Typing 1 more correct char advances combo to 4 (M = 1.0)
+  // Typing cleanly on Word 1 now legitimately builds combo from 0
   const nextWordText = controller.sessionModel.getCurrentWordText();
   controller.handleChar(nextWordText[0]);
-  assert.strictEqual(controller.getHiddenCombo(), 4);
-  assert.strictEqual(controller.sessionModel.getBlindfoldMask(), 1.0);
+  assert.strictEqual(controller.getHiddenCombo(), 1);
+  assert.strictEqual(controller.sessionModel.getBlindfoldMask(), 0.25);
   // First letter is now behind cursor (k < 0 -> hd-past, opacity 0)
   assert.strictEqual(word1.children[0].classList.contains('hd-past'), true);
   assert.strictEqual(word1.children[0].style.opacity, '0');
-  // Second letter is at cursor (k = 0 -> penetration = 1.0 - 0 = 1.0 -> raw = 0 -> opacity '0')
-  assert.strictEqual(word1.children[1].style.opacity, '0');
-  // Third letter is upcoming char 1 (k = 1 -> penetration = 1.0 - 1 = 0 -> opacity '')
+  // Second letter is at cursor (k = 0 -> penetration = 0.25 - 0 = 0.25 -> raw = 0.75 -> opacity '0.75')
+  assert.strictEqual(word1.children[1].style.opacity, '0.75');
+  // Third letter is upcoming char 1 (k = 1 -> penetration <= 0 -> opacity '')
   assert.strictEqual(word1.children[2].style.opacity, '');
 });
 
@@ -732,6 +731,165 @@ it('completing words in Hidden Mode awards +15% bonus XP', () => {
 
   // Hidden mode must award strictly greater XP (+15% bonus)
   assert.ok(xpHidden > xpEarnedNormal, `Expected Hidden XP (${xpHidden}) > Normal XP (${xpEarnedNormal})`);
+});
+
+it('typing incorrect letter in Hidden Flow Mode immediately breaks flow streak and combo, but clean submission clears error underline and renders letters transparent', () => {
+  const { controller } = createTestHarness();
+  controller.init();
+  controller.toggleHiddenMode(); // Enable Hidden Mode
+
+  // Accelerate momentum and build flowStreak
+  controller.flowModel.momentum = 80;
+  controller.flowModel.flowStreak = 5;
+  controller.flowModel.consecutiveCleanWords = 5;
+
+  const word = controller.sessionModel.getCurrentWordText(); // 'the'
+  // Type 't'
+  controller.handleChar(word[0]);
+  assert.strictEqual(controller.flowModel.flowStreak, 5);
+
+  // Type typo 'z' instead of 'h'
+  controller.handleChar('z');
+  // Immediately breaks flow combo & streak
+  assert.strictEqual(controller.flowModel.flowStreak, 0);
+  assert.strictEqual(controller.flowModel.consecutiveCleanWords, 0);
+  assert.strictEqual(controller.sessionModel.combo, 0);
+
+  // Backspace the error
+  controller.handleBackspace();
+  assert.strictEqual(controller.flowModel.flowStreak, 0);
+
+  // Finish typing the word cleanly
+  for (let i = 1; i < word.length; i++) {
+    controller.handleChar(word[i]);
+  }
+  assert.strictEqual(controller.sessionModel.combo, 0); // Still 0 on tainted word
+
+  const completedWordEl = controller.stageView.wordElements[controller.sessionModel.currentWordIdx];
+  controller.handleSpace();
+
+  // Completed word was fixed: hasErrors must be false, no .error class (no red underline)
+  assert.strictEqual(completedWordEl.classList.contains('error'), false, 'Fixed word should NOT have .error class');
+
+  // Completed word in hidden mode must become transparent with hd-past
+  const letters = completedWordEl.querySelectorAll('.letter');
+  for (let i = 0; i < letters.length; i++) {
+    assert.strictEqual(letters[i].classList.contains('hd-past'), true, `Letter ${i} should have hd-past class`);
+    assert.strictEqual(letters[i].style.opacity, '0', `Letter ${i} should have opacity: '0'`);
+  }
+
+  // Anti-exploit: combo and wordStreak stayed at 0 for the tainted word
+  assert.strictEqual(controller.sessionModel.combo, 0);
+  assert.strictEqual(controller.sessionModel.wordStreak, 0);
+});
+
+it('GameController switches Hidden mode method and word distance, and handles Word Vanish mode during play', () => {
+  const { controller } = createTestHarness();
+  controller.init();
+  controller.toggleHiddenMode(); // Enable Hidden Mode
+
+  // Switch to Word mode
+  controller.setHiddenMethod('word');
+  controller.setHiddenWordDistance(2);
+
+  assert.strictEqual(controller.storageService.getHiddenMethod(), 'word');
+  assert.strictEqual(controller.storageService.getHiddenWordDistance(), 2);
+  assert.strictEqual(controller.sessionModel.hiddenMethod, 'word');
+  assert.strictEqual(controller.sessionModel.hiddenWordDistance, 2);
+  assert.strictEqual(controller.stageView.hiddenMethod, 'word');
+  assert.strictEqual(controller.stageView.hiddenWordDistance, 2);
+
+  // At start (streak 0): active word (word 0) and upcoming words are visible
+  const w0 = controller.stageView.wordElements[0];
+  const w1 = controller.stageView.wordElements[1];
+  const w2 = controller.stageView.wordElements[2];
+  assert.strictEqual(w0.classList.contains('hd-word-vanished'), false);
+  assert.strictEqual(w1.classList.contains('hd-word-vanished'), false);
+
+  // Complete Word 0 cleanly
+  const word0 = controller.sessionModel.getCurrentWordText();
+  for (let i = 0; i < word0.length; i++) {
+    controller.handleChar(word0[i]);
+  }
+  controller.handleSpace();
+
+  // Streak is now 1: active word (word 1) vanishes, word 2 is visible
+  assert.strictEqual(controller.sessionModel.wordStreak, 1);
+  assert.strictEqual(w1.classList.contains('hd-word-vanished'), true);
+  assert.strictEqual(w2.classList.contains('hd-word-vanished'), false);
+
+  // Complete Word 1 cleanly
+  const word1 = controller.sessionModel.getCurrentWordText();
+  for (let i = 0; i < word1.length; i++) {
+    controller.handleChar(word1[i]);
+  }
+  controller.handleSpace();
+
+  // Streak is now 2: active word (word 2) and word 3 (1 word ahead) vanish!
+  const w3 = controller.stageView.wordElements[3];
+  const w4 = controller.stageView.wordElements[4];
+  assert.strictEqual(controller.sessionModel.wordStreak, 2);
+  assert.strictEqual(w2.classList.contains('hd-word-vanished'), true);
+  assert.strictEqual(w3.classList.contains('hd-word-vanished'), true);
+  assert.strictEqual(w4.classList.contains('hd-word-vanished'), false);
+
+  // Mistype on word 2: safety brake triggers immediately and reveals vanished words!
+  controller.handleChar('z');
+  assert.strictEqual(w2.classList.contains('hd-word-vanished'), false);
+  assert.strictEqual(w3.classList.contains('hd-word-vanished'), false);
+
+  // Set distance to 1 (cursor-only mode): only active word vanishes, upcoming words remain visible
+  controller.setHiddenWordDistance(1);
+  assert.strictEqual(controller.storageService.getHiddenWordDistance(), 1);
+  assert.strictEqual(controller.sessionModel.hiddenWordDistance, 1);
+  controller.sessionModel.wordStreak = 4;
+  controller.stageView.updateHiddenHorizon(2, 0, 10, false, null, { method: 'word', wordDistance: 1, streak: 4 });
+  assert.strictEqual(w2.classList.contains('hd-word-vanished'), true);
+  assert.strictEqual(w3.classList.contains('hd-word-vanished'), false);
+  assert.strictEqual(w4.classList.contains('hd-word-vanished'), false);
+});
+
+it('proactively initializes stage runway with ~60 words and replenishes to keep line 3 full with tight flow relevance', () => {
+  const { controller, sessionModel, stageView } = createTestHarness();
+  controller.init();
+
+  // 1. Initial buffer maintains ~60 words so lines 1, 2, and 3 are completely filled (~25-50 words visible)
+  assert.strictEqual(sessionModel.words.length, 60);
+  assert.strictEqual(stageView.wordElements.length, 60);
+
+  // 2. Advance through words until remaining count hits threshold (<= 24)
+  // At word index 35: remaining words = 60 - 35 = 25 (> 24, no refill yet)
+  sessionModel.currentWordIdx = 35;
+  controller.ensureWordBuffer(35);
+  assert.strictEqual(sessionModel.words.length, 60);
+
+  // At word index 36: remaining words = 60 - 36 = 24 (threshold hit, appends 30 words)
+  sessionModel.currentWordIdx = 36;
+  controller.ensureWordBuffer(36);
+  assert.strictEqual(sessionModel.words.length, 90);
+  assert.strictEqual(stageView.wordElements.length, 90);
+
+  // Remaining words ahead is now 90 - 36 = 54 words (~50-60 words), ensuring line 3 is always full
+  // while keeping newly generated words fresh and tightly responsive to player's live flow state
+  assert.strictEqual(stageView.wordElements.length - 36, 54);
+});
+
+it('replenishes classic mode word stream to maintain runway for long tests', () => {
+  const { controller, sessionModel, stageView } = createTestHarness();
+  controller.init();
+  controller.switchMode('classic');
+
+  assert.strictEqual(controller.currentMode, 'classic');
+  assert.strictEqual(sessionModel.words.length, 60);
+
+  // Advance near end of buffer in Classic mode
+  sessionModel.currentWordIdx = 36;
+  controller.ensureWordBuffer(36);
+
+  // Check that 30 classic words were appended
+  assert.strictEqual(sessionModel.words.length, 90);
+  assert.strictEqual(stageView.wordElements.length, 90);
+  assert.strictEqual(typeof sessionModel.words[89], 'string');
 });
 
 console.log('\n========================================');

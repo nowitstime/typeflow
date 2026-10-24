@@ -59,12 +59,13 @@ header {
   align-items: center;
   padding-bottom: 12px;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px 14px;
 }
 .header-left {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
+  flex-shrink: 0;
 }
 .logo-area {
   display: flex;
@@ -127,7 +128,22 @@ header {
 .header-controls {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
+  margin-left: auto;
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  margin-left: auto;
+}
+.header-tool-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 .flow-diff-pill {
   background: var(--bg-secondary);
@@ -257,6 +273,70 @@ header {
   font-size: 12px;
   font-variant-numeric: tabular-nums;
   min-width: 54px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+.hd-config-pill {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 3px 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--sub-color);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.hd-config-pill:focus-within {
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
+}
+.hd-mode-toggle {
+  display: flex;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 7px;
+  padding: 2px;
+}
+.hd-mode-btn {
+  background: none;
+  border: none;
+  color: var(--sub-color);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.hd-mode-btn:hover {
+  color: var(--text-color);
+}
+.hd-mode-btn.active {
+  background: var(--sub-alt-color);
+  color: var(--main-color);
+  box-shadow: 0 0 6px rgba(56, 189, 248, 0.2);
+}
+.hd-word-slider-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 6px;
+  border-left: 1px solid var(--border-color);
+}
+.hd-word-slider-group .hd-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--sub-color);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.hd-word-slider-group .hd-val {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  min-width: 80px;
   font-weight: 600;
   color: var(--text-color);
 }
@@ -551,11 +631,20 @@ main {
   transition: color 0.1s ease, opacity 0.12s cubic-bezier(0.2, 0.0, 0.2, 1);
   will-change: opacity;
 }
+.words-box.hidden-mode .word {
+  transition: opacity 0.22s cubic-bezier(0.2, 0.0, 0.2, 1);
+  will-change: opacity;
+}
 .words-box.hidden-mode .letter.hd-past {
+  opacity: 0;
+}
+.words-box.hidden-mode .word.hd-word-vanished {
   opacity: 0;
 }
 .words-box.hidden-mode .letter.incorrect,
 .words-box.hidden-mode .letter.extra,
+.words-box.hidden-mode .word.error,
+.words-box.hidden-mode .word.error.hd-word-vanished,
 .words-box.hidden-mode .word.error .letter {
   opacity: 1 !important;
 }
@@ -1447,6 +1536,7 @@ footer {
 }
 header .header-left,
 header .header-controls,
+header .header-actions,
 footer,
 #brand-logo {
   opacity: var(--focus-opacity, 1);
@@ -1775,23 +1865,40 @@ footer,
             <div class="hud-level-bar-fill" id="hud-level-bar-fill"></div>
           </div>
         </div>
+      </div>
+      <div class="header-actions">
         <button class="icon-btn" id="stats-btn" title="View Lifetime Stats & Personal Bests">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
             <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
           </svg>
         </button>
-        <button class="icon-btn" id="hd-btn" title="Toggle Hidden (HD) Look-Ahead Mode">
-          <span>HD</span>
-        </button>
-        <button class="icon-btn" id="ghost-btn" title="Toggle Ghost Cursor Pacer" aria-pressed="false">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C7.58 2 4 5.58 4 10v9.5c0 .48.53.77.92.5l2.08-1.4 2.5 1.7c.32.22.75.22 1.07 0l2.43-1.65 2.43 1.65c.32.22.75.22 1.07 0l2.5-1.7 2.08 1.4c.39.27.92-.02.92-.5V10c0-4.42-3.58-8-8-8zm-3 8c-.83 0-1.5-.67-1.5-1.5S8.17 7 9 7s1.5.67 1.5 1.5S9.83 10 9 10zm6 0c-.83 0-1.5-.67-1.5-1.5S14.17 7 15 7s1.5.67 1.5 1.5S15.83 10 15 10z"/>
-          </svg>
-        </button>
-        <div class="ghost-slider-pill" id="ghost-slider-pill" style="display: none;" title="Ghost Cursor Pace (WPM)">
-          <span class="ghost-label">Ghost:</span>
-          <input type="range" id="ghost-slider" class="diff-slider" min="15" max="150" step="5" value="50" aria-label="Ghost Cursor speed slider">
-          <span class="ghost-val" id="ghost-val">50 WPM</span>
+        <div class="header-tool-group">
+          <button class="icon-btn" id="hd-btn" title="Toggle Hidden (HD) Look-Ahead Mode">
+            <span>HD</span>
+          </button>
+          <div class="hd-config-pill" id="hd-config-pill" style="display: none;" title="Hidden Words Count">
+            <div class="hd-mode-toggle" id="hd-mode-toggle">
+              <button type="button" class="hd-mode-btn active" id="hd-mode-char" data-mode="char" title="Character Horizon">Char</button>
+              <button type="button" class="hd-mode-btn" id="hd-mode-word" data-mode="word" title="Word Vanish">Word</button>
+            </div>
+            <div class="hd-word-slider-group" id="hd-word-slider-group" style="display: none;" title="Hidden Words Count">
+              <span class="hd-label">Hide:</span>
+              <input type="range" id="hd-words-slider" class="diff-slider" min="1" max="6" step="1" value="2" aria-label="Hidden words count slider">
+              <span class="hd-val" id="hd-words-val">2 words</span>
+            </div>
+          </div>
+        </div>
+        <div class="header-tool-group">
+          <button class="icon-btn" id="ghost-btn" title="Toggle Ghost Cursor Pacer" aria-pressed="false">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C7.58 2 4 5.58 4 10v9.5c0 .48.53.77.92.5l2.08-1.4 2.5 1.7c.32.22.75.22 1.07 0l2.43-1.65 2.43 1.65c.32.22.75.22 1.07 0l2.5-1.7 2.08 1.4c.39.27.92-.02.92-.5V10c0-4.42-3.58-8-8-8zm-3 8c-.83 0-1.5-.67-1.5-1.5S8.17 7 9 7s1.5.67 1.5 1.5S9.83 10 9 10zm6 0c-.83 0-1.5-.67-1.5-1.5S14.17 7 15 7s1.5.67 1.5 1.5S15.83 10 15 10z"/>
+            </svg>
+          </button>
+          <div class="ghost-slider-pill" id="ghost-slider-pill" style="display: none;" title="Ghost Cursor Pace (WPM)">
+            <span class="ghost-label">Ghost:</span>
+            <input type="range" id="ghost-slider" class="diff-slider" min="15" max="150" step="5" value="50" aria-label="Ghost Cursor speed slider">
+            <span class="ghost-val" id="ghost-val">50 WPM</span>
+          </div>
         </div>
         <button class="icon-btn" id="sound-btn" title="Toggle Mechanical Keyboard Sounds">
           <svg id="sound-icon-on" style="display: none;" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -2147,6 +2254,11 @@ const CONSTANTS = {
     CRACK_WORD: 'egg',
     DROP_CHANCE_BASE: 0.15,
     STREAK_BONUS_INTERVAL: 15
+  },
+  STREAM_BUFFER: {
+    INITIAL_WORD_COUNT: 60,
+    REFILL_THRESHOLD: 24,
+    REFILL_BATCH_SIZE: 30
   },
   STORAGE_KEYS: {
     CLASSIC_STATS: 'typeflow_classic_stats_v1',
@@ -3099,16 +3211,19 @@ class FlowModel extends _EventEmitter {
     this.eggChance = 0.0;
     this.lastKeystrokeTime = 0;
   }
-  reset(preserveEggCharge = true) {
+  reset(preserveEggCharge = true, resetHighStreak = false) {
     this.momentum = 0.0;
     this.flowStreak = 0;
     this.consecutiveCleanWords = 0;
     if (!preserveEggCharge) {
       this.eggCharge = 0.0;
     }
+    if (resetHighStreak) {
+      this.highStreak = 0;
+    }
     this.eggChance = 0.0;
     this.lastKeystrokeTime = 0;
-    this.emit('reset', { momentum: 0.0, eggCharge: this.eggCharge });
+    this.emit('reset', { momentum: 0.0, eggCharge: this.eggCharge, highStreak: this.highStreak });
   }
   setTargetWpm(wpm) {
     this.targetWpm = Math.max(5, Math.min(300, Number(wpm) || 40));
@@ -3303,6 +3418,9 @@ class SessionModel extends _EventEmitter {
     super();
     this.mode = options.mode || 'flow'; // 'classic' | 'flow'
     this.duration = options.duration || 30;
+    this.hiddenMode = options.hiddenMode || false;
+    this.hiddenMethod = options.hiddenMethod || 'char';
+    this.hiddenWordDistance = options.hiddenWordDistance || 2;
     this.timeLeft = this.duration;
     this.isActive = false;
     this.isFinished = false;
@@ -3310,6 +3428,7 @@ class SessionModel extends _EventEmitter {
     this.currentWordIdx = 0;
     this.currentCharIdx = 0;
     this.hadBackspaceOnCurrentWord = false;
+    this.hadErrorOnCurrentWord = false;
     this.wordStreak = 0;
     this.combo = 0;
     this.startTime = null;
@@ -3335,6 +3454,9 @@ class SessionModel extends _EventEmitter {
   reset(options = {}) {
     if (options.mode) this.mode = options.mode;
     if (options.duration) this.duration = options.duration;
+    if (options.hiddenMode !== undefined) this.hiddenMode = options.hiddenMode;
+    if (options.hiddenMethod !== undefined) this.hiddenMethod = options.hiddenMethod;
+    if (options.hiddenWordDistance !== undefined) this.hiddenWordDistance = options.hiddenWordDistance;
     this.timeLeft = this.duration;
     this.isActive = false;
     this.isFinished = false;
@@ -3342,6 +3464,7 @@ class SessionModel extends _EventEmitter {
     this.currentWordIdx = 0;
     this.currentCharIdx = 0;
     this.hadBackspaceOnCurrentWord = false;
+    this.hadErrorOnCurrentWord = false;
     this.currentWordCharCorrect = [];
     this.wordStreak = 0;
     this.combo = 0;
@@ -3364,6 +3487,16 @@ class SessionModel extends _EventEmitter {
     this.lastSecRaw = 0;
     this.secondDeltas = [];
     this.emit('reset', { mode: this.mode, duration: this.duration });
+  }
+  setHiddenMode(enabled) {
+    this.hiddenMode = Boolean(enabled);
+  }
+  setHiddenMethod(method) {
+    this.hiddenMethod = (method === 'word') ? 'word' : 'char';
+  }
+  setHiddenWordDistance(dist) {
+    const d = parseInt(dist, 10);
+    this.hiddenWordDistance = (d >= 1 && d <= 6) ? d : 2;
   }
   setWords(words) {
     this.words = words || [];
@@ -3453,7 +3586,6 @@ class SessionModel extends _EventEmitter {
       this.wordStartTime = now;
     }
     this.rawKeystrokes++;
-    this.rollingKeystrokeTimestamps.push(now);
     const sec = this.getCurrentSecond(now);
     const prevCharIdx = this.currentCharIdx;
     const currentWord = this.getCurrentWordText();
@@ -3465,6 +3597,8 @@ class SessionModel extends _EventEmitter {
     }
     if (isExtra) {
       this.combo = 0;
+      this.hadErrorOnCurrentWord = true;
+      if (this.hiddenMode) this.wordStreak = 0;
       this.extraCharsCount++;
       this.incorrectKeystrokes++;
       const key = `${this.currentWordIdx}:${prevCharIdx}:extra`;
@@ -3481,8 +3615,13 @@ class SessionModel extends _EventEmitter {
       list.push(errEntry);
       this.unfixedErrorsByKey.set(key, list);
     } else if (isCorrect) {
-      this.combo++;
+      if (this.hiddenMode && this.hadErrorOnCurrentWord) {
+        this.combo = 0;
+      } else {
+        this.combo++;
+      }
       this.correctKeystrokes++;
+      this.rollingKeystrokeTimestamps.push(now);
       const key = `${this.currentWordIdx}:${prevCharIdx}:norm`;
       const unfixedList = this.unfixedErrorsByKey.get(key);
       if (unfixedList && unfixedList.length > 0) {
@@ -3499,6 +3638,8 @@ class SessionModel extends _EventEmitter {
       }
     } else {
       this.combo = 0;
+      this.hadErrorOnCurrentWord = true;
+      if (this.hiddenMode) this.wordStreak = 0;
       this.incorrectKeystrokes++;
       const key = `${this.currentWordIdx}:${prevCharIdx}:norm`;
       const errEntry = {
@@ -3599,6 +3740,10 @@ class SessionModel extends _EventEmitter {
           fixedError = true;
         }
       }
+      if (!isExtra && this.currentWordCharCorrect[deletedIdx] === true) {
+        this.correctKeystrokes = Math.max(0, this.correctKeystrokes - 1);
+        this.rollingKeystrokeTimestamps.pop();
+      }
       this.currentWordCharCorrect.length = deletedIdx;
       this.currentCharIdx--;
       this.emit('backspace', {
@@ -3686,11 +3831,18 @@ class SessionModel extends _EventEmitter {
       }
     }
     this.rawKeystrokes++;
-    this.rollingKeystrokeTimestamps.push(now);
     if (!hasErrors) {
       this.correctKeystrokes++;
-      this.wordStreak++;
-      this.combo++;
+      if (this.hiddenMode && this.hadErrorOnCurrentWord) {
+        this.wordStreak = 0;
+        this.combo = 0;
+      } else {
+        this.wordStreak++;
+        this.combo++;
+      }
+      if (this.currentCharIdx > 0) {
+        this.rollingKeystrokeTimestamps.push(now);
+      }
     } else {
       this.wordStreak = 0;
       this.combo = 0;
@@ -3699,6 +3851,7 @@ class SessionModel extends _EventEmitter {
       charIdx: this.currentCharIdx,
       charCorrect: [...this.currentWordCharCorrect],
       hadBackspace: this.hadBackspaceOnCurrentWord,
+      hadErrorOnCurrentWord: this.hadErrorOnCurrentWord,
       missedLetters,
       extraLetters,
       extraLettersAddedOnSubmit,
@@ -3711,6 +3864,7 @@ class SessionModel extends _EventEmitter {
     this.currentWordCharCorrect = [];
     this.lastWordEndTime = now;
     this.hadBackspaceOnCurrentWord = false;
+    this.hadErrorOnCurrentWord = false;
     this.currentWordIdx++;
     this.currentCharIdx = 0;
     this.wordStartTime = 0;
@@ -3751,15 +3905,22 @@ class SessionModel extends _EventEmitter {
     }
     if (!prevHistory.hasErrors) {
       this.correctKeystrokes = Math.max(0, this.correctKeystrokes - 1);
+      this.rollingKeystrokeTimestamps.pop();
     }
     this.currentWordIdx = prevIdx;
     this.currentCharIdx = prevHistory.charIdx;
     this.currentWordCharCorrect = [...prevHistory.charCorrect];
     this.hadBackspaceOnCurrentWord = true;
+    this.hadErrorOnCurrentWord = Boolean(prevHistory.hadErrorOnCurrentWord || prevHistory.hasErrors);
     this.wordStartTime = prevHistory.wordStartTime || 0;
     this.lastWordEndTime = prevHistory.lastWordEndTime || 0;
-    this.wordStreak = prevHistory.wordStreakBefore !== undefined ? prevHistory.wordStreakBefore : 0;
-    this.combo = prevHistory.comboBefore !== undefined ? prevHistory.comboBefore : Math.max(0, this.combo - 1);
+    if (this.hiddenMode && this.hadErrorOnCurrentWord) {
+      this.wordStreak = 0;
+      this.combo = 0;
+    } else {
+      this.wordStreak = prevHistory.wordStreakBefore !== undefined ? prevHistory.wordStreakBefore : 0;
+      this.combo = prevHistory.comboBefore !== undefined ? prevHistory.comboBefore : Math.max(0, this.combo - 1);
+    }
     this.rawKeystrokes++;
     this.emit('wordReverted', {
       wordIdx: this.currentWordIdx,
@@ -3876,6 +4037,15 @@ class SessionModel extends _EventEmitter {
   }
   getHiddenFadeDepth(rampWidth = 4.0) {
     return SessionModel.calculateHiddenFadeDepth(this.wordStreak, rampWidth);
+  }
+  static calculateWordVanishEffectiveCount(streak, targetCount = 2) {
+    const s = Math.max(0, streak || 0);
+    const maxWords = Math.max(1, Math.min(6, targetCount || 2));
+    if (s <= 0) return 0;
+    return Math.min(maxWords, s);
+  }
+  getHiddenWordVanishEffectiveCount() {
+    return SessionModel.calculateWordVanishEffectiveCount(this.wordStreak, this.hiddenWordDistance);
   }
 }
 if (typeof window !== 'undefined') {
@@ -4109,6 +4279,8 @@ const STORAGE_KEYS = {
   GAME_SAVE:     'typeflow_game_save_v2',
   ACTIVE_MODE:   'typeflow_active_mode',
   HIDDEN_MODE:   'typeflow_hidden_mode',
+  HIDDEN_METHOD: 'typeflow_hidden_method',
+  HIDDEN_WORD_DIST: 'typeflow_hidden_word_dist',
   GHOST_CURSOR:  'typeflow_ghost_cursor',
   GHOST_SPEED:   'typeflow_ghost_speed'
 };
@@ -4136,6 +4308,8 @@ const DEFAULT_GAME_SAVE = {
   lifetimeWords: 0,
   highStreak: 0,
   hiddenMode: false,
+  hiddenMethod: 'char',
+  hiddenWordDistance: 2,
   ghostCursor: false,
   ghostSpeed: 50
 };
@@ -4179,7 +4353,8 @@ class StorageService {
       const s = this._getStorage();
       const data = s ? s.getItem(STORAGE_KEYS.CLASSIC_STATS) : null;
       if (!data) return JSON.parse(JSON.stringify(DEFAULT_CLASSIC_STATS));
-      return Object.assign({}, DEFAULT_CLASSIC_STATS, JSON.parse(data));
+      const defaultClone = JSON.parse(JSON.stringify(DEFAULT_CLASSIC_STATS));
+      return Object.assign(defaultClone, JSON.parse(data));
     } catch (e) {
       return JSON.parse(JSON.stringify(DEFAULT_CLASSIC_STATS));
     }
@@ -4240,7 +4415,8 @@ class StorageService {
         return fresh;
       }
       const parsed = JSON.parse(data);
-      const state = Object.assign({}, DEFAULT_GAME_SAVE, parsed);
+      const defaultClone = JSON.parse(JSON.stringify(DEFAULT_GAME_SAVE));
+      const state = Object.assign(defaultClone, parsed);
       if (!state.unlockedRanks || state.unlockedRanks.length === 0) {
         state.unlockedRanks = [1];
       }
@@ -4252,6 +4428,12 @@ class StorageService {
       }
       if (typeof state.hiddenMode !== 'boolean') {
         state.hiddenMode = false;
+      }
+      if (state.hiddenMethod !== 'char' && state.hiddenMethod !== 'word') {
+        state.hiddenMethod = 'char';
+      }
+      if (typeof state.hiddenWordDistance !== 'number' || isNaN(state.hiddenWordDistance) || state.hiddenWordDistance < 1 || state.hiddenWordDistance > 5) {
+        state.hiddenWordDistance = 2;
       }
       if (typeof state.ghostCursor !== 'boolean') {
         state.ghostCursor = false;
@@ -4313,12 +4495,15 @@ class StorageService {
       save.level += 1;
       leveledUp = true;
       req = this.getXpForLevel(save.level);
+      let stepRarity = 'uncommon';
       if (save.level % 10 === 0) {
-        bonusEggRarity = 'epic';
+        stepRarity = 'epic';
       } else if (save.level % 5 === 0) {
-        bonusEggRarity = 'rare';
-      } else {
-        bonusEggRarity = 'uncommon';
+        stepRarity = 'rare';
+      }
+      const RARITY_WEIGHT = { uncommon: 1, rare: 2, epic: 3 };
+      if (!bonusEggRarity || RARITY_WEIGHT[stepRarity] > RARITY_WEIGHT[bonusEggRarity]) {
+        bonusEggRarity = stepRarity;
       }
     }
     this.saveGameSave(save);
@@ -4568,6 +4753,60 @@ class StorageService {
       return val;
     } catch (e) {
       return val;
+    }
+  }
+  getHiddenMethod() {
+    try {
+      const s = this._getStorage();
+      if (s) {
+        const val = s.getItem(STORAGE_KEYS.HIDDEN_METHOD);
+        if (val === 'char' || val === 'word') return val;
+      }
+      const save = this.getGameSave();
+      return (save.hiddenMethod === 'word') ? 'word' : 'char';
+    } catch (e) {
+      return 'char';
+    }
+  }
+  setHiddenMethod(val) {
+    const method = (val === 'word') ? 'word' : 'char';
+    try {
+      const s = this._getStorage();
+      if (s) s.setItem(STORAGE_KEYS.HIDDEN_METHOD, method);
+      const save = this.getGameSave();
+      save.hiddenMethod = method;
+      this.saveGameSave(save);
+      return method;
+    } catch (e) {
+      return method;
+    }
+  }
+  getHiddenWordDistance() {
+    try {
+      const s = this._getStorage();
+      if (s) {
+        const val = parseInt(s.getItem(STORAGE_KEYS.HIDDEN_WORD_DIST), 10);
+        if (!isNaN(val) && val >= 1 && val <= 6) return val;
+      }
+      const save = this.getGameSave();
+      const dist = parseInt(save.hiddenWordDistance, 10);
+      return (!isNaN(dist) && dist >= 1 && dist <= 6) ? dist : 2;
+    } catch (e) {
+      return 2;
+    }
+  }
+  setHiddenWordDistance(val) {
+    const parsed = parseInt(val, 10);
+    const dist = isNaN(parsed) ? 2 : Math.max(1, Math.min(6, parsed));
+    try {
+      const s = this._getStorage();
+      if (s) s.setItem(STORAGE_KEYS.HIDDEN_WORD_DIST, String(dist));
+      const save = this.getGameSave();
+      save.hiddenWordDistance = dist;
+      this.saveGameSave(save);
+      return dist;
+    } catch (e) {
+      return dist;
     }
   }
   getGhostCursor() {
@@ -4831,6 +5070,8 @@ class StageView {
     this.scrollOffset = 0;
     this.wordElements = [];
     this.hiddenMode = false;
+    this.hiddenMethod = 'char';
+    this.hiddenWordDistance = 2;
   }
   bindEvents(handlers = {}) {
     const handleBoxClick = () => {
@@ -4847,6 +5088,9 @@ class StageView {
     }
   }
   static getBlindfoldMask(combo) {
+    if (typeof SessionModel !== 'undefined' && SessionModel.getBlindfoldMask) {
+      return SessionModel.getBlindfoldMask(combo);
+    }
     const c = Math.max(0, combo || 0);
     if (c <= 26) {
       return c * 0.25;
@@ -4854,6 +5098,9 @@ class StageView {
     return 6.5 + 0.75 * Math.sqrt(c - 26);
   }
   static getHiddenOpacity(k, combo) {
+    if (typeof SessionModel !== 'undefined' && SessionModel.getHiddenOpacity) {
+      return SessionModel.getHiddenOpacity(k, combo);
+    }
     if (k < 0) return 0.0;
     const M = StageView.getBlindfoldMask(combo);
     const penetration = M - k;
@@ -4878,6 +5125,10 @@ class StageView {
     if (!doc) return;
     this.wordsWrapper.innerHTML = '';
     this.wordElements = [];
+    const fragment = (doc && typeof doc.createDocumentFragment === 'function')
+      ? doc.createDocumentFragment()
+      : null;
+    const container = fragment || this.wordsWrapper;
     for (let wIdx = 0; wIdx < wordsList.length; wIdx++) {
       const word = wordsList[wIdx];
       const wordEl = doc.createElement('div');
@@ -4889,8 +5140,11 @@ class StageView {
         letterEl.textContent = word[i];
         wordEl.appendChild(letterEl);
       }
-      this.wordsWrapper.appendChild(wordEl);
+      container.appendChild(wordEl);
       this.wordElements.push(wordEl);
+    }
+    if (fragment) {
+      this.wordsWrapper.appendChild(fragment);
     }
     this.scrollOffset = 0;
     this.wordsWrapper.style.transform = 'translateY(0px)';
@@ -4902,6 +5156,10 @@ class StageView {
     if (!this.wordsWrapper || !Array.isArray(moreWords)) return;
     const doc = this._getDoc();
     if (!doc) return;
+    const fragment = (doc && typeof doc.createDocumentFragment === 'function')
+      ? doc.createDocumentFragment()
+      : null;
+    const container = fragment || this.wordsWrapper;
     for (let i = 0; i < moreWords.length; i++) {
       const word = moreWords[i];
       const wordEl = doc.createElement('div');
@@ -4913,8 +5171,11 @@ class StageView {
         letterEl.textContent = word[j];
         wordEl.appendChild(letterEl);
       }
-      this.wordsWrapper.appendChild(wordEl);
+      container.appendChild(wordEl);
       this.wordElements.push(wordEl);
+    }
+    if (fragment) {
+      this.wordsWrapper.appendChild(fragment);
     }
   }
   insertWordsAt(insertIdx, wordsToInsert) {
@@ -4988,6 +5249,7 @@ class StageView {
         prevEl.classList.remove('error');
       }
       if (this.hiddenMode) {
+        prevEl.classList.remove('hd-word-vanished');
         const letters = prevEl.querySelectorAll('.letter');
         for (let i = 0; i < letters.length; i++) {
           letters[i].classList.add('hd-past');
@@ -5005,6 +5267,7 @@ class StageView {
     if (currentEl) {
       currentEl.classList.remove('active');
       if (this.hiddenMode) {
+        currentEl.classList.remove('hd-word-vanished');
         const letters = currentEl.querySelectorAll('.letter');
         for (let i = 0; i < letters.length; i++) {
           letters[i].classList.remove('hd-past');
@@ -5040,7 +5303,16 @@ class StageView {
     if (!firstWord) return;
     const baseTop = firstWord.offsetTop;
     const currentWordTop = activeWordEl.offsetTop;
-    const line2Word = Array.from(this.wordsWrapper.children).find(w => w.offsetTop > baseTop + 10);
+    let line2Word = null;
+    if (this.wordElements) {
+      const searchLimit = Math.min(this.wordElements.length, 40);
+      for (let i = 0; i < searchLimit; i++) {
+        if (this.wordElements[i].offsetTop > baseTop + 10) {
+          line2Word = this.wordElements[i];
+          break;
+        }
+      }
+    }
     const lineHeight = line2Word ? (line2Word.offsetTop - baseTop) : (activeWordEl.offsetHeight || 42);
     let newScrollOffset = 0;
     if (currentWordTop > baseTop + lineHeight * 1.2) {
@@ -5196,30 +5468,54 @@ class StageView {
       this.wordsBox.classList.toggle('hidden-mode', this.hiddenMode);
     }
     if (!this.hiddenMode) {
+      this._clearHiddenStyling();
       for (let i = 0; i < this.wordElements.length; i++) {
         const wEl = this.wordElements[i];
         if (wEl) {
           const letters = wEl.querySelectorAll('.letter');
           for (let j = 0; j < letters.length; j++) {
-            letters[j].style.opacity = '';
             letters[j].classList.remove('hd-past');
           }
         }
       }
     }
   }
-  updateHiddenHorizon(currentWordIdx, currentCharIdx, combo = 0, hasError = false, zeroDist = null) {
+  setHiddenMethod(method) {
+    this.hiddenMethod = (method === 'word') ? 'word' : 'char';
+    this._clearHiddenStyling();
+  }
+  setHiddenWordDistance(dist) {
+    const d = parseInt(dist, 10);
+    this.hiddenWordDistance = (d >= 1 && d <= 6) ? d : 2;
+  }
+  _clearHiddenStyling() {
+    if (!this.wordElements) return;
+    for (let i = 0; i < this.wordElements.length; i++) {
+      const wEl = this.wordElements[i];
+      if (wEl) {
+        wEl.classList.remove('hd-word-vanished');
+        const letters = wEl.querySelectorAll('.letter');
+        for (let j = 0; j < letters.length; j++) {
+          letters[j].style.opacity = '';
+        }
+      }
+    }
+  }
+  updateHiddenHorizon(currentWordIdx, currentCharIdx, combo = 0, hasError = false, zeroDist = null, streakOrOptions = 0) {
     if (!this.hiddenMode || !this.wordElements || this.wordElements.length === 0) return;
     const activeWordEl = this.wordElements[currentWordIdx];
     if (!activeWordEl) return;
     if (hasError) {
+      activeWordEl.classList.remove('hd-word-vanished');
       const activeLetters = activeWordEl.querySelectorAll('.letter');
       for (let i = 0; i < activeLetters.length; i++) {
         activeLetters[i].style.opacity = '';
+        activeLetters[i].classList.remove('hd-past');
       }
-      for (let w = 1; w <= 6; w++) {
+      for (let w = 1; w <= 12; w++) {
         const nextWordEl = this.wordElements[currentWordIdx + w];
         if (!nextWordEl) break;
+        nextWordEl.classList.remove('hd-word-vanished');
         const letters = nextWordEl.querySelectorAll('.letter');
         for (let j = 0; j < letters.length; j++) {
           letters[j].style.opacity = '';
@@ -5228,6 +5524,55 @@ class StageView {
       }
       return;
     }
+    let method = this.hiddenMethod;
+    let wordDistance = this.hiddenWordDistance;
+    let streak = 0;
+    if (typeof streakOrOptions === 'object' && streakOrOptions !== null) {
+      if (streakOrOptions.method) method = streakOrOptions.method;
+      if (streakOrOptions.wordDistance) wordDistance = streakOrOptions.wordDistance;
+      if (typeof streakOrOptions.streak === 'number') streak = streakOrOptions.streak;
+    } else if (typeof streakOrOptions === 'number') {
+      streak = streakOrOptions;
+    }
+    if (method === 'word') {
+      let effectiveCount = 0;
+      if (typeof SessionModel !== 'undefined' && SessionModel.calculateWordVanishEffectiveCount) {
+        effectiveCount = SessionModel.calculateWordVanishEffectiveCount(streak, wordDistance);
+      } else {
+        const maxWords = Math.max(1, Math.min(6, wordDistance || 2));
+        effectiveCount = streak <= 0 ? 0 : Math.min(maxWords, streak);
+      }
+      if (effectiveCount >= 1) {
+        activeWordEl.classList.add('hd-word-vanished');
+      } else {
+        activeWordEl.classList.remove('hd-word-vanished');
+      }
+      const activeLetters = activeWordEl.querySelectorAll('.letter');
+      for (let i = 0; i < activeLetters.length; i++) {
+        activeLetters[i].style.opacity = '';
+        if (i < currentCharIdx) {
+          activeLetters[i].classList.add('hd-past');
+        } else {
+          activeLetters[i].classList.remove('hd-past');
+        }
+      }
+      for (let w = 1; w <= 12; w++) {
+        const wordEl = this.wordElements[currentWordIdx + w];
+        if (!wordEl) break;
+        if (w < effectiveCount) {
+          wordEl.classList.add('hd-word-vanished');
+        } else {
+          wordEl.classList.remove('hd-word-vanished');
+        }
+        const letters = wordEl.querySelectorAll('.letter');
+        for (let j = 0; j < letters.length; j++) {
+          letters[j].style.opacity = '';
+          letters[j].classList.remove('hd-past');
+        }
+      }
+      return;
+    }
+    activeWordEl.classList.remove('hd-word-vanished');
     if (zeroDist !== null && typeof zeroDist === 'number') {
       const actualZeroDist = zeroDist;
       const N = Math.max(actualZeroDist + 0.1, combo || 6);
@@ -5308,16 +5653,20 @@ class StageView {
       if (!nextWordEl) break;
       const nextLetters = nextWordEl.querySelectorAll('.letter');
       if (kRunning >= M) {
-        for (let j = 0; j < nextLetters.length; j++) {
-          nextLetters[j].classList.remove('hd-past');
-          nextLetters[j].style.opacity = '';
-        }
-        const aheadWordEl = this.wordElements[currentWordIdx + nextWordOffset + 1];
-        if (aheadWordEl) {
-          const aheadLetters = aheadWordEl.querySelectorAll('.letter');
-          for (let q = 0; q < aheadLetters.length; q++) {
-            aheadLetters[q].classList.remove('hd-past');
-            aheadLetters[q].style.opacity = '';
+        for (let clearOffset = nextWordOffset; clearOffset < Math.min(this.wordElements.length - currentWordIdx, nextWordOffset + 12); clearOffset++) {
+          const clearWordEl = this.wordElements[currentWordIdx + clearOffset];
+          if (!clearWordEl) break;
+          const clearLetters = clearWordEl.querySelectorAll('.letter');
+          let hadAnyOpacity = false;
+          for (let j = 0; j < clearLetters.length; j++) {
+            if (clearLetters[j].style.opacity !== '' || clearLetters[j].classList.contains('hd-past')) {
+              hadAnyOpacity = true;
+              clearLetters[j].classList.remove('hd-past');
+              clearLetters[j].style.opacity = '';
+            }
+          }
+          if (!hadAnyOpacity && clearOffset > nextWordOffset + 1) {
+            break;
           }
         }
         break;
@@ -5489,6 +5838,12 @@ class HUDView {
     this.soundIconOn = elements.soundIconOn || (typeof document !== 'undefined' ? document.getElementById('sound-icon-on') : null);
     this.soundIconOff = elements.soundIconOff || (typeof document !== 'undefined' ? document.getElementById('sound-icon-off') : null);
     this.hdBtn = elements.hdBtn || (typeof document !== 'undefined' ? document.getElementById('hd-btn') : null);
+    this.hdConfigPill = elements.hdConfigPill || (typeof document !== 'undefined' ? document.getElementById('hd-config-pill') : null);
+    this.hdModeChar = elements.hdModeChar || (typeof document !== 'undefined' ? document.getElementById('hd-mode-char') : null);
+    this.hdModeWord = elements.hdModeWord || (typeof document !== 'undefined' ? document.getElementById('hd-mode-word') : null);
+    this.hdWordSliderGroup = elements.hdWordSliderGroup || (typeof document !== 'undefined' ? document.getElementById('hd-word-slider-group') : null);
+    this.hdWordsSlider = elements.hdWordsSlider || (typeof document !== 'undefined' ? document.getElementById('hd-words-slider') : null);
+    this.hdWordsVal = elements.hdWordsVal || (typeof document !== 'undefined' ? document.getElementById('hd-words-val') : null);
     this.ghostBtn = elements.ghostBtn || (typeof document !== 'undefined' ? document.getElementById('ghost-btn') : null);
     this.ghostSliderPill = elements.ghostSliderPill || (typeof document !== 'undefined' ? document.getElementById('ghost-slider-pill') : null);
     this.ghostSlider = elements.ghostSlider || (typeof document !== 'undefined' ? document.getElementById('ghost-slider') : null);
@@ -5562,6 +5917,25 @@ class HUDView {
     if (hdBtn) {
       hdBtn.addEventListener('click', () => {
         if (handlers.onHiddenToggle) handlers.onHiddenToggle();
+      });
+    }
+    const hdModeChar = this.hdModeChar || ((typeof document !== 'undefined') ? document.getElementById('hd-mode-char') : null);
+    if (hdModeChar) {
+      hdModeChar.addEventListener('click', () => {
+        if (handlers.onHiddenMethodChange) handlers.onHiddenMethodChange('char');
+      });
+    }
+    const hdModeWord = this.hdModeWord || ((typeof document !== 'undefined') ? document.getElementById('hd-mode-word') : null);
+    if (hdModeWord) {
+      hdModeWord.addEventListener('click', () => {
+        if (handlers.onHiddenMethodChange) handlers.onHiddenMethodChange('word');
+      });
+    }
+    const hdWordsSlider = this.hdWordsSlider || ((typeof document !== 'undefined') ? document.getElementById('hd-words-slider') : null);
+    if (hdWordsSlider) {
+      hdWordsSlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        if (handlers.onHiddenWordDistanceChange) handlers.onHiddenWordDistanceChange(val);
       });
     }
     const ghostBtn = this.ghostBtn || ((typeof document !== 'undefined') ? document.getElementById('ghost-btn') : null);
@@ -5741,14 +6115,34 @@ class HUDView {
       if (toast.parentNode) toast.parentNode.removeChild(toast);
     }, 950);
   }
-  updateHiddenModeState(enabled) {
+  updateHiddenModeState(enabled, method = 'char', distance = 2) {
     const btn = this.hdBtn || ((typeof document !== 'undefined') ? document.getElementById('hd-btn') : null);
     if (btn) {
       btn.classList.toggle('active', !!enabled);
       btn.setAttribute('aria-pressed', String(!!enabled));
       btn.title = enabled
-        ? 'Hidden (HD) Look-Ahead: ON (Click to disable)'
+        ? `Hidden (HD) Mode: ON (${method === 'word' ? 'Word Vanish' : 'Character Horizon'}) - Click to disable`
         : 'Toggle Hidden (HD) Look-Ahead Mode';
+    }
+    const pill = this.hdConfigPill || ((typeof document !== 'undefined') ? document.getElementById('hd-config-pill') : null);
+    if (pill) {
+      pill.style.display = enabled ? 'flex' : 'none';
+    }
+    const charBtn = this.hdModeChar || ((typeof document !== 'undefined') ? document.getElementById('hd-mode-char') : null);
+    const wordBtn = this.hdModeWord || ((typeof document !== 'undefined') ? document.getElementById('hd-mode-word') : null);
+    if (charBtn) charBtn.classList.toggle('active', method === 'char');
+    if (wordBtn) wordBtn.classList.toggle('active', method === 'word');
+    const sliderGroup = this.hdWordSliderGroup || ((typeof document !== 'undefined') ? document.getElementById('hd-word-slider-group') : null);
+    if (sliderGroup) {
+      sliderGroup.style.display = (method === 'word') ? 'flex' : 'none';
+    }
+    const slider = this.hdWordsSlider || ((typeof document !== 'undefined') ? document.getElementById('hd-words-slider') : null);
+    if (slider) {
+      slider.value = distance;
+    }
+    const valEl = this.hdWordsVal || ((typeof document !== 'undefined') ? document.getElementById('hd-words-val') : null);
+    if (valEl) {
+      valEl.textContent = `${distance} ${distance === 1 ? 'word' : 'words'}`;
     }
   }
   updateGhostState(enabled, speed) {
@@ -6476,6 +6870,12 @@ if (!_BigramLedger && typeof require !== 'undefined') {
     _BigramLedger = require('../models/BigramLedger.js').BigramLedger;
   } catch (e) {}
 }
+var _Constants = (typeof CONSTANTS !== 'undefined') ? CONSTANTS : null;
+if (!_Constants && typeof require !== 'undefined') {
+  try {
+    _Constants = require('../core/Constants.js').CONSTANTS;
+  } catch (e) {}
+}
 class GameController {
   constructor(deps = {}) {
     this.wordsModel = deps.wordsModel || new WordsModel();
@@ -6496,6 +6896,12 @@ class GameController {
     this.lastKeystrokeTime = null;
     this.pendingHatchedWords = [];
     this.pendingRareEpicUnlocks = [];
+    const cfg = deps.bufferConfig || (_Constants ? _Constants.STREAM_BUFFER : null);
+    this.bufferConfig = {
+      initialWordCount: (cfg && cfg.INITIAL_WORD_COUNT) || 60,
+      refillThreshold: (cfg && cfg.REFILL_THRESHOLD) || 24,
+      refillBatchSize: (cfg && cfg.REFILL_BATCH_SIZE) || 30
+    };
     this.stageView = deps.stageView || new StageView();
     this.nestView = deps.nestView || new NestView();
     this.hudView = deps.hudView || new HUDView();
@@ -6517,6 +6923,7 @@ class GameController {
     this.ghostResetTimer = null;
     this.isGhostRunning = false;
     this.ghostNeedsSync = true;
+    this._onWindowResize = null;
     const KBClass = deps.keyboardControllerClass || _KeyboardController;
     if (KBClass) {
       this.keyboardController = new KBClass({
@@ -6564,9 +6971,16 @@ class GameController {
     );
     this.hudView.updateSoundState(this.audioService.isEnabled());
     const isHidden = this.storageService.getHiddenMode ? this.storageService.getHiddenMode() : false;
+    const hiddenMethod = this.storageService.getHiddenMethod ? this.storageService.getHiddenMethod() : 'char';
+    const hiddenWordDistance = this.storageService.getHiddenWordDistance ? this.storageService.getHiddenWordDistance() : 2;
+    this.sessionModel.setHiddenMode(isHidden);
+    this.sessionModel.setHiddenMethod(hiddenMethod);
+    this.sessionModel.setHiddenWordDistance(hiddenWordDistance);
     this.stageView.setHiddenMode(isHidden);
+    this.stageView.setHiddenMethod(hiddenMethod);
+    this.stageView.setHiddenWordDistance(hiddenWordDistance);
     if (this.hudView.updateHiddenModeState) {
-      this.hudView.updateHiddenModeState(isHidden);
+      this.hudView.updateHiddenModeState(isHidden, hiddenMethod, hiddenWordDistance);
     }
     this.ghostEnabled = this.storageService.getGhostCursor ? this.storageService.getGhostCursor() : false;
     this.ghostSpeed = this.storageService.getGhostSpeed ? this.storageService.getGhostSpeed() : 50;
@@ -6599,6 +7013,8 @@ class GameController {
         }
       },
       onHiddenToggle: () => this.toggleHiddenMode(),
+      onHiddenMethodChange: (method) => this.setHiddenMethod(method),
+      onHiddenWordDistanceChange: (dist) => this.setHiddenWordDistance(dist),
       onGhostToggle: () => this.toggleGhostCursor(),
       onGhostSpeedChange: (speed) => this.updateGhostSpeed(speed),
       onRestart: () => this.resetTest()
@@ -6633,10 +7049,23 @@ class GameController {
         if (window.confirm('Reset Flow RPG progress back to Level 1 and 1 word ("the")?')) {
           this.storageService.resetGameSave();
           this.eggNestModel.syncBasket([]);
-          this.flowModel.reset();
+          if (this.eggNestModel.clearRevealedSlots) {
+            this.eggNestModel.clearRevealedSlots();
+          }
+          this.flowModel.reset(false, true);
+          this.flowModel.setTargetWpm(40);
+          this.hudView.syncTargetWpm(40);
+          const BigramClass = typeof BigramLedger !== 'undefined' ? BigramLedger : (typeof require !== 'undefined' ? require('../models/BigramLedger.js').BigramLedger : null);
+          if (BigramClass) {
+            this.bigramLedger = new BigramClass({});
+          }
+          this.pendingHatchedWords = [];
+          this.pendingRareEpicUnlocks = [];
           this.updateLevelHud();
           this.nestView.render(this.eggNestModel);
           this.resetTest();
+          const freshSave = this.storageService.getGameSave();
+          this.modalView.renderFlowStats(freshSave);
           this.hudView.spawnXpToast('RPG Reset to Ground Zero!', 1.0, null, true);
         }
       },
@@ -6649,13 +7078,15 @@ class GameController {
     });
     this.chartView.bindEvents();
     if (typeof window !== 'undefined') {
-      window.addEventListener('resize', () => {
+      this._onWindowResize = () => {
         if (!this.sessionModel.isFinished) {
           this.stageView.updateCaret(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
+          this.ensureWordBuffer(this.sessionModel.currentWordIdx);
         } else {
           this.chartView.render(this.sessionModel.wpmHistory, this.chartView.hoveredPointIndex);
         }
-      });
+      };
+      window.addEventListener('resize', this._onWindowResize);
     }
   }
   updateTargetWpm(wpm) {
@@ -6693,18 +7124,68 @@ class GameController {
     if (this.storageService.setHiddenMode) {
       this.storageService.setHiddenMode(next);
     }
+    this.sessionModel.setHiddenMode(next);
     this.stageView.setHiddenMode(next);
+    const method = this.storageService.getHiddenMethod ? this.storageService.getHiddenMethod() : 'char';
+    const dist = this.storageService.getHiddenWordDistance ? this.storageService.getHiddenWordDistance() : 2;
     if (this.hudView.updateHiddenModeState) {
-      this.hudView.updateHiddenModeState(next);
+      this.hudView.updateHiddenModeState(next, method, dist);
     }
     const combo = this.getHiddenCombo();
+    const streak = this.sessionModel ? this.sessionModel.wordStreak : 0;
     this.stageView.updateHiddenHorizon(
       this.sessionModel.currentWordIdx,
       this.sessionModel.currentCharIdx,
       combo,
-      this.sessionModel.hasErrorInCurrentWord()
+      this.sessionModel.hasErrorInCurrentWord(),
+      null,
+      streak
     );
     return next;
+  }
+  setHiddenMethod(method) {
+    if (this.storageService.setHiddenMethod) {
+      this.storageService.setHiddenMethod(method);
+    }
+    this.sessionModel.setHiddenMethod(method);
+    this.stageView.setHiddenMethod(method);
+    const isHidden = this.storageService.getHiddenMode ? this.storageService.getHiddenMode() : false;
+    const dist = this.storageService.getHiddenWordDistance ? this.storageService.getHiddenWordDistance() : 2;
+    if (this.hudView.updateHiddenModeState) {
+      this.hudView.updateHiddenModeState(isHidden, method, dist);
+    }
+    const combo = this.getHiddenCombo();
+    const streak = this.sessionModel ? this.sessionModel.wordStreak : 0;
+    this.stageView.updateHiddenHorizon(
+      this.sessionModel.currentWordIdx,
+      this.sessionModel.currentCharIdx,
+      combo,
+      this.sessionModel.hasErrorInCurrentWord(),
+      null,
+      streak
+    );
+  }
+  setHiddenWordDistance(dist) {
+    if (this.storageService.setHiddenWordDistance) {
+      this.storageService.setHiddenWordDistance(dist);
+    }
+    this.sessionModel.setHiddenWordDistance(dist);
+    this.stageView.setHiddenWordDistance(dist);
+    const isHidden = this.storageService.getHiddenMode ? this.storageService.getHiddenMode() : false;
+    const method = this.storageService.getHiddenMethod ? this.storageService.getHiddenMethod() : 'char';
+    if (this.hudView.updateHiddenModeState) {
+      this.hudView.updateHiddenModeState(isHidden, method, dist);
+    }
+    const combo = this.getHiddenCombo();
+    const streak = this.sessionModel ? this.sessionModel.wordStreak : 0;
+    this.stageView.updateHiddenHorizon(
+      this.sessionModel.currentWordIdx,
+      this.sessionModel.currentCharIdx,
+      combo,
+      this.sessionModel.hasErrorInCurrentWord(),
+      null,
+      streak
+    );
   }
   toggleGhostCursor() {
     this.ghostEnabled = !this.ghostEnabled;
@@ -6832,8 +7313,10 @@ class GameController {
   }
   stopGhostPacer(cancelTimers = false) {
     this.isGhostRunning = false;
-    if (this.ghostAnimId && typeof cancelAnimationFrame !== 'undefined') {
-      cancelAnimationFrame(this.ghostAnimId);
+    if (this.ghostAnimId) {
+      if (typeof cancelAnimationFrame !== 'undefined') {
+        cancelAnimationFrame(this.ghostAnimId);
+      }
       this.ghostAnimId = null;
     }
     if (cancelTimers) {
@@ -6878,7 +7361,7 @@ class GameController {
     this.lastKeystrokeTime = null;
     const gameState = this.storageService.getGameSave();
     this.eggNestModel.syncBasket(gameState.eggBasket || []);
-    const count = 70;
+    const count = this.bufferConfig.initialWordCount;
     const words = (this.currentMode === 'flow')
       ? this.wordsModel.generateBatch(count, gameState.unlockedRanks, gameState.wordStats, this.flowModel.targetWpm, 0, this.bigramLedger)
       : this.wordsModel.generateClassicBatch(count);
@@ -6892,11 +7375,13 @@ class GameController {
       );
       words.splice(0, 3, ...sandwich);
     }
-    this.sessionModel.reset({ mode: this.currentMode, duration: this.sessionModel.duration, words });
+    const isHidden = this.storageService.getHiddenMode ? this.storageService.getHiddenMode() : false;
+    this.sessionModel.setHiddenMode(isHidden);
+    this.sessionModel.reset({ mode: this.currentMode, duration: this.sessionModel.duration, words, hiddenMode: isHidden });
     this.stageView.renderWords(words);
     this.stageView.updateCaret(0, 0);
     const combo = this.getHiddenCombo();
-    this.stageView.updateHiddenHorizon(0, 0, combo, false);
+    this.stageView.updateHiddenHorizon(0, 0, combo, false, null, 0);
     if (this.currentMode === 'classic') {
       this.hudView.updateTimer(this.sessionModel.duration);
       if (this.hudView.liveStats) this.hudView.liveStats.classList.remove('visible');
@@ -6985,11 +7470,32 @@ class GameController {
     this.lastKeystrokeTime = now;
     this.sessionModel.recordChar(char, isCorrect, isExtra);
     this.flowModel.recordKeystroke();
+    const isHidden = (this.sessionModel && this.sessionModel.hiddenMode) || (this.storageService && this.storageService.getHiddenMode && this.storageService.getHiddenMode());
+    if (isHidden && (!isCorrect || isExtra)) {
+      if (this.currentMode === 'flow' && this.flowModel) {
+        this.flowModel.flowStreak = 0;
+        this.flowModel.consecutiveCleanWords = 0;
+        if (this.hudView && this.hudView.updateFlowGauge) {
+          const unlockedCount = (this.storageService && this.storageService.getGameSave)
+            ? (this.storageService.getGameSave().unlockedRanks || [1]).length
+            : 1;
+          this.hudView.updateFlowGauge(
+            this.sessionModel.getInstantaneousWpm(),
+            this.flowModel.targetWpm,
+            this.flowModel.momentum,
+            this.flowModel.getMultiplier(),
+            0.0,
+            unlockedCount
+          );
+        }
+      }
+    }
     this.stageView.updateLetter(this.sessionModel.currentWordIdx, charIdx, isCorrect, isExtra, char);
     this.stageView.updateCaret(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
     const combo = this.getHiddenCombo();
+    const streak = this.sessionModel ? this.sessionModel.wordStreak : 0;
     const hasErr = isExtra || !isCorrect || this.sessionModel.hasErrorInCurrentWord();
-    this.stageView.updateHiddenHorizon(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx, combo, hasErr);
+    this.stageView.updateHiddenHorizon(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx, combo, hasErr, null, streak);
     this.triggerGhostActivity();
     this.audioService.playKey(false, this.currentMode === 'flow' ? this.flowModel.flowStreak : 0);
   }
@@ -7006,11 +7512,14 @@ class GameController {
           this.triggerGhostActivity();
           this.flowModel.recordKeystroke();
           const combo = this.getHiddenCombo();
+          const streak = this.sessionModel ? this.sessionModel.wordStreak : 0;
           this.stageView.updateHiddenHorizon(
             this.sessionModel.currentWordIdx,
             this.sessionModel.currentCharIdx,
             combo,
-            this.sessionModel.hasErrorInCurrentWord()
+            this.sessionModel.hasErrorInCurrentWord(),
+            null,
+            streak
           );
         }
       }
@@ -7024,17 +7533,21 @@ class GameController {
     this.stageView.updateCaret(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
     this.triggerGhostActivity();
     const combo = this.getHiddenCombo();
+    const streak = this.sessionModel ? this.sessionModel.wordStreak : 0;
     this.stageView.updateHiddenHorizon(
       this.sessionModel.currentWordIdx,
       this.sessionModel.currentCharIdx,
       combo,
-      this.sessionModel.hasErrorInCurrentWord()
+      this.sessionModel.hasErrorInCurrentWord(),
+      null,
+      streak
     );
   }
   handleSpace() {
     if (this.sessionModel.isFinished) return;
     if (this.sessionModel.currentCharIdx === 0) return;
     this.lastKeystrokeTime = null;
+    this.flowModel.recordKeystroke();
     this.audioService.init();
     this.audioService.playKey(true, this.currentMode === 'flow' ? this.flowModel.flowStreak : 0);
     if (!this.sessionModel.isActive && this.currentMode === 'classic') {
@@ -7144,8 +7657,13 @@ class GameController {
           this.bigramLedger
         );
         const insertPos = this.sessionModel.currentWordIdx + 3;
+        const insertBoundaryChars = this.getCharCumulativeIndex(insertPos, 0);
         this.sessionModel.insertWordsAt(insertPos, sandwich);
         this.stageView.insertWordsAt(insertPos, sandwich);
+        if (this.ghostEnabled && this.ghostTotalChars >= insertBoundaryChars) {
+          const addedChars = sandwich.reduce((sum, w) => sum + w.length + 1, 0);
+          this.ghostTotalChars += addedChars;
+        }
       }
     }
     const prevIdx = this.sessionModel.currentWordIdx - 1;
@@ -7153,13 +7671,20 @@ class GameController {
     this.stageView.advanceWord(prevIdx, nextIdx, hasUncorrectedErrors);
     this.stageView.updateCaret(nextIdx, 0);
     const combo = this.getHiddenCombo();
-    this.stageView.updateHiddenHorizon(nextIdx, 0, combo, false);
+    const streak = this.sessionModel ? this.sessionModel.wordStreak : 0;
+    this.stageView.updateHiddenHorizon(nextIdx, 0, combo, false, null, streak);
     this.triggerGhostActivity();
-    if (nextIdx >= this.stageView.wordElements.length - 10) {
+    this.ensureWordBuffer(nextIdx);
+  }
+  ensureWordBuffer(nextIdx = (this.sessionModel ? this.sessionModel.currentWordIdx : 0)) {
+    if (!this.stageView || !this.stageView.wordElements) return;
+    const remainingWords = this.stageView.wordElements.length - nextIdx;
+    if (remainingWords <= this.bufferConfig.refillThreshold) {
       const gameState = this.storageService.getGameSave();
+      const refillCount = this.bufferConfig.refillBatchSize;
       const more = (this.currentMode === 'flow')
-        ? this.wordsModel.generateBatch(30, gameState.unlockedRanks, gameState.wordStats, this.flowModel.targetWpm, this.flowModel.momentum, this.bigramLedger)
-        : this.wordsModel.generateClassicBatch(30);
+        ? this.wordsModel.generateBatch(refillCount, gameState.unlockedRanks, gameState.wordStats, this.flowModel.targetWpm, this.flowModel.momentum, this.bigramLedger)
+        : this.wordsModel.generateClassicBatch(refillCount);
       this.sessionModel.appendWords(more);
       this.stageView.appendWords(more);
     }
@@ -7356,6 +7881,11 @@ class GameController {
     }
   }
   destroy() {
+    if (this._onWindowResize && typeof window !== 'undefined') {
+      window.removeEventListener('resize', this._onWindowResize);
+      this._onWindowResize = null;
+    }
+    this.stopGhostPacer(true);
     if (this.classicTimerInterval) {
       clearInterval(this.classicTimerInterval);
       this.classicTimerInterval = null;

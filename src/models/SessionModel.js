@@ -26,6 +26,9 @@ class SessionModel extends _EventEmitter {
     super();
     this.mode = options.mode || 'flow'; // 'classic' | 'flow'
     this.duration = options.duration || 30; // seconds for classic
+    this.hiddenMode = options.hiddenMode || false;
+    this.hiddenMethod = options.hiddenMethod || 'char';
+    this.hiddenWordDistance = options.hiddenWordDistance || 2;
     this.timeLeft = this.duration;
     this.isActive = false;
     this.isFinished = false;
@@ -35,6 +38,7 @@ class SessionModel extends _EventEmitter {
     this.currentWordIdx = 0;
     this.currentCharIdx = 0;
     this.hadBackspaceOnCurrentWord = false;
+    this.hadErrorOnCurrentWord = false;
     this.wordStreak = 0;
     this.combo = 0;
 
@@ -69,6 +73,9 @@ class SessionModel extends _EventEmitter {
   reset(options = {}) {
     if (options.mode) this.mode = options.mode;
     if (options.duration) this.duration = options.duration;
+    if (options.hiddenMode !== undefined) this.hiddenMode = options.hiddenMode;
+    if (options.hiddenMethod !== undefined) this.hiddenMethod = options.hiddenMethod;
+    if (options.hiddenWordDistance !== undefined) this.hiddenWordDistance = options.hiddenWordDistance;
     this.timeLeft = this.duration;
     this.isActive = false;
     this.isFinished = false;
@@ -77,6 +84,7 @@ class SessionModel extends _EventEmitter {
     this.currentWordIdx = 0;
     this.currentCharIdx = 0;
     this.hadBackspaceOnCurrentWord = false;
+    this.hadErrorOnCurrentWord = false;
     this.currentWordCharCorrect = [];
     this.wordStreak = 0;
     this.combo = 0;
@@ -104,6 +112,19 @@ class SessionModel extends _EventEmitter {
     this.secondDeltas = [];
 
     this.emit('reset', { mode: this.mode, duration: this.duration });
+  }
+
+  setHiddenMode(enabled) {
+    this.hiddenMode = Boolean(enabled);
+  }
+
+  setHiddenMethod(method) {
+    this.hiddenMethod = (method === 'word') ? 'word' : 'char';
+  }
+
+  setHiddenWordDistance(dist) {
+    const d = parseInt(dist, 10);
+    this.hiddenWordDistance = (d >= 1 && d <= 6) ? d : 2;
   }
 
   setWords(words) {
@@ -211,7 +232,6 @@ class SessionModel extends _EventEmitter {
     }
 
     this.rawKeystrokes++;
-    this.rollingKeystrokeTimestamps.push(now);
     const sec = this.getCurrentSecond(now);
     const prevCharIdx = this.currentCharIdx;
     const currentWord = this.getCurrentWordText();
@@ -225,6 +245,8 @@ class SessionModel extends _EventEmitter {
 
     if (isExtra) {
       this.combo = 0;
+      this.hadErrorOnCurrentWord = true;
+      if (this.hiddenMode) this.wordStreak = 0;
       this.extraCharsCount++;
       this.incorrectKeystrokes++;
       const key = `${this.currentWordIdx}:${prevCharIdx}:extra`;
@@ -241,8 +263,13 @@ class SessionModel extends _EventEmitter {
       list.push(errEntry);
       this.unfixedErrorsByKey.set(key, list);
     } else if (isCorrect) {
-      this.combo++;
+      if (this.hiddenMode && this.hadErrorOnCurrentWord) {
+        this.combo = 0;
+      } else {
+        this.combo++;
+      }
       this.correctKeystrokes++;
+      this.rollingKeystrokeTimestamps.push(now);
       // Check if user is repairing a previously incorrect character at this position
       const key = `${this.currentWordIdx}:${prevCharIdx}:norm`;
       const unfixedList = this.unfixedErrorsByKey.get(key);
@@ -260,6 +287,8 @@ class SessionModel extends _EventEmitter {
       }
     } else {
       this.combo = 0;
+      this.hadErrorOnCurrentWord = true;
+      if (this.hiddenMode) this.wordStreak = 0;
       this.incorrectKeystrokes++;
       const key = `${this.currentWordIdx}:${prevCharIdx}:norm`;
       const errEntry = {
@@ -375,6 +404,11 @@ class SessionModel extends _EventEmitter {
           }
           fixedError = true;
         }
+      }
+
+      if (!isExtra && this.currentWordCharCorrect[deletedIdx] === true) {
+        this.correctKeystrokes = Math.max(0, this.correctKeystrokes - 1);
+        this.rollingKeystrokeTimestamps.pop();
       }
 
       this.currentWordCharCorrect.length = deletedIdx;
@@ -495,11 +529,18 @@ class SessionModel extends _EventEmitter {
 
     // Spacebar keystroke accounting (Divisor of 5 chars/word assumes 4 letters + 1 space)
     this.rawKeystrokes++;
-    this.rollingKeystrokeTimestamps.push(now);
     if (!hasErrors) {
       this.correctKeystrokes++;
-      this.wordStreak++;
-      this.combo++;
+      if (this.hiddenMode && this.hadErrorOnCurrentWord) {
+        this.wordStreak = 0;
+        this.combo = 0;
+      } else {
+        this.wordStreak++;
+        this.combo++;
+      }
+      if (this.currentCharIdx > 0) {
+        this.rollingKeystrokeTimestamps.push(now);
+      }
     } else {
       this.wordStreak = 0;
       this.combo = 0;
@@ -509,6 +550,7 @@ class SessionModel extends _EventEmitter {
       charIdx: this.currentCharIdx,
       charCorrect: [...this.currentWordCharCorrect],
       hadBackspace: this.hadBackspaceOnCurrentWord,
+      hadErrorOnCurrentWord: this.hadErrorOnCurrentWord,
       missedLetters,
       extraLetters,
       extraLettersAddedOnSubmit,
@@ -522,6 +564,7 @@ class SessionModel extends _EventEmitter {
     this.currentWordCharCorrect = [];
     this.lastWordEndTime = now;
     this.hadBackspaceOnCurrentWord = false;
+    this.hadErrorOnCurrentWord = false;
     this.currentWordIdx++;
     this.currentCharIdx = 0;
     this.wordStartTime = 0;
@@ -573,16 +616,23 @@ class SessionModel extends _EventEmitter {
     // Rollback spacebar keystroke from submitWord (Bug 1A / 1C)
     if (!prevHistory.hasErrors) {
       this.correctKeystrokes = Math.max(0, this.correctKeystrokes - 1);
+      this.rollingKeystrokeTimestamps.pop();
     }
 
     this.currentWordIdx = prevIdx;
     this.currentCharIdx = prevHistory.charIdx;
     this.currentWordCharCorrect = [...prevHistory.charCorrect];
     this.hadBackspaceOnCurrentWord = true;
+    this.hadErrorOnCurrentWord = Boolean(prevHistory.hadErrorOnCurrentWord || prevHistory.hasErrors);
     this.wordStartTime = prevHistory.wordStartTime || 0;
     this.lastWordEndTime = prevHistory.lastWordEndTime || 0;
-    this.wordStreak = prevHistory.wordStreakBefore !== undefined ? prevHistory.wordStreakBefore : 0;
-    this.combo = prevHistory.comboBefore !== undefined ? prevHistory.comboBefore : Math.max(0, this.combo - 1);
+    if (this.hiddenMode && this.hadErrorOnCurrentWord) {
+      this.wordStreak = 0;
+      this.combo = 0;
+    } else {
+      this.wordStreak = prevHistory.wordStreakBefore !== undefined ? prevHistory.wordStreakBefore : 0;
+      this.combo = prevHistory.comboBefore !== undefined ? prevHistory.comboBefore : Math.max(0, this.combo - 1);
+    }
     this.rawKeystrokes++;
 
     this.emit('wordReverted', {
@@ -760,6 +810,28 @@ class SessionModel extends _EventEmitter {
 
   getHiddenFadeDepth(rampWidth = 4.0) {
     return SessionModel.calculateHiddenFadeDepth(this.wordStreak, rampWidth);
+  }
+
+  /**
+   * Calculates effective total words hidden (active word + upcoming words) in Word Vanish mode.
+   * Progressively scales with clean word streak S:
+   * - At streak 0: 0 words hidden (everything visible)
+   * - At streak 1: 1 word hidden (current word W)
+   * - At streak 2: 2 words hidden (current word W + 1 word ahead)
+   * - At streak N: up to targetCount words hidden
+   * @param {number} streak - Consecutive clean word streak
+   * @param {number} targetCount - User configured total words hidden (default 2, range 1..6)
+   * @returns {number} Effective total words hidden
+   */
+  static calculateWordVanishEffectiveCount(streak, targetCount = 2) {
+    const s = Math.max(0, streak || 0);
+    const maxWords = Math.max(1, Math.min(6, targetCount || 2));
+    if (s <= 0) return 0;
+    return Math.min(maxWords, s);
+  }
+
+  getHiddenWordVanishEffectiveCount() {
+    return SessionModel.calculateWordVanishEffectiveCount(this.wordStreak, this.hiddenWordDistance);
   }
 }
 

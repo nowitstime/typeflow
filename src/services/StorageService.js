@@ -9,6 +9,8 @@ const STORAGE_KEYS = {
   GAME_SAVE:     'typeflow_game_save_v2',
   ACTIVE_MODE:   'typeflow_active_mode',
   HIDDEN_MODE:   'typeflow_hidden_mode',
+  HIDDEN_METHOD: 'typeflow_hidden_method',
+  HIDDEN_WORD_DIST: 'typeflow_hidden_word_dist',
   GHOST_CURSOR:  'typeflow_ghost_cursor',
   GHOST_SPEED:   'typeflow_ghost_speed'
 };
@@ -38,6 +40,8 @@ const DEFAULT_GAME_SAVE = {
   lifetimeWords: 0,
   highStreak: 0,
   hiddenMode: false,
+  hiddenMethod: 'char',
+  hiddenWordDistance: 2,
   ghostCursor: false,
   ghostSpeed: 50
 };
@@ -87,7 +91,8 @@ class StorageService {
       const s = this._getStorage();
       const data = s ? s.getItem(STORAGE_KEYS.CLASSIC_STATS) : null;
       if (!data) return JSON.parse(JSON.stringify(DEFAULT_CLASSIC_STATS));
-      return Object.assign({}, DEFAULT_CLASSIC_STATS, JSON.parse(data));
+      const defaultClone = JSON.parse(JSON.stringify(DEFAULT_CLASSIC_STATS));
+      return Object.assign(defaultClone, JSON.parse(data));
     } catch (e) {
       return JSON.parse(JSON.stringify(DEFAULT_CLASSIC_STATS));
     }
@@ -159,7 +164,8 @@ class StorageService {
         return fresh;
       }
       const parsed = JSON.parse(data);
-      const state = Object.assign({}, DEFAULT_GAME_SAVE, parsed);
+      const defaultClone = JSON.parse(JSON.stringify(DEFAULT_GAME_SAVE));
+      const state = Object.assign(defaultClone, parsed);
       if (!state.unlockedRanks || state.unlockedRanks.length === 0) {
         state.unlockedRanks = [1];
       }
@@ -171,6 +177,12 @@ class StorageService {
       }
       if (typeof state.hiddenMode !== 'boolean') {
         state.hiddenMode = false;
+      }
+      if (state.hiddenMethod !== 'char' && state.hiddenMethod !== 'word') {
+        state.hiddenMethod = 'char';
+      }
+      if (typeof state.hiddenWordDistance !== 'number' || isNaN(state.hiddenWordDistance) || state.hiddenWordDistance < 1 || state.hiddenWordDistance > 5) {
+        state.hiddenWordDistance = 2;
       }
       if (typeof state.ghostCursor !== 'boolean') {
         state.ghostCursor = false;
@@ -244,12 +256,16 @@ class StorageService {
       leveledUp = true;
       req = this.getXpForLevel(save.level);
 
+      let stepRarity = 'uncommon';
       if (save.level % 10 === 0) {
-        bonusEggRarity = 'epic';
+        stepRarity = 'epic';
       } else if (save.level % 5 === 0) {
-        bonusEggRarity = 'rare';
-      } else {
-        bonusEggRarity = 'uncommon';
+        stepRarity = 'rare';
+      }
+
+      const RARITY_WEIGHT = { uncommon: 1, rare: 2, epic: 3 };
+      if (!bonusEggRarity || RARITY_WEIGHT[stepRarity] > RARITY_WEIGHT[bonusEggRarity]) {
+        bonusEggRarity = stepRarity;
       }
     }
 
@@ -531,6 +547,64 @@ class StorageService {
       return val;
     } catch (e) {
       return val;
+    }
+  }
+
+  getHiddenMethod() {
+    try {
+      const s = this._getStorage();
+      if (s) {
+        const val = s.getItem(STORAGE_KEYS.HIDDEN_METHOD);
+        if (val === 'char' || val === 'word') return val;
+      }
+      const save = this.getGameSave();
+      return (save.hiddenMethod === 'word') ? 'word' : 'char';
+    } catch (e) {
+      return 'char';
+    }
+  }
+
+  setHiddenMethod(val) {
+    const method = (val === 'word') ? 'word' : 'char';
+    try {
+      const s = this._getStorage();
+      if (s) s.setItem(STORAGE_KEYS.HIDDEN_METHOD, method);
+      const save = this.getGameSave();
+      save.hiddenMethod = method;
+      this.saveGameSave(save);
+      return method;
+    } catch (e) {
+      return method;
+    }
+  }
+
+  getHiddenWordDistance() {
+    try {
+      const s = this._getStorage();
+      if (s) {
+        const val = parseInt(s.getItem(STORAGE_KEYS.HIDDEN_WORD_DIST), 10);
+        if (!isNaN(val) && val >= 1 && val <= 6) return val;
+      }
+      const save = this.getGameSave();
+      const dist = parseInt(save.hiddenWordDistance, 10);
+      return (!isNaN(dist) && dist >= 1 && dist <= 6) ? dist : 2;
+    } catch (e) {
+      return 2;
+    }
+  }
+
+  setHiddenWordDistance(val) {
+    const parsed = parseInt(val, 10);
+    const dist = isNaN(parsed) ? 2 : Math.max(1, Math.min(6, parsed));
+    try {
+      const s = this._getStorage();
+      if (s) s.setItem(STORAGE_KEYS.HIDDEN_WORD_DIST, String(dist));
+      const save = this.getGameSave();
+      save.hiddenWordDistance = dist;
+      this.saveGameSave(save);
+      return dist;
+    } catch (e) {
+      return dist;
     }
   }
 

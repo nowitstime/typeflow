@@ -17,6 +17,8 @@ class StageView {
     this.scrollOffset = 0;
     this.wordElements = [];
     this.hiddenMode = false;
+    this.hiddenMethod = 'char';
+    this.hiddenWordDistance = 2;
   }
 
   /**
@@ -40,6 +42,9 @@ class StageView {
   }
 
   static getBlindfoldMask(combo) {
+    if (typeof SessionModel !== 'undefined' && SessionModel.getBlindfoldMask) {
+      return SessionModel.getBlindfoldMask(combo);
+    }
     const c = Math.max(0, combo || 0);
     if (c <= 26) {
       return c * 0.25;
@@ -48,6 +53,9 @@ class StageView {
   }
 
   static getHiddenOpacity(k, combo) {
+    if (typeof SessionModel !== 'undefined' && SessionModel.getHiddenOpacity) {
+      return SessionModel.getHiddenOpacity(k, combo);
+    }
     if (k < 0) return 0.0;
     const M = StageView.getBlindfoldMask(combo);
     const penetration = M - k;
@@ -80,6 +88,11 @@ class StageView {
     this.wordsWrapper.innerHTML = '';
     this.wordElements = [];
 
+    const fragment = (doc && typeof doc.createDocumentFragment === 'function')
+      ? doc.createDocumentFragment()
+      : null;
+    const container = fragment || this.wordsWrapper;
+
     for (let wIdx = 0; wIdx < wordsList.length; wIdx++) {
       const word = wordsList[wIdx];
       const wordEl = doc.createElement('div');
@@ -92,8 +105,12 @@ class StageView {
         letterEl.textContent = word[i];
         wordEl.appendChild(letterEl);
       }
-      this.wordsWrapper.appendChild(wordEl);
+      container.appendChild(wordEl);
       this.wordElements.push(wordEl);
+    }
+
+    if (fragment) {
+      this.wordsWrapper.appendChild(fragment);
     }
 
     this.scrollOffset = 0;
@@ -111,6 +128,11 @@ class StageView {
     const doc = this._getDoc();
     if (!doc) return;
 
+    const fragment = (doc && typeof doc.createDocumentFragment === 'function')
+      ? doc.createDocumentFragment()
+      : null;
+    const container = fragment || this.wordsWrapper;
+
     for (let i = 0; i < moreWords.length; i++) {
       const word = moreWords[i];
       const wordEl = doc.createElement('div');
@@ -123,8 +145,12 @@ class StageView {
         letterEl.textContent = word[j];
         wordEl.appendChild(letterEl);
       }
-      this.wordsWrapper.appendChild(wordEl);
+      container.appendChild(wordEl);
       this.wordElements.push(wordEl);
+    }
+
+    if (fragment) {
+      this.wordsWrapper.appendChild(fragment);
     }
   }
 
@@ -220,6 +246,7 @@ class StageView {
         prevEl.classList.remove('error');
       }
       if (this.hiddenMode) {
+        prevEl.classList.remove('hd-word-vanished');
         const letters = prevEl.querySelectorAll('.letter');
         for (let i = 0; i < letters.length; i++) {
           letters[i].classList.add('hd-past');
@@ -242,6 +269,7 @@ class StageView {
     if (currentEl) {
       currentEl.classList.remove('active');
       if (this.hiddenMode) {
+        currentEl.classList.remove('hd-word-vanished');
         const letters = currentEl.querySelectorAll('.letter');
         for (let i = 0; i < letters.length; i++) {
           letters[i].classList.remove('hd-past');
@@ -288,7 +316,16 @@ class StageView {
     const baseTop = firstWord.offsetTop;
     const currentWordTop = activeWordEl.offsetTop;
 
-    const line2Word = Array.from(this.wordsWrapper.children).find(w => w.offsetTop > baseTop + 10);
+    let line2Word = null;
+    if (this.wordElements) {
+      const searchLimit = Math.min(this.wordElements.length, 40);
+      for (let i = 0; i < searchLimit; i++) {
+        if (this.wordElements[i].offsetTop > baseTop + 10) {
+          line2Word = this.wordElements[i];
+          break;
+        }
+      }
+    }
     const lineHeight = line2Word ? (line2Word.offsetTop - baseTop) : (activeWordEl.offsetHeight || 42);
 
     let newScrollOffset = 0;
@@ -489,14 +526,38 @@ class StageView {
       this.wordsBox.classList.toggle('hidden-mode', this.hiddenMode);
     }
     if (!this.hiddenMode) {
+      this._clearHiddenStyling();
       for (let i = 0; i < this.wordElements.length; i++) {
         const wEl = this.wordElements[i];
         if (wEl) {
           const letters = wEl.querySelectorAll('.letter');
           for (let j = 0; j < letters.length; j++) {
-            letters[j].style.opacity = '';
             letters[j].classList.remove('hd-past');
           }
+        }
+      }
+    }
+  }
+
+  setHiddenMethod(method) {
+    this.hiddenMethod = (method === 'word') ? 'word' : 'char';
+    this._clearHiddenStyling();
+  }
+
+  setHiddenWordDistance(dist) {
+    const d = parseInt(dist, 10);
+    this.hiddenWordDistance = (d >= 1 && d <= 6) ? d : 2;
+  }
+
+  _clearHiddenStyling() {
+    if (!this.wordElements) return;
+    for (let i = 0; i < this.wordElements.length; i++) {
+      const wEl = this.wordElements[i];
+      if (wEl) {
+        wEl.classList.remove('hd-word-vanished');
+        const letters = wEl.querySelectorAll('.letter');
+        for (let j = 0; j < letters.length; j++) {
+          letters[j].style.opacity = '';
         }
       }
     }
@@ -510,21 +571,25 @@ class StageView {
    * @param {number} combo - Consecutive correct keystroke streak (or legacy fadeDepth)
    * @param {boolean} hasError - Safety brake: if true, immediately restores visibility
    * @param {number|null} zeroDist - Optional legacy parameter
+   * @param {number|Object} streakOrOptions - Consecutive clean word streak or config object
    */
-  updateHiddenHorizon(currentWordIdx, currentCharIdx, combo = 0, hasError = false, zeroDist = null) {
+  updateHiddenHorizon(currentWordIdx, currentCharIdx, combo = 0, hasError = false, zeroDist = null, streakOrOptions = 0) {
     if (!this.hiddenMode || !this.wordElements || this.wordElements.length === 0) return;
     const activeWordEl = this.wordElements[currentWordIdx];
     if (!activeWordEl) return;
 
     // Safety brake: if error exists, immediately restore visibility of all letters in active word & upcoming words
     if (hasError) {
+      activeWordEl.classList.remove('hd-word-vanished');
       const activeLetters = activeWordEl.querySelectorAll('.letter');
       for (let i = 0; i < activeLetters.length; i++) {
         activeLetters[i].style.opacity = '';
+        activeLetters[i].classList.remove('hd-past');
       }
-      for (let w = 1; w <= 6; w++) {
+      for (let w = 1; w <= 12; w++) {
         const nextWordEl = this.wordElements[currentWordIdx + w];
         if (!nextWordEl) break;
+        nextWordEl.classList.remove('hd-word-vanished');
         const letters = nextWordEl.querySelectorAll('.letter');
         for (let j = 0; j < letters.length; j++) {
           letters[j].style.opacity = '';
@@ -533,6 +598,64 @@ class StageView {
       }
       return;
     }
+
+    let method = this.hiddenMethod;
+    let wordDistance = this.hiddenWordDistance;
+    let streak = 0;
+
+    if (typeof streakOrOptions === 'object' && streakOrOptions !== null) {
+      if (streakOrOptions.method) method = streakOrOptions.method;
+      if (streakOrOptions.wordDistance) wordDistance = streakOrOptions.wordDistance;
+      if (typeof streakOrOptions.streak === 'number') streak = streakOrOptions.streak;
+    } else if (typeof streakOrOptions === 'number') {
+      streak = streakOrOptions;
+    }
+
+    // Word Vanish Mode
+    if (method === 'word') {
+      let effectiveCount = 0;
+      if (typeof SessionModel !== 'undefined' && SessionModel.calculateWordVanishEffectiveCount) {
+        effectiveCount = SessionModel.calculateWordVanishEffectiveCount(streak, wordDistance);
+      } else {
+        const maxWords = Math.max(1, Math.min(6, wordDistance || 2));
+        effectiveCount = streak <= 0 ? 0 : Math.min(maxWords, streak);
+      }
+
+      // Process active word
+      if (effectiveCount >= 1) {
+        activeWordEl.classList.add('hd-word-vanished');
+      } else {
+        activeWordEl.classList.remove('hd-word-vanished');
+      }
+      const activeLetters = activeWordEl.querySelectorAll('.letter');
+      for (let i = 0; i < activeLetters.length; i++) {
+        activeLetters[i].style.opacity = '';
+        if (i < currentCharIdx) {
+          activeLetters[i].classList.add('hd-past');
+        } else {
+          activeLetters[i].classList.remove('hd-past');
+        }
+      }
+
+      // Process upcoming words
+      for (let w = 1; w <= 12; w++) {
+        const wordEl = this.wordElements[currentWordIdx + w];
+        if (!wordEl) break;
+        if (w < effectiveCount) {
+          wordEl.classList.add('hd-word-vanished');
+        } else {
+          wordEl.classList.remove('hd-word-vanished');
+        }
+        const letters = wordEl.querySelectorAll('.letter');
+        for (let j = 0; j < letters.length; j++) {
+          letters[j].style.opacity = '';
+          letters[j].classList.remove('hd-past');
+        }
+      }
+      return;
+    }
+
+    activeWordEl.classList.remove('hd-word-vanished');
 
     // Support legacy 5-argument callers if zeroDist is explicitly provided
     if (zeroDist !== null && typeof zeroDist === 'number') {
@@ -627,18 +750,22 @@ class StageView {
       const nextLetters = nextWordEl.querySelectorAll('.letter');
 
       // If upcoming word is completely past blindfold horizon (kRunning >= M),
-      // all characters are 1.0: clear inline opacity and stop.
+      // all characters are 1.0: clear inline opacity across previously faded words and stop.
       if (kRunning >= M) {
-        for (let j = 0; j < nextLetters.length; j++) {
-          nextLetters[j].classList.remove('hd-past');
-          nextLetters[j].style.opacity = '';
-        }
-        const aheadWordEl = this.wordElements[currentWordIdx + nextWordOffset + 1];
-        if (aheadWordEl) {
-          const aheadLetters = aheadWordEl.querySelectorAll('.letter');
-          for (let q = 0; q < aheadLetters.length; q++) {
-            aheadLetters[q].classList.remove('hd-past');
-            aheadLetters[q].style.opacity = '';
+        for (let clearOffset = nextWordOffset; clearOffset < Math.min(this.wordElements.length - currentWordIdx, nextWordOffset + 12); clearOffset++) {
+          const clearWordEl = this.wordElements[currentWordIdx + clearOffset];
+          if (!clearWordEl) break;
+          const clearLetters = clearWordEl.querySelectorAll('.letter');
+          let hadAnyOpacity = false;
+          for (let j = 0; j < clearLetters.length; j++) {
+            if (clearLetters[j].style.opacity !== '' || clearLetters[j].classList.contains('hd-past')) {
+              hadAnyOpacity = true;
+              clearLetters[j].classList.remove('hd-past');
+              clearLetters[j].style.opacity = '';
+            }
+          }
+          if (!hadAnyOpacity && clearOffset > nextWordOffset + 1) {
+            break;
           }
         }
         break;

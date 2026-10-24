@@ -19,6 +19,13 @@ if (!_BigramLedger && typeof require !== 'undefined') {
   } catch (e) {}
 }
 
+var _Constants = (typeof CONSTANTS !== 'undefined') ? CONSTANTS : null;
+if (!_Constants && typeof require !== 'undefined') {
+  try {
+    _Constants = require('../core/Constants.js').CONSTANTS;
+  } catch (e) {}
+}
+
 class GameController {
   constructor(deps = {}) {
     // Models
@@ -46,6 +53,14 @@ class GameController {
     this.pendingHatchedWords = [];
     this.pendingRareEpicUnlocks = [];
 
+    // Stream Buffer Configuration (keeps ~60 words total at any given time for tight flow adaptation)
+    const cfg = deps.bufferConfig || (_Constants ? _Constants.STREAM_BUFFER : null);
+    this.bufferConfig = {
+      initialWordCount: (cfg && cfg.INITIAL_WORD_COUNT) || 60,
+      refillThreshold: (cfg && cfg.REFILL_THRESHOLD) || 24,
+      refillBatchSize: (cfg && cfg.REFILL_BATCH_SIZE) || 30
+    };
+
     // Views
     this.stageView = deps.stageView || new StageView();
     this.nestView = deps.nestView || new NestView();
@@ -72,6 +87,7 @@ class GameController {
     this.ghostResetTimer = null;
     this.isGhostRunning = false;
     this.ghostNeedsSync = true;
+    this._onWindowResize = null;
 
     const KBClass = deps.keyboardControllerClass || _KeyboardController;
     if (KBClass) {
@@ -127,9 +143,16 @@ class GameController {
     );
     this.hudView.updateSoundState(this.audioService.isEnabled());
     const isHidden = this.storageService.getHiddenMode ? this.storageService.getHiddenMode() : false;
+    const hiddenMethod = this.storageService.getHiddenMethod ? this.storageService.getHiddenMethod() : 'char';
+    const hiddenWordDistance = this.storageService.getHiddenWordDistance ? this.storageService.getHiddenWordDistance() : 2;
+    this.sessionModel.setHiddenMode(isHidden);
+    this.sessionModel.setHiddenMethod(hiddenMethod);
+    this.sessionModel.setHiddenWordDistance(hiddenWordDistance);
     this.stageView.setHiddenMode(isHidden);
+    this.stageView.setHiddenMethod(hiddenMethod);
+    this.stageView.setHiddenWordDistance(hiddenWordDistance);
     if (this.hudView.updateHiddenModeState) {
-      this.hudView.updateHiddenModeState(isHidden);
+      this.hudView.updateHiddenModeState(isHidden, hiddenMethod, hiddenWordDistance);
     }
     this.ghostEnabled = this.storageService.getGhostCursor ? this.storageService.getGhostCursor() : false;
     this.ghostSpeed = this.storageService.getGhostSpeed ? this.storageService.getGhostSpeed() : 50;
@@ -172,6 +195,8 @@ class GameController {
         }
       },
       onHiddenToggle: () => this.toggleHiddenMode(),
+      onHiddenMethodChange: (method) => this.setHiddenMethod(method),
+      onHiddenWordDistanceChange: (dist) => this.setHiddenWordDistance(dist),
       onGhostToggle: () => this.toggleGhostCursor(),
       onGhostSpeedChange: (speed) => this.updateGhostSpeed(speed),
       onRestart: () => this.resetTest()
@@ -212,10 +237,23 @@ class GameController {
         if (window.confirm('Reset Flow RPG progress back to Level 1 and 1 word ("the")?')) {
           this.storageService.resetGameSave();
           this.eggNestModel.syncBasket([]);
-          this.flowModel.reset();
+          if (this.eggNestModel.clearRevealedSlots) {
+            this.eggNestModel.clearRevealedSlots();
+          }
+          this.flowModel.reset(false, true);
+          this.flowModel.setTargetWpm(40);
+          this.hudView.syncTargetWpm(40);
+          const BigramClass = typeof BigramLedger !== 'undefined' ? BigramLedger : (typeof require !== 'undefined' ? require('../models/BigramLedger.js').BigramLedger : null);
+          if (BigramClass) {
+            this.bigramLedger = new BigramClass({});
+          }
+          this.pendingHatchedWords = [];
+          this.pendingRareEpicUnlocks = [];
           this.updateLevelHud();
           this.nestView.render(this.eggNestModel);
           this.resetTest();
+          const freshSave = this.storageService.getGameSave();
+          this.modalView.renderFlowStats(freshSave);
           this.hudView.spawnXpToast('RPG Reset to Ground Zero!', 1.0, null, true);
         }
       },
@@ -232,13 +270,15 @@ class GameController {
 
     // 6. Window resize handler
     if (typeof window !== 'undefined') {
-      window.addEventListener('resize', () => {
+      this._onWindowResize = () => {
         if (!this.sessionModel.isFinished) {
           this.stageView.updateCaret(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
+          this.ensureWordBuffer(this.sessionModel.currentWordIdx);
         } else {
           this.chartView.render(this.sessionModel.wpmHistory, this.chartView.hoveredPointIndex);
         }
-      });
+      };
+      window.addEventListener('resize', this._onWindowResize);
     }
   }
 
@@ -282,18 +322,70 @@ class GameController {
     if (this.storageService.setHiddenMode) {
       this.storageService.setHiddenMode(next);
     }
+    this.sessionModel.setHiddenMode(next);
     this.stageView.setHiddenMode(next);
+    const method = this.storageService.getHiddenMethod ? this.storageService.getHiddenMethod() : 'char';
+    const dist = this.storageService.getHiddenWordDistance ? this.storageService.getHiddenWordDistance() : 2;
     if (this.hudView.updateHiddenModeState) {
-      this.hudView.updateHiddenModeState(next);
+      this.hudView.updateHiddenModeState(next, method, dist);
     }
     const combo = this.getHiddenCombo();
+    const streak = this.sessionModel ? this.sessionModel.wordStreak : 0;
     this.stageView.updateHiddenHorizon(
       this.sessionModel.currentWordIdx,
       this.sessionModel.currentCharIdx,
       combo,
-      this.sessionModel.hasErrorInCurrentWord()
+      this.sessionModel.hasErrorInCurrentWord(),
+      null,
+      streak
     );
     return next;
+  }
+
+  setHiddenMethod(method) {
+    if (this.storageService.setHiddenMethod) {
+      this.storageService.setHiddenMethod(method);
+    }
+    this.sessionModel.setHiddenMethod(method);
+    this.stageView.setHiddenMethod(method);
+    const isHidden = this.storageService.getHiddenMode ? this.storageService.getHiddenMode() : false;
+    const dist = this.storageService.getHiddenWordDistance ? this.storageService.getHiddenWordDistance() : 2;
+    if (this.hudView.updateHiddenModeState) {
+      this.hudView.updateHiddenModeState(isHidden, method, dist);
+    }
+    const combo = this.getHiddenCombo();
+    const streak = this.sessionModel ? this.sessionModel.wordStreak : 0;
+    this.stageView.updateHiddenHorizon(
+      this.sessionModel.currentWordIdx,
+      this.sessionModel.currentCharIdx,
+      combo,
+      this.sessionModel.hasErrorInCurrentWord(),
+      null,
+      streak
+    );
+  }
+
+  setHiddenWordDistance(dist) {
+    if (this.storageService.setHiddenWordDistance) {
+      this.storageService.setHiddenWordDistance(dist);
+    }
+    this.sessionModel.setHiddenWordDistance(dist);
+    this.stageView.setHiddenWordDistance(dist);
+    const isHidden = this.storageService.getHiddenMode ? this.storageService.getHiddenMode() : false;
+    const method = this.storageService.getHiddenMethod ? this.storageService.getHiddenMethod() : 'char';
+    if (this.hudView.updateHiddenModeState) {
+      this.hudView.updateHiddenModeState(isHidden, method, dist);
+    }
+    const combo = this.getHiddenCombo();
+    const streak = this.sessionModel ? this.sessionModel.wordStreak : 0;
+    this.stageView.updateHiddenHorizon(
+      this.sessionModel.currentWordIdx,
+      this.sessionModel.currentCharIdx,
+      combo,
+      this.sessionModel.hasErrorInCurrentWord(),
+      null,
+      streak
+    );
   }
 
   toggleGhostCursor() {
@@ -441,8 +533,10 @@ class GameController {
 
   stopGhostPacer(cancelTimers = false) {
     this.isGhostRunning = false;
-    if (this.ghostAnimId && typeof cancelAnimationFrame !== 'undefined') {
-      cancelAnimationFrame(this.ghostAnimId);
+    if (this.ghostAnimId) {
+      if (typeof cancelAnimationFrame !== 'undefined') {
+        cancelAnimationFrame(this.ghostAnimId);
+      }
       this.ghostAnimId = null;
     }
     if (cancelTimers) {
@@ -492,7 +586,7 @@ class GameController {
 
     const gameState = this.storageService.getGameSave();
     this.eggNestModel.syncBasket(gameState.eggBasket || []);
-    const count = 70;
+    const count = this.bufferConfig.initialWordCount;
     const words = (this.currentMode === 'flow')
       ? this.wordsModel.generateBatch(count, gameState.unlockedRanks, gameState.wordStats, this.flowModel.targetWpm, 0, this.bigramLedger)
       : this.wordsModel.generateClassicBatch(count);
@@ -509,11 +603,13 @@ class GameController {
       words.splice(0, 3, ...sandwich);
     }
 
-    this.sessionModel.reset({ mode: this.currentMode, duration: this.sessionModel.duration, words });
+    const isHidden = this.storageService.getHiddenMode ? this.storageService.getHiddenMode() : false;
+    this.sessionModel.setHiddenMode(isHidden);
+    this.sessionModel.reset({ mode: this.currentMode, duration: this.sessionModel.duration, words, hiddenMode: isHidden });
     this.stageView.renderWords(words);
     this.stageView.updateCaret(0, 0);
     const combo = this.getHiddenCombo();
-    this.stageView.updateHiddenHorizon(0, 0, combo, false);
+    this.stageView.updateHiddenHorizon(0, 0, combo, false, null, 0);
 
     if (this.currentMode === 'classic') {
       this.hudView.updateTimer(this.sessionModel.duration);
@@ -621,12 +717,35 @@ class GameController {
 
     this.sessionModel.recordChar(char, isCorrect, isExtra);
     this.flowModel.recordKeystroke();
+
+    const isHidden = (this.sessionModel && this.sessionModel.hiddenMode) || (this.storageService && this.storageService.getHiddenMode && this.storageService.getHiddenMode());
+    if (isHidden && (!isCorrect || isExtra)) {
+      if (this.currentMode === 'flow' && this.flowModel) {
+        this.flowModel.flowStreak = 0;
+        this.flowModel.consecutiveCleanWords = 0;
+        if (this.hudView && this.hudView.updateFlowGauge) {
+          const unlockedCount = (this.storageService && this.storageService.getGameSave)
+            ? (this.storageService.getGameSave().unlockedRanks || [1]).length
+            : 1;
+          this.hudView.updateFlowGauge(
+            this.sessionModel.getInstantaneousWpm(),
+            this.flowModel.targetWpm,
+            this.flowModel.momentum,
+            this.flowModel.getMultiplier(),
+            0.0,
+            unlockedCount
+          );
+        }
+      }
+    }
+
     this.stageView.updateLetter(this.sessionModel.currentWordIdx, charIdx, isCorrect, isExtra, char);
     this.stageView.updateCaret(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
 
     const combo = this.getHiddenCombo();
+    const streak = this.sessionModel ? this.sessionModel.wordStreak : 0;
     const hasErr = isExtra || !isCorrect || this.sessionModel.hasErrorInCurrentWord();
-    this.stageView.updateHiddenHorizon(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx, combo, hasErr);
+    this.stageView.updateHiddenHorizon(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx, combo, hasErr, null, streak);
 
     this.triggerGhostActivity();
     this.audioService.playKey(false, this.currentMode === 'flow' ? this.flowModel.flowStreak : 0);
@@ -646,11 +765,14 @@ class GameController {
           this.triggerGhostActivity();
           this.flowModel.recordKeystroke();
           const combo = this.getHiddenCombo();
+          const streak = this.sessionModel ? this.sessionModel.wordStreak : 0;
           this.stageView.updateHiddenHorizon(
             this.sessionModel.currentWordIdx,
             this.sessionModel.currentCharIdx,
             combo,
-            this.sessionModel.hasErrorInCurrentWord()
+            this.sessionModel.hasErrorInCurrentWord(),
+            null,
+            streak
           );
         }
       }
@@ -665,11 +787,14 @@ class GameController {
     this.stageView.updateCaret(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
     this.triggerGhostActivity();
     const combo = this.getHiddenCombo();
+    const streak = this.sessionModel ? this.sessionModel.wordStreak : 0;
     this.stageView.updateHiddenHorizon(
       this.sessionModel.currentWordIdx,
       this.sessionModel.currentCharIdx,
       combo,
-      this.sessionModel.hasErrorInCurrentWord()
+      this.sessionModel.hasErrorInCurrentWord(),
+      null,
+      streak
     );
   }
 
@@ -678,6 +803,7 @@ class GameController {
     if (this.sessionModel.currentCharIdx === 0) return; // Prevent empty skipping
 
     this.lastKeystrokeTime = null;
+    this.flowModel.recordKeystroke();
     this.audioService.init();
     this.audioService.playKey(true, this.currentMode === 'flow' ? this.flowModel.flowStreak : 0);
 
@@ -812,8 +938,13 @@ class GameController {
           this.bigramLedger
         );
         const insertPos = this.sessionModel.currentWordIdx + 3;
+        const insertBoundaryChars = this.getCharCumulativeIndex(insertPos, 0);
         this.sessionModel.insertWordsAt(insertPos, sandwich);
         this.stageView.insertWordsAt(insertPos, sandwich);
+        if (this.ghostEnabled && this.ghostTotalChars >= insertBoundaryChars) {
+          const addedChars = sandwich.reduce((sum, w) => sum + w.length + 1, 0);
+          this.ghostTotalChars += addedChars;
+        }
       }
     }
 
@@ -822,15 +953,27 @@ class GameController {
     this.stageView.advanceWord(prevIdx, nextIdx, hasUncorrectedErrors);
     this.stageView.updateCaret(nextIdx, 0);
     const combo = this.getHiddenCombo();
-    this.stageView.updateHiddenHorizon(nextIdx, 0, combo, false);
+    const streak = this.sessionModel ? this.sessionModel.wordStreak : 0;
+    this.stageView.updateHiddenHorizon(nextIdx, 0, combo, false, null, streak);
     this.triggerGhostActivity();
 
-    // Dynamic infinite stream appending
-    if (nextIdx >= this.stageView.wordElements.length - 10) {
+    // Dynamic infinite stream appending: keep runway full well ahead of line 3
+    this.ensureWordBuffer(nextIdx);
+  }
+
+  /**
+   * Proactively replenishes words in the stage to guarantee the 3rd line and beyond
+   * are always fully populated without visual gaps or pop-in.
+   */
+  ensureWordBuffer(nextIdx = (this.sessionModel ? this.sessionModel.currentWordIdx : 0)) {
+    if (!this.stageView || !this.stageView.wordElements) return;
+    const remainingWords = this.stageView.wordElements.length - nextIdx;
+    if (remainingWords <= this.bufferConfig.refillThreshold) {
       const gameState = this.storageService.getGameSave();
+      const refillCount = this.bufferConfig.refillBatchSize;
       const more = (this.currentMode === 'flow')
-        ? this.wordsModel.generateBatch(30, gameState.unlockedRanks, gameState.wordStats, this.flowModel.targetWpm, this.flowModel.momentum, this.bigramLedger)
-        : this.wordsModel.generateClassicBatch(30);
+        ? this.wordsModel.generateBatch(refillCount, gameState.unlockedRanks, gameState.wordStats, this.flowModel.targetWpm, this.flowModel.momentum, this.bigramLedger)
+        : this.wordsModel.generateClassicBatch(refillCount);
       this.sessionModel.appendWords(more);
       this.stageView.appendWords(more);
     }
@@ -1054,6 +1197,11 @@ class GameController {
   }
 
   destroy() {
+    if (this._onWindowResize && typeof window !== 'undefined') {
+      window.removeEventListener('resize', this._onWindowResize);
+      this._onWindowResize = null;
+    }
+    this.stopGhostPacer(true);
     if (this.classicTimerInterval) {
       clearInterval(this.classicTimerInterval);
       this.classicTimerInterval = null;

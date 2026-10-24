@@ -963,6 +963,103 @@ it('recordBackspace() truncates array length avoiding sparse undefined array hol
   assert.strictEqual(spread.includes(undefined), false);
 });
 
+it('Hidden Mode breaks combo on error, taints the word against backspace exploit, but does not flag uncorrected errors on clean submission', () => {
+  const session = new SessionModel({ mode: 'flow', words: ['apple', 'orange'], hiddenMode: true });
+
+  // Word 0: 'a', 'p', 'p', 'l', 'e'
+  // Cleanly type 'a', 'p'
+  session.recordChar('a', true);
+  session.recordChar('p', true);
+  assert.strictEqual(session.combo, 2);
+  assert.strictEqual(session.hadErrorOnCurrentWord, false);
+
+  // Type typo 'z' instead of 'p'
+  session.recordChar('z', false);
+  assert.strictEqual(session.combo, 0);
+  assert.strictEqual(session.hadErrorOnCurrentWord, true);
+  assert.strictEqual(session.wordStreak, 0);
+
+  // Typist backspaces the typo 'z'
+  session.recordBackspace();
+  assert.strictEqual(session.combo, 0);
+  assert.strictEqual(session.hadErrorOnCurrentWord, true); // Still tainted!
+
+  // Typist types out remainder of word correctly: 'p', 'l', 'e'
+  session.recordChar('p', true);
+  assert.strictEqual(session.combo, 0); // Cannot accumulate combo on tainted word!
+  session.recordChar('l', true);
+  assert.strictEqual(session.combo, 0);
+  session.recordChar('e', true);
+  assert.strictEqual(session.combo, 0);
+
+  // Spacebar submitted: hasErrors is false because typist corrected all mistakes
+  const res0 = session.submitWord();
+  assert.strictEqual(res0.hasErrors, false);
+  // Anti-exploit protection: tainted word cannot increment wordStreak or combo!
+  assert.strictEqual(session.wordStreak, 0);
+  assert.strictEqual(session.combo, 0);
+  assert.strictEqual(session.currentWordIdx, 1);
+  assert.strictEqual(session.hadErrorOnCurrentWord, false); // Next word is clean!
+
+  // Word 1: 'orange' typed cleanly
+  session.recordChar('o', true);
+  assert.strictEqual(session.combo, 1);
+  session.recordChar('r', true);
+  assert.strictEqual(session.combo, 2);
+  session.recordChar('a', true);
+  assert.strictEqual(session.combo, 3);
+  session.recordChar('n', true);
+  assert.strictEqual(session.combo, 4);
+  session.recordChar('g', true);
+  assert.strictEqual(session.combo, 5);
+  session.recordChar('e', true);
+  assert.strictEqual(session.combo, 6);
+
+  const res1 = session.submitWord();
+  assert.strictEqual(res1.hasErrors, false);
+  assert.strictEqual(session.wordStreak, 1);
+  assert.strictEqual(session.combo, 7); // 6 letters + 1 spacebar
+});
+
+it('SessionModel.calculateWordVanishEffectiveCount scales progressively with word streak', () => {
+  // targetCount = 1 (cursor-only vanishing mode)
+  assert.strictEqual(SessionModel.calculateWordVanishEffectiveCount(0, 1), 0); // Streak 0: all visible
+  assert.strictEqual(SessionModel.calculateWordVanishEffectiveCount(1, 1), 1); // Streak 1: active word vanished, upcoming words visible
+  assert.strictEqual(SessionModel.calculateWordVanishEffectiveCount(2, 1), 1); // Streak 2: stays strictly at 1 word (active only)
+  assert.strictEqual(SessionModel.calculateWordVanishEffectiveCount(10, 1), 1); // Capped at 1 word
+
+  // targetCount = 2 (default)
+  assert.strictEqual(SessionModel.calculateWordVanishEffectiveCount(0, 2), 0); // Streak 0: all visible
+  assert.strictEqual(SessionModel.calculateWordVanishEffectiveCount(1, 2), 1); // Streak 1: active word vanished
+  assert.strictEqual(SessionModel.calculateWordVanishEffectiveCount(2, 2), 2); // Streak 2: active + 1 ahead vanished
+  assert.strictEqual(SessionModel.calculateWordVanishEffectiveCount(3, 2), 2); // Streak 3: capped at 2 words total
+  assert.strictEqual(SessionModel.calculateWordVanishEffectiveCount(10, 2), 2);
+
+  // targetCount = 5
+  assert.strictEqual(SessionModel.calculateWordVanishEffectiveCount(0, 5), 0);
+  assert.strictEqual(SessionModel.calculateWordVanishEffectiveCount(3, 5), 3);
+  assert.strictEqual(SessionModel.calculateWordVanishEffectiveCount(5, 5), 5);
+  assert.strictEqual(SessionModel.calculateWordVanishEffectiveCount(20, 5), 5);
+
+  // targetCount = 6 (maximum)
+  assert.strictEqual(SessionModel.calculateWordVanishEffectiveCount(6, 6), 6);
+  assert.strictEqual(SessionModel.calculateWordVanishEffectiveCount(20, 6), 6);
+
+  // Instance methods
+  const session = new SessionModel({ hiddenMode: true, hiddenMethod: 'word', hiddenWordDistance: 3 });
+  assert.strictEqual(session.hiddenMethod, 'word');
+  assert.strictEqual(session.hiddenWordDistance, 3);
+  assert.strictEqual(session.getHiddenWordVanishEffectiveCount(), 0);
+
+  session.wordStreak = 2;
+  assert.strictEqual(session.getHiddenWordVanishEffectiveCount(), 2);
+
+  session.setHiddenMethod('char');
+  assert.strictEqual(session.hiddenMethod, 'char');
+  session.setHiddenWordDistance(6);
+  assert.strictEqual(session.hiddenWordDistance, 6);
+});
+
 console.log('\n========================================');
 console.log(`TEST RESULTS: ${passedTests} / ${totalTests} PASSED`);
 if (passedTests === totalTests) {

@@ -172,6 +172,62 @@ it('toggles hiddenMode on wordsBox and applies character fade horizon', () => {
   assert.strictEqual(word0.children[0].classList.contains('hd-past'), false);
 });
 
+it('applies Word Vanish mode progressively in StageView', () => {
+  const dom = new JSDOM(`
+    <div id="words-box">
+      <div id="words-wrapper"></div>
+      <div id="caret"></div>
+    </div>
+  `);
+  const wordsBox = dom.window.document.getElementById('words-box');
+  const wordsWrapper = dom.window.document.getElementById('words-wrapper');
+  const caret = dom.window.document.getElementById('caret');
+  const stage = new StageView({ wordsBox, wordsWrapper, caret });
+  stage.renderWords(['apple', 'banana', 'cherry', 'date', 'elderberry']);
+  stage.setHiddenMode(true);
+  stage.setHiddenMethod('word');
+  stage.setHiddenWordDistance(2);
+
+  const [w0, w1, w2, w3, w4] = stage.wordElements;
+
+  // Streak = 0: all words visible
+  stage.updateHiddenHorizon(0, 0, 0, false, null, { method: 'word', wordDistance: 2, streak: 0 });
+  assert.strictEqual(w0.classList.contains('hd-word-vanished'), false);
+  assert.strictEqual(w1.classList.contains('hd-word-vanished'), false);
+  assert.strictEqual(w2.classList.contains('hd-word-vanished'), false);
+
+  // Streak = 1: word 0 vanishes
+  stage.updateHiddenHorizon(0, 0, 0, false, null, { method: 'word', wordDistance: 2, streak: 1 });
+  assert.strictEqual(w0.classList.contains('hd-word-vanished'), true);
+  assert.strictEqual(w1.classList.contains('hd-word-vanished'), false);
+
+  // Streak = 2: word 0 and word 1 vanish
+  stage.updateHiddenHorizon(0, 0, 0, false, null, { method: 'word', wordDistance: 2, streak: 2 });
+  assert.strictEqual(w0.classList.contains('hd-word-vanished'), true);
+  assert.strictEqual(w1.classList.contains('hd-word-vanished'), true);
+  assert.strictEqual(w2.classList.contains('hd-word-vanished'), false);
+
+  // Streak = 3 (target 3 words): word 0 (active), word 1 (1 ahead), word 2 (2 ahead) vanish!
+  stage.updateHiddenHorizon(0, 0, 0, false, null, { method: 'word', wordDistance: 3, streak: 3 });
+  assert.strictEqual(w0.classList.contains('hd-word-vanished'), true);
+  assert.strictEqual(w1.classList.contains('hd-word-vanished'), true);
+  assert.strictEqual(w2.classList.contains('hd-word-vanished'), true);
+  assert.strictEqual(w3.classList.contains('hd-word-vanished'), false);
+  assert.strictEqual(w4.classList.contains('hd-word-vanished'), false);
+
+  // Cursor-only mode (wordDistance = 1): only active word vanishes, upcoming words are always visible
+  stage.updateHiddenHorizon(0, 0, 0, false, null, { method: 'word', wordDistance: 1, streak: 5 });
+  assert.strictEqual(w0.classList.contains('hd-word-vanished'), true);
+  assert.strictEqual(w1.classList.contains('hd-word-vanished'), false);
+  assert.strictEqual(w2.classList.contains('hd-word-vanished'), false);
+
+  // Error occurs: safety brake clears hd-word-vanished instantly
+  stage.updateHiddenHorizon(0, 0, 0, true, null, { method: 'word', wordDistance: 2, streak: 3 });
+  assert.strictEqual(w0.classList.contains('hd-word-vanished'), false);
+  assert.strictEqual(w1.classList.contains('hd-word-vanished'), false);
+  assert.strictEqual(w2.classList.contains('hd-word-vanished'), false);
+});
+
 it('manages Ghost Caret visibility, coordinates, and fading in StageView', () => {
   const dom = new JSDOM(`
     <div id="words-box">
@@ -216,6 +272,27 @@ it('manages Ghost Caret visibility, coordinates, and fading in StageView', () =>
   // Sync ghost directly to caret
   stage.syncGhostToCaret(0, 0);
   assert.ok(stage.ghostCaret.style.transform.includes('translate('));
+});
+
+it('appends words dynamically and cleanly updates wordElements and DOM structure', () => {
+  const dom = new JSDOM(`<div id="words-box"><div id="words-wrapper"></div></div>`);
+  const stage = new StageView({
+    wordsBox: dom.window.document.getElementById('words-box'),
+    wordsWrapper: dom.window.document.getElementById('words-wrapper')
+  });
+
+  stage.renderWords(['apple', 'banana']);
+  assert.strictEqual(stage.wordElements.length, 2);
+  assert.strictEqual(stage.wordsWrapper.children.length, 2);
+
+  // Dynamically append a batch of 50 words
+  const batch = Array.from({ length: 50 }, (_, i) => `word${i}`);
+  stage.appendWords(batch);
+
+  assert.strictEqual(stage.wordElements.length, 52);
+  assert.strictEqual(stage.wordsWrapper.children.length, 52);
+  assert.strictEqual(stage.wordElements[51].dataset.word, 'word49');
+  assert.strictEqual(stage.wordElements[51].children.length, 'word49'.length);
 });
 
 // 2. NestView Tests
@@ -409,21 +486,54 @@ it('updateFlowGauge updates speedometer tags and multiplier badge across flow st
   assert.ok(hud.flowMultiplierBadge.classList.contains('cushion-active'));
 });
 
-it('HUDView.updateHiddenModeState updates active class and aria-pressed', () => {
+it('HUDView.updateHiddenModeState updates active class, config pill, method toggle, and distance slider', () => {
   const dom = new JSDOM(`
     <button class="icon-btn" id="hd-btn" title="Toggle Hidden">HD</button>
+    <div id="hd-config-pill" style="display: none;">
+      <button id="hd-mode-char" class="active"></button>
+      <button id="hd-mode-word"></button>
+      <div id="hd-word-slider-group" style="display: none;">
+        <input id="hd-words-slider" type="range" min="1" max="5" value="2">
+        <span id="hd-words-val">2 words ahead</span>
+      </div>
+    </div>
   `);
   const hud = new HUDView({
-    hdBtn: dom.window.document.getElementById('hd-btn')
+    hdBtn: dom.window.document.getElementById('hd-btn'),
+    hdConfigPill: dom.window.document.getElementById('hd-config-pill'),
+    hdModeChar: dom.window.document.getElementById('hd-mode-char'),
+    hdModeWord: dom.window.document.getElementById('hd-mode-word'),
+    hdWordSliderGroup: dom.window.document.getElementById('hd-word-slider-group'),
+    hdWordsSlider: dom.window.document.getElementById('hd-words-slider'),
+    hdWordsVal: dom.window.document.getElementById('hd-words-val')
   });
 
-  hud.updateHiddenModeState(true);
+  hud.updateHiddenModeState(true, 'word', 3);
   assert.strictEqual(hud.hdBtn.classList.contains('active'), true);
   assert.strictEqual(hud.hdBtn.getAttribute('aria-pressed'), 'true');
+  assert.strictEqual(hud.hdConfigPill.style.display, 'flex');
+  assert.strictEqual(hud.hdModeWord.classList.contains('active'), true);
+  assert.strictEqual(hud.hdModeChar.classList.contains('active'), false);
+  assert.strictEqual(hud.hdWordSliderGroup.style.display, 'flex');
+  assert.strictEqual(hud.hdWordsSlider.value, '3');
+  assert.strictEqual(hud.hdWordsVal.textContent, '3 words');
 
+  // Verify single word label
+  hud.updateHiddenModeState(true, 'word', 1);
+  assert.strictEqual(hud.hdWordsSlider.value, '1');
+  assert.strictEqual(hud.hdWordsVal.textContent, '1 word');
+
+  // Switch to char mode
+  hud.updateHiddenModeState(true, 'char', 2);
+  assert.strictEqual(hud.hdModeChar.classList.contains('active'), true);
+  assert.strictEqual(hud.hdModeWord.classList.contains('active'), false);
+  assert.strictEqual(hud.hdWordSliderGroup.style.display, 'none');
+
+  // Turn off HD
   hud.updateHiddenModeState(false);
   assert.strictEqual(hud.hdBtn.classList.contains('active'), false);
   assert.strictEqual(hud.hdBtn.getAttribute('aria-pressed'), 'false');
+  assert.strictEqual(hud.hdConfigPill.style.display, 'none');
 });
 
 it('HUDView.updateGhostState updates button, slider, and visibility', () => {
