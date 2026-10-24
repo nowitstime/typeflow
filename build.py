@@ -559,7 +559,7 @@ def build():
         <span><span class="shortcut-badge">esc</span> - pause / hatchery</span>
       </div>
       <div class="footer-right">
-        <span>TypeFlow v3.0 • Flow RPG Edition</span>
+        <span>TypeFlow v3.5 • Flow RPG Edition</span>
       </div>
     </footer>
   </div>
