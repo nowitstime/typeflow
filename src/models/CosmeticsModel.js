@@ -196,7 +196,7 @@ const COSMETIC_CARETS = {
     category: 'caret',
     title: 'Permanent Prism',
     icon: '🌈',
-    desc: 'Keeps the 100% Flow iridescent rainbow barber-pole aura active at all times.',
+    desc: 'Keeps the caret in its glowing Flow State active at all times across all Caret FX modifiers.',
     reqLevel: 12,
     reqTrophies: ['zen_master', 'overclocked'],
     reqLabel: 'Lv. 12 or Zen Master / Overclocked'
