@@ -146,7 +146,65 @@ New playtesters need seamless onboarding without intrusive tutorial pop-ups.
 
 ---
 
+## 8. Flow FX Revamp, Custom Atmospheres & Caret Modifiers (Under Active Design)
+Decouple Flow FX from static blue and establish a modular, customizable atmospheric ecosystem integrated into the Cosmetic Armory.
+
+### 8.1 Flow FX Styles as a 4th Armory Category
+- **Atmospheric Style Presets:**
+  - *Adaptive Resonance (Default Lv. 1):* 100% theme-reactive; dynamically derives corner portals, perimeter vignettes, and glows from `--main-color`, `--accent`, and background properties.
+  - *Prismatic Aurora (Unlockable):* Liquid northern lights ribbons undulating along screen borders with translucent iridescent refraction.
+  - *Cyberpunk Grid (Unlockable):* Synthwave/Tron wireframe laser borders with digital grid corner arcs and scanline pulses.
+  - *Solar Flame / Inferno (Unlockable):* Procedural fire generated via zero-dependency CSS/SVG `<feTurbulence>` filters and rising combustion embers.
+  - *Hyperdrive Speedlines (Unlockable):* Sleek peripheral optical warp lines that lengthen with momentum acceleration.
+  - *Zen Trance (Minimalist Lv. 1):* Zero color distraction; velvet edge vignette, pure luminance breathing, and deep peripheral focus dimming.
+
+### 8.2 Universal Caret Flow Modifiers
+Enhance the player's equipped caret geometry (Line, Underline Runner, Block, Capsule) without overriding its shape:
+- *Prismatic Rainbow:* The classic shifting chromatic spectrum.
+- *Plasma Overdrive:* High-voltage electric aura pulsing with lightning micro-sparks.
+- *Solar Flare:* Fiery shifting gradient (cherry red, ember orange, solar gold) flaring on high-speed words.
+- *Holo Glitch:* Subtle scanlines, horizontal jitter, and RGB chromatic aberration split during Flow.
+- *Hyperdrive Tracer:* Motion blur wake trailing 2–3 ghost segments behind rapid cursor movement.
+- *Ethereal Frost:* Shimmering diamond cyan/white crystalline glow with sparkle particles.
+- *Customization Architecture:* Linked to equipped Flow FX by default, with an independent Caret Flow FX override option in the Armory.
+
+### 8.3 Ghost Caret (Pace Rabbit) Customization
+- **Selectable Ghost Shapes:**
+  - *Ghost Line (Default):* Classic semi-transparent vertical tracking line.
+  - *Ghost Runner:* Underline shadow skimming beneath upcoming words.
+  - *Ghost Wireframe Block:* Hollow terminal box outlining target pace letters.
+  - *Ghost Dot / Halo:* Hovering orb or chevron guiding rhythm.
+- **Ghost Personas & Palettes:**
+  - *Phantom White (Default):* Translucent mist.
+  - *Hologram Cyan:* Retro sci-fi wireframe.
+  - *Golden Hare:* Radiant championship gold shimmer.
+  - *Shadow Rival:* High-contrast smoke with crimson rim.
+- **Real-Time Pace Delta Tag (Optional):** Subtle floating chip attached to the ghost or player caret displaying instantaneous rhythm difference (`+4 WPM`, `-2 WPM`).
+
+### 8.4 Tactile Overspin Cushion & Ambient Audio (Staged for Phase 2)
+- *Overspin Cushion Shield (100%–120%):* Crystalline/electrified perimeter aura visually arming the shield; "shield shatter / deflect" dispersion wave upon absorbing typos.
+- *Ambient Flow Audio:* Gentle harmonic undertone or binaural synth drone swelling at $\ge 75\%$ flow, with an Apex transcendence chime at 100% (fully toggleable with volume controls).
+
+### 8.5 Comprehensive Settings & Menu Revamp (Future Phase)
+- *Flow FX Intensity Slider:* Off, Subtle (25%), Normal (Default), and Max Energy.
+- *Reduced Motion Mode:* Replaces pulsing scale and moving gradients with static opacity crossfades.
+- *Unified Navigation:* Streamlined drawer consolidating gameplay modifiers, cosmetics, audio, and diagnostics.
+
+---
+
 ## Completed Milestones (Shipped)
+- [x] **v4.0 Cosmetic Armory & Theme Engine:**
+  - *6 Full Themes:* OLED Cyan, Sakura Stream, Phosphor CRT, Cyberpunk Neon, Nord Frost, Obsidian Gold.
+  - *Dynamic Color Inheritance:* Universal `--main-color`, `--accent`, and `color-mix()` inheritance across all modals, buttons, sliders, levels, charts, and nests.
+  - *4 Caret Geometries:* Line, Low-Profile Runner (full-width underline), Classic Terminal (full-coverage block), and Capsule.
+  - *5 Mechanical Switch Sound Packs:* Default Box Blue, Thoccy Linear, Tactile Brown, Typewriter Bell, and Bubble Droplet.
+  - *Cosmetic Armory Drawer:* Tabbed modal interface with live preview cards, lock criteria, and instant equipment.
+- [x] **v3.5 Achievements & Trophies System:**
+  - *35 Distinct Achievements:* Speed milestones, cadence consistency, typo recoveries, sustained flow, apex overspin, egg hatching, and vocabulary lexicon goals (including the 1,000-word Crown Jewel).
+  - *Two-Tier Progression:* Entry milestones and mastery tiers to reward dedication without idle spam.
+  - *Micro-Toast Notification Queue:* Fixed top celebration pill with tier-specific sound synthesis and stats button pulse badge.
+  - *Trophy Case Gallery:* Filterable modal gallery (All, Speed, Flow, Hatchery, Hidden, Feats) with live progress bars.
+  - *Retroactive Save Synchronization:* Automatic historical evaluation of past tests on startup.
 - [x] **Deterministic Egg Incubation:** Charge-based egg progression (`eggCharge` $0\text{--}100\%$) driven by clean on-pace words in Flow; hybrid under-track and dynamic glow aura.
 - [x] **In-Situ Hatchery & Sandwiched Induction:** In-stride egg cracking (`e-g-g`) directly in the active slot; sandwich spawner (`createWordSandwich`) wrapping new words between launchpad and landing pad anchors.
 - [x] **Contextual First-Egg Prompt:** Inline non-modal prompt (`tab: hatch` and `type 'egg' (tab: back)`) guiding players directly through their first crack cycle without intrusive popups.

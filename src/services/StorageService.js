@@ -40,8 +40,8 @@ const DEFAULT_GAME_SAVE = {
   lifetimeWords: 0,
   highStreak: 0,
   hiddenMode: false,
-  hiddenMethod: 'char',
-  hiddenWordDistance: 2,
+  hiddenMethod: 'word',
+  hiddenWordDistance: 1,
   ghostCursor: false,
   ghostSpeed: 50,
   achievements: {},
@@ -54,6 +54,14 @@ const DEFAULT_GAME_SAVE = {
     tests92Consistency: 0,
     testsHiddenMode: 0,
     eggsHatchedTotal: 0
+  },
+  equippedCosmetics: {
+    theme: 'oled_cyan',
+    flowFx: 'adaptive_resonance',
+    caret: 'line',
+    caretFx: 'rainbow_prism',
+    ghostStyle: 'phantom_line',
+    sound: 'clicky_blue'
   }
 };
 
@@ -202,17 +210,32 @@ class StorageService {
       if (typeof state.hiddenMode !== 'boolean') {
         state.hiddenMode = false;
       }
-      if (state.hiddenMethod !== 'char' && state.hiddenMethod !== 'word') {
+      if (state.hiddenMethod !== 'char' && state.hiddenMethod !== 'word' && state.hiddenMethod !== 'combo') {
+        state.hiddenMethod = 'word';
+      } else if (state.hiddenMethod === 'combo') {
         state.hiddenMethod = 'char';
       }
       if (typeof state.hiddenWordDistance !== 'number' || isNaN(state.hiddenWordDistance) || state.hiddenWordDistance < 1 || state.hiddenWordDistance > 5) {
-        state.hiddenWordDistance = 2;
+        state.hiddenWordDistance = 1;
       }
       if (typeof state.ghostCursor !== 'boolean') {
         state.ghostCursor = false;
       }
       if (typeof state.ghostSpeed !== 'number' || isNaN(state.ghostSpeed) || state.ghostSpeed <= 0) {
         state.ghostSpeed = 50;
+      }
+      const defaultCosmetics = {
+        theme: 'oled_cyan',
+        flowFx: 'adaptive_resonance',
+        caret: 'line',
+        caretFx: 'rainbow_prism',
+        ghostStyle: 'phantom_line',
+        sound: 'clicky_blue'
+      };
+      if (!state.equippedCosmetics || typeof state.equippedCosmetics !== 'object') {
+        state.equippedCosmetics = Object.assign({}, defaultCosmetics);
+      } else {
+        state.equippedCosmetics = Object.assign({}, defaultCosmetics, state.equippedCosmetics);
       }
       return state;
     } catch (e) {
@@ -537,6 +560,7 @@ class StorageService {
         if (prev.achievements) fresh.achievements = prev.achievements;
         if (prev.achievementCounters) fresh.achievementCounters = prev.achievementCounters;
         if (prev.achievementRetroSynced) fresh.achievementRetroSynced = prev.achievementRetroSynced;
+        if (prev.equippedCosmetics) fresh.equippedCosmetics = prev.equippedCosmetics;
       }
       this.saveGameSave(fresh);
       return fresh;
@@ -612,16 +636,17 @@ class StorageService {
       if (s) {
         const val = s.getItem(STORAGE_KEYS.HIDDEN_METHOD);
         if (val === 'char' || val === 'word') return val;
+        if (val === 'combo') return 'char';
       }
       const save = this.getGameSave();
-      return (save.hiddenMethod === 'word') ? 'word' : 'char';
+      return (save.hiddenMethod === 'char') ? 'char' : 'word';
     } catch (e) {
-      return 'char';
+      return 'word';
     }
   }
 
   setHiddenMethod(val) {
-    const method = (val === 'word') ? 'word' : 'char';
+    const method = (val === 'char' || val === 'combo') ? 'char' : 'word';
     try {
       const s = this._getStorage();
       if (s) s.setItem(STORAGE_KEYS.HIDDEN_METHOD, method);
@@ -643,15 +668,15 @@ class StorageService {
       }
       const save = this.getGameSave();
       const dist = parseInt(save.hiddenWordDistance, 10);
-      return (!isNaN(dist) && dist >= 1 && dist <= 6) ? dist : 2;
+      return (!isNaN(dist) && dist >= 1 && dist <= 6) ? dist : 1;
     } catch (e) {
-      return 2;
+      return 1;
     }
   }
 
   setHiddenWordDistance(val) {
     const parsed = parseInt(val, 10);
-    const dist = isNaN(parsed) ? 2 : Math.max(1, Math.min(6, parsed));
+    const dist = isNaN(parsed) ? 1 : Math.max(1, Math.min(6, parsed));
     try {
       const s = this._getStorage();
       if (s) s.setItem(STORAGE_KEYS.HIDDEN_WORD_DIST, String(dist));
@@ -832,6 +857,39 @@ class StorageService {
       this.unlockAchievement(ach.id, ach.unlockedAt);
     }
     return newlyUnlocked;
+  }
+
+  getEquippedCosmetics() {
+    const save = this.getGameSave();
+    return Object.assign(
+      {
+        theme: 'oled_cyan',
+        flowFx: 'adaptive_resonance',
+        caret: 'line',
+        caretFx: 'rainbow_prism',
+        ghostStyle: 'phantom_line',
+        sound: 'clicky_blue'
+      },
+      save.equippedCosmetics || {}
+    );
+  }
+
+  setEquippedCosmetic(category, id) {
+    if (!category || !id) return this.getEquippedCosmetics();
+    const save = this.getGameSave();
+    if (!save.equippedCosmetics || typeof save.equippedCosmetics !== 'object') {
+      save.equippedCosmetics = {
+        theme: 'oled_cyan',
+        flowFx: 'adaptive_resonance',
+        caret: 'line',
+        caretFx: 'rainbow_prism',
+        ghostStyle: 'phantom_line',
+        sound: 'clicky_blue'
+      };
+    }
+    save.equippedCosmetics[category] = id;
+    this.saveGameSave(save);
+    return Object.assign({}, save.equippedCosmetics);
   }
 }
 

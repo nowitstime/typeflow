@@ -38,36 +38,63 @@ CORPUS_1000 = (
 ).split()
 
 def score_word(word):
-    """Calculates D_raw = C_key + C_trans + C_len."""
+    """
+    Calculates biomechanical typability friction:
+    D_raw = C_key_norm + C_trans_norm + C_cadence
+    Focuses on per-stroke fluidity, hand alternation, inward rolls,
+    and ergonomic cadence rather than penalizing word length.
+    """
+    n = len(word)
+    # 1. Normalized per-character key cost (effort per stroke)
     c_key = sum(
-        (ROW_COST[KEY_MAP[c][2]] * FINGER_COST[KEY_MAP[c][1]]) + (0.4 if KEY_MAP[c][3] else 0.0)
+        (ROW_COST[KEY_MAP[c][2]] * FINGER_COST[KEY_MAP[c][1]]) + (0.35 if KEY_MAP[c][3] else 0.0)
         for c in word if c in KEY_MAP
     )
+    c_key_norm = c_key / n
+
+    # 2. Normalized transition cost (per-bigram physical flow)
+    n_trans = max(1, n - 1)
     c_trans = 0.0
-    for i in range(len(word) - 1):
+    for i in range(n - 1):
         c1, c2 = word[i], word[i+1]
         if c1 not in KEY_MAP or c2 not in KEY_MAP:
             continue
         h1, f1, r1, _ = KEY_MAP[c1]
         h2, f2, r2, _ = KEY_MAP[c2]
-        
+
         if h1 != h2:
-            c_trans -= 0.3  # Hand alternation bonus
+            c_trans -= 0.45  # Hand alternation bonus (rhythm & speed)
         else:
             if c1 == c2:
-                c_trans += 0.8  # Same key repeat
+                c_trans += 0.25  # Double letter tap bounce
             elif f1 == f2:
-                c_trans += 3.0  # Same-finger bigram (SFB) penalty
+                c_trans += 3.2   # Same-finger bigram (SFB) severe penalty
             elif f1 > f2:
-                c_trans += 0.1  # Inward roll
+                c_trans -= 0.20  # Inward roll bonus
             else:
-                c_trans += 0.4  # Outward roll
-            
+                c_trans += 0.35  # Outward roll friction
+
             if abs(r1 - r2) == 2:
-                c_trans += 1.2  # Row jump penalty
-                
-    c_len = len(word) * 0.2
-    return c_key + c_trans + c_len
+                c_trans += 1.5   # Top-bottom row jump / hurdle penalty
+
+    c_trans_norm = c_trans / n_trans
+
+    # 3. Typing flow cadence & inter-word rhythm factor:
+    # 4-6 letters is the golden sweet spot for typing flow (fluid rolls without spacebar thrashing)
+    if n == 2:
+        c_cadence = 0.55  # Spacebar thrashing disrupts typing flow
+    elif n == 3:
+        c_cadence = 0.15
+    elif 4 <= n <= 6:
+        c_cadence = 0.00  # Optimal flow zone
+    elif n == 7:
+        c_cadence = 0.15
+    elif n == 8:
+        c_cadence = 0.35
+    else:
+        c_cadence = 0.35 + 0.15 * (n - 8)
+
+    return c_key_norm + c_trans_norm + c_cadence
 
 def generate_ranked_words():
     raw_scores = [score_word(w) for w in CORPUS_1000]
@@ -78,7 +105,7 @@ def generate_ranked_words():
         s = raw_scores[idx]
         D = sorted_scores.index(s) / (len(sorted_scores) - 1.0)
         E = 1.0 - D
-        C = 1.0 - 0.9 * (idx / (len(CORPUS_1000) - 1.0))
+        C = 1.0 - 0.85 * (idx / (len(CORPUS_1000) - 1.0))
         priority = E * C
         scored.append({
             'word': w,

@@ -99,6 +99,7 @@ it('toggles hiddenMode on wordsBox and applies character fade horizon', () => {
 
   stage.renderWords(['the', 'quick']);
   stage.setHiddenMode(true);
+  stage.setHiddenMethod('char');
   assert.strictEqual(stage.wordsBox.classList.contains('hidden-mode'), true);
 
   // Test static methods
@@ -490,11 +491,11 @@ it('HUDView.updateHiddenModeState updates active class, config pill, method togg
   const dom = new JSDOM(`
     <button class="icon-btn" id="hd-btn" title="Toggle Hidden">HD</button>
     <div id="hd-config-pill" style="display: none;">
-      <button id="hd-mode-char" class="active"></button>
-      <button id="hd-mode-word"></button>
+      <button id="hd-mode-word" class="active">Word</button>
+      <button id="hd-mode-char">Combo</button>
       <div id="hd-word-slider-group" style="display: none;">
-        <input id="hd-words-slider" type="range" min="1" max="5" value="2">
-        <span id="hd-words-val">2 words ahead</span>
+        <input id="hd-words-slider" type="range" min="1" max="6" value="1">
+        <span id="hd-words-val">1 word</span>
       </div>
     </div>
   `);

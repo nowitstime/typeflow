@@ -33,6 +33,13 @@ if (!_AchievementsModel && typeof require !== 'undefined') {
   } catch (e) {}
 }
 
+var _CosmeticsModel = (typeof CosmeticsModel !== 'undefined') ? CosmeticsModel : null;
+if (!_CosmeticsModel && typeof require !== 'undefined') {
+  try {
+    _CosmeticsModel = require('../models/CosmeticsModel.js').CosmeticsModel;
+  } catch (e) {}
+}
+
 class GameController {
   constructor(deps = {}) {
     // Models
@@ -54,6 +61,16 @@ class GameController {
       this.achievementsModel = new AMClass(savedAchievements);
     } else {
       this.achievementsModel = null;
+    }
+
+    // Cosmetics Model
+    const CMClass = deps.cosmeticsModelClass || _CosmeticsModel || (typeof CosmeticsModel !== 'undefined' ? CosmeticsModel : null);
+    if (deps.cosmeticsModel) {
+      this.cosmeticsModel = deps.cosmeticsModel;
+    } else if (CMClass) {
+      this.cosmeticsModel = new CMClass();
+    } else {
+      this.cosmeticsModel = null;
     }
 
     // Achievements tracking telemetry
@@ -156,7 +173,8 @@ class GameController {
     this.flowModel.eggCharge = gameState.eggCharge || 0.0;
     this.eggNestModel.syncBasket(gameState.eggBasket || []);
 
-    // 2. Initialize HUD & Views
+    // 2. Initialize HUD, Views & Equipped Cosmetics
+    this.applyEquippedCosmetics();
     this.hudView.setMode(this.currentMode, this.sessionModel.duration);
     this.hudView.syncTargetWpm(gameState.targetWpm || 40);
     this.updateLevelHud();
@@ -168,8 +186,8 @@ class GameController {
     );
     this.hudView.updateSoundState(this.audioService.isEnabled());
     const isHidden = this.storageService.getHiddenMode ? this.storageService.getHiddenMode() : false;
-    const hiddenMethod = this.storageService.getHiddenMethod ? this.storageService.getHiddenMethod() : 'char';
-    const hiddenWordDistance = this.storageService.getHiddenWordDistance ? this.storageService.getHiddenWordDistance() : 2;
+    const hiddenMethod = this.storageService.getHiddenMethod ? this.storageService.getHiddenMethod() : 'word';
+    const hiddenWordDistance = this.storageService.getHiddenWordDistance ? this.storageService.getHiddenWordDistance() : 1;
     this.sessionModel.setHiddenMode(isHidden);
     this.sessionModel.setHiddenMethod(hiddenMethod);
     this.sessionModel.setHiddenWordDistance(hiddenWordDistance);
@@ -204,7 +222,7 @@ class GameController {
   }
 
   bindUIListeners() {
-    // 1. HUD View events (tabs, durations, target WPM, sound toggle, restart)
+    // 1. HUD View events (tabs, durations, target WPM, sound toggle, restart, armory shortcut)
     this.hudView.bindEvents({
       onModeChange: (mode) => this.switchMode(mode),
       onDurationChange: (dur) => {
@@ -224,7 +242,8 @@ class GameController {
       onHiddenWordDistanceChange: (dist) => this.setHiddenWordDistance(dist),
       onGhostToggle: () => this.toggleGhostCursor(),
       onGhostSpeedChange: (speed) => this.updateGhostSpeed(speed),
-      onRestart: () => this.resetTest()
+      onRestart: () => this.resetTest(),
+      onOpenArmory: () => this.openStats('armory')
     });
 
     // 2. Nest View events (slot clicks to enter/exit hatch mode)
@@ -292,6 +311,9 @@ class GameController {
         if (this.achievementsModel) {
           this.modalView.renderTrophies(this.achievementsModel, this.storageService);
         }
+      },
+      onSelectArmoryTab: () => {
+        this.renderArmoryModal();
       }
     });
 
@@ -320,6 +342,61 @@ class GameController {
         }
       }
     }
+  }
+
+  applyEquippedCosmetics() {
+    if (!this.cosmeticsModel || !this.storageService || !this.storageService.getEquippedCosmetics) return;
+    const equipped = this.storageService.getEquippedCosmetics();
+    const themeDef = this.cosmeticsModel.getTheme(equipped.theme);
+    if (this.hudView && this.hudView.applyTheme && themeDef) {
+      this.hudView.applyTheme(themeDef);
+    }
+    if (this.hudView && this.hudView.applyFlowFx) {
+      this.hudView.applyFlowFx(equipped.flowFx || 'adaptive_resonance');
+    }
+    if (this.stageView && this.stageView.setCaretStyle) {
+      this.stageView.setCaretStyle(equipped.caret || 'line');
+    }
+    if (this.stageView && this.stageView.setCaretFx) {
+      this.stageView.setCaretFx(equipped.caretFx || 'rainbow_prism');
+    }
+    if (this.stageView && this.stageView.setGhostStyle) {
+      this.stageView.setGhostStyle(equipped.ghostStyle || 'phantom_line');
+    }
+    if (this.audioService && this.audioService.setSoundPack) {
+      this.audioService.setSoundPack(equipped.sound || 'clicky_blue');
+    }
+  }
+
+  renderArmoryModal() {
+    if (this.cosmeticsModel && this.modalView && this.modalView.renderArmory) {
+      this.modalView.renderArmory(this.cosmeticsModel, this.storageService, {
+        onEquipCosmetic: (category, id) => this.equipCosmetic(category, id)
+      });
+    }
+  }
+
+  equipCosmetic(category, id) {
+    if (!this.cosmeticsModel || !this.storageService) return false;
+    const gameSave = this.storageService.getGameSave ? this.storageService.getGameSave() : { level: 1, achievements: {} };
+    const level = gameSave.level || 1;
+    const unlockedAchievements = gameSave.achievements || ((this.storageService.getAchievements) ? this.storageService.getAchievements() : {});
+
+    if (!this.cosmeticsModel.isUnlocked(id, level, unlockedAchievements)) {
+      return false;
+    }
+
+    if (this.storageService.setEquippedCosmetic) {
+      this.storageService.setEquippedCosmetic(category, id);
+    }
+    this.applyEquippedCosmetics();
+
+    if (category === 'sound' && this.audioService && this.audioService.previewSoundPack) {
+      this.audioService.previewSoundPack(id);
+    }
+
+    this.renderArmoryModal();
+    return true;
   }
 
   triggerAchievementEvent(eventType, payload = {}) {
@@ -1047,6 +1124,30 @@ class GameController {
           this.nestView.render(this.eggNestModel);
           this.hudView.spawnXpToast(`LVL UP! 🎁 ${bonusEgg.name}`, 1.0, wordEl, true);
         }
+
+        // Check for newly unlocked cosmetics on level-up
+        if (this.cosmeticsModel && this.cosmeticsModel.getNewlyUnlockedOnLevelUp) {
+          const unlockedCosmetics = this.cosmeticsModel.getNewlyUnlockedOnLevelUp(
+            xpRes.oldLevel,
+            xpRes.newLevel,
+            curSave.achievements || {}
+          );
+          if (unlockedCosmetics && unlockedCosmetics.length > 0) {
+            for (const item of unlockedCosmetics) {
+              if (this.hudView && this.hudView.showAchievementToast) {
+                this.hudView.showAchievementToast({
+                  tier: 'cosmetic',
+                  icon: item.icon,
+                  title: item.title,
+                  desc: `Unlocked ${item.category} in the Cosmetic Armory!`
+                });
+              }
+            }
+            if (this.hudView && this.hudView.setStatsBadgeVisible) {
+              this.hudView.setStatsBadgeVisible(true);
+            }
+          }
+        }
       }
 
       // Deterministic Egg Incubation Spawn
@@ -1324,6 +1425,7 @@ class GameController {
     if (this.achievementsModel && this.modalView.renderTrophies) {
       this.modalView.renderTrophies(this.achievementsModel, this.storageService);
     }
+    this.renderArmoryModal();
     if (this.hudView && this.hudView.setStatsBadgeVisible) {
       this.hudView.setStatsBadgeVisible(false);
     }

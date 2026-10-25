@@ -54,6 +54,7 @@ def build():
         "src/models/SessionModel.js",
         "src/models/EggNestModel.js",
         "src/models/AchievementsModel.js",
+        "src/models/CosmeticsModel.js",
         "src/services/StorageService.js",
         "src/services/AudioService.js",
         "src/views/StageView.js",
@@ -94,8 +95,20 @@ def build():
   <!-- Micro-Toast Achievement Notification -->
   <div class="achievement-toast" id="achievement-toast"></div>
 
+  <!-- Procedural SVG Turbulence Filter for Solar Inferno Flow FX -->
+  <svg width="0" height="0" style="position: absolute; pointer-events: none;" aria-hidden="true">
+    <defs>
+      <filter id="tf-flame-filter" x="-10%" y="-10%" width="120%" height="120%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.018 0.075" numOctaves="3" seed="4">
+          <animate attributeName="baseFrequency" dur="3.6s" values="0.018 0.075; 0.024 0.11; 0.018 0.075" repeatCount="indefinite" />
+        </feTurbulence>
+        <feDisplacementMap in="SourceGraphic" scale="22" />
+      </filter>
+    </defs>
+  </svg>
+
   <!-- Flow Atmosphere Vignette Overlay -->
-  <div class="flow-vignette-overlay" id="flow-vignette-overlay"></div>
+  <div class="flow-vignette-overlay flow-fx-adaptive_resonance" id="flow-vignette-overlay"></div>
   <div class="app-container">
     <!-- Header -->
     <header>
@@ -131,7 +144,7 @@ def build():
         </div>
 
         <!-- Level HUD Card in Header -->
-        <div class="level-hud-card" id="level-hud-card" title="Player Level & XP Progress">
+        <div class="level-hud-card" id="level-hud-card" title="Player Level & XP Progress • Click to Open Cosmetic Armory">
           <div class="level-hud-info">
             <span class="hud-level-badge" id="hud-level-badge">Lv. 1</span>
             <span class="hud-level-title" id="hud-level-title">Novice Typist</span>
@@ -161,13 +174,13 @@ def build():
           <!-- Hidden Mode Config Pill (Revealed when HD is active) -->
           <div class="hd-config-pill" id="hd-config-pill" style="display: none;" title="Hidden Words Count">
             <div class="hd-mode-toggle" id="hd-mode-toggle">
-              <button type="button" class="hd-mode-btn active" id="hd-mode-char" data-mode="char" title="Character Horizon">Char</button>
-              <button type="button" class="hd-mode-btn" id="hd-mode-word" data-mode="word" title="Word Vanish">Word</button>
+              <button type="button" class="hd-mode-btn active" id="hd-mode-word" data-mode="word" title="Word Vanish">Word</button>
+              <button type="button" class="hd-mode-btn" id="hd-mode-char" data-mode="char" title="Combo Horizon">Combo</button>
             </div>
-            <div class="hd-word-slider-group" id="hd-word-slider-group" style="display: none;" title="Hidden Words Count">
+            <div class="hd-word-slider-group" id="hd-word-slider-group" style="display: flex;" title="Hidden Words Count">
               <span class="hd-label">Hide:</span>
-              <input type="range" id="hd-words-slider" class="diff-slider" min="1" max="6" step="1" value="2" aria-label="Hidden words count slider">
-              <span class="hd-val" id="hd-words-val">2 words</span>
+              <input type="range" id="hd-words-slider" class="diff-slider" min="1" max="6" step="1" value="1" aria-label="Hidden words count slider">
+              <span class="hd-val" id="hd-words-val">1 word</span>
             </div>
           </div>
         </div>
@@ -383,6 +396,7 @@ def build():
                 <button class="stats-tab active" id="tab-stats-flow" data-tab="flow">🎮 Flow RPG & Mastery</button>
                 <button class="stats-tab" id="tab-stats-classic" data-tab="classic">⏱️ Classic Records</button>
                 <button class="stats-tab" id="tab-stats-trophies" data-tab="trophies">🏆 Trophies</button>
+                <button class="stats-tab" id="tab-stats-armory" data-tab="armory">🎨 Armory</button>
               </div>
             </div>
             <button class="icon-btn close-modal-btn" id="close-stats-btn" title="Close Stats">✕</button>
@@ -541,6 +555,61 @@ def build():
             </div>
           </div>
 
+          <!-- Cosmetic Armory Pane -->
+          <div class="stats-pane" id="pane-stats-armory" style="display: none;">
+            <div class="trophy-summary-bar">
+              <div class="trophy-summary-left">
+                <span class="trophy-summary-title">Cosmetic Armory</span>
+                <span class="trophy-summary-count" id="armory-count">6 / 34 unlocked (18%)</span>
+              </div>
+              <div class="trophy-summary-track">
+                <div class="trophy-summary-fill" id="armory-progress-bar" style="width: 18%;"></div>
+              </div>
+            </div>
+
+            <div class="trophy-filters armory-filters" id="armory-filters">
+              <button class="trophy-filter-btn armory-filter-btn active" data-filter="all">All</button>
+              <button class="trophy-filter-btn armory-filter-btn" data-filter="theme">🎨 Themes</button>
+              <button class="trophy-filter-btn armory-filter-btn" data-filter="flowFx">🌌 Flow FX</button>
+              <button class="trophy-filter-btn armory-filter-btn" data-filter="caret">│ Caret Shapes</button>
+              <button class="trophy-filter-btn armory-filter-btn" data-filter="caretFx">✨ Caret FX</button>
+              <button class="trophy-filter-btn armory-filter-btn" data-filter="ghostStyle">👻 Ghost Pacer</button>
+              <button class="trophy-filter-btn armory-filter-btn" data-filter="sound">🔊 Sounds</button>
+            </div>
+
+            <div class="armory-scroll-container">
+              <div class="armory-section" data-armory-section="theme">
+                <div class="armory-section-title">🎨 OLED Stage Themes</div>
+                <div class="armory-grid" id="armory-themes-grid"></div>
+              </div>
+
+              <div class="armory-section" data-armory-section="flowFx">
+                <div class="armory-section-title">🌌 Flow State Atmospheres (Flow FX)</div>
+                <div class="armory-grid" id="armory-flowfx-grid"></div>
+              </div>
+
+              <div class="armory-section" data-armory-section="caret">
+                <div class="armory-section-title">│ Caret Geometries</div>
+                <div class="armory-grid" id="armory-carets-grid"></div>
+              </div>
+
+              <div class="armory-section" data-armory-section="caretFx">
+                <div class="armory-section-title">✨ Flow Caret Modifiers (Independent)</div>
+                <div class="armory-grid" id="armory-caretfx-grid"></div>
+              </div>
+
+              <div class="armory-section" data-armory-section="ghostStyle">
+                <div class="armory-section-title">👻 Ghost Cursor Pacer Styles</div>
+                <div class="armory-grid" id="armory-ghost-grid"></div>
+              </div>
+
+              <div class="armory-section" data-armory-section="sound">
+                <div class="armory-section-title">🔊 Mechanical Switch Sound Packs</div>
+                <div class="armory-grid" id="armory-sounds-grid"></div>
+              </div>
+            </div>
+          </div>
+
           <div class="modal-footer space-between" style="margin-top: 18px;">
             <div style="display: flex; gap: 10px; align-items: center;">
               <button class="btn-danger-outline" id="reset-rpg-stats-btn" title="Reset Flow RPG progress back to Level 1, 0 XP, and 1 Word">Reset RPG (Ground Zero) ↺</button>
@@ -559,7 +628,7 @@ def build():
         <span><span class="shortcut-badge">esc</span> - pause / hatchery</span>
       </div>
       <div class="footer-right">
-        <span>TypeFlow v3.5 • Flow RPG Edition</span>
+        <span>TypeFlow v4.0 • Flow RPG Edition</span>
       </div>
     </footer>
   </div>

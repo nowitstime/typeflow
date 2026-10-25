@@ -17,8 +17,12 @@ class StageView {
     this.scrollOffset = 0;
     this.wordElements = [];
     this.hiddenMode = false;
-    this.hiddenMethod = 'char';
-    this.hiddenWordDistance = 2;
+    this.hiddenMethod = 'word';
+    this.hiddenWordDistance = 1;
+    this.caretStyle = 'line';
+    this.caretFx = 'rainbow_prism';
+    this.ghostStyle = 'phantom_line';
+    this.isFlowRainbow = false;
   }
 
   /**
@@ -490,8 +494,38 @@ class StageView {
   }
 
   setCaretRainbow(isApex) {
+    this.isFlowRainbow = Boolean(isApex);
     if (!this.caret) return;
-    this.caret.classList.toggle('caret-rainbow', isApex);
+    this.caret.classList.toggle('caret-rainbow', this.isFlowRainbow || this.caretStyle === 'prism');
+  }
+
+  setCaretStyle(styleId = 'line') {
+    const valid = ['line', 'underline', 'block', 'capsule', 'prism'];
+    this.caretStyle = valid.includes(styleId) ? styleId : 'line';
+    if (!this.caret) return this.caretStyle;
+    valid.forEach(s => this.caret.classList.remove(`caret-style-${s}`));
+    this.caret.classList.add(`caret-style-${this.caretStyle}`);
+    this.caret.classList.toggle('caret-rainbow', this.isFlowRainbow || this.caretStyle === 'prism');
+    return this.caretStyle;
+  }
+
+  setCaretFx(fxId = 'rainbow_prism') {
+    const valid = ['rainbow_prism', 'theme_overdrive', 'solar_flare', 'holo_glitch', 'frost_sparkle', 'plasma_arc'];
+    this.caretFx = valid.includes(fxId) ? fxId : 'rainbow_prism';
+    if (!this.caret) return this.caretFx;
+    valid.forEach(fx => this.caret.classList.remove(`caret-fx-${fx}`));
+    this.caret.classList.add(`caret-fx-${this.caretFx}`);
+    this.caret.classList.toggle('caret-rainbow', this.isFlowRainbow || this.caretStyle === 'prism');
+    return this.caretFx;
+  }
+
+  setGhostStyle(ghostStyleId = 'phantom_line') {
+    const valid = ['phantom_line', 'hologram_runner', 'theme_specter', 'wireframe_block', 'golden_hare', 'shadow_rival'];
+    this.ghostStyle = valid.includes(ghostStyleId) ? ghostStyleId : 'phantom_line';
+    if (!this.ghostCaret) return this.ghostStyle;
+    valid.forEach(gs => this.ghostCaret.classList.remove(`ghost-style-${gs}`));
+    this.ghostCaret.classList.add(`ghost-style-${this.ghostStyle}`);
+    return this.ghostStyle;
   }
 
   setPacePaused(isPaused) {
@@ -540,13 +574,13 @@ class StageView {
   }
 
   setHiddenMethod(method) {
-    this.hiddenMethod = (method === 'word') ? 'word' : 'char';
+    this.hiddenMethod = (method === 'char' || method === 'combo') ? 'char' : 'word';
     this._clearHiddenStyling();
   }
 
   setHiddenWordDistance(dist) {
     const d = parseInt(dist, 10);
-    this.hiddenWordDistance = (d >= 1 && d <= 6) ? d : 2;
+    this.hiddenWordDistance = (d >= 1 && d <= 6) ? d : 1;
   }
 
   _clearHiddenStyling() {

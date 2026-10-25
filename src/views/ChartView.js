@@ -127,11 +127,35 @@ class ChartView {
     ctx.stroke();
     ctx.restore();
 
-    // 3. Cumulative Avg WPM line (cyan with area gradient)
+    // 3. Cumulative Avg WPM line (matches active theme with area gradient)
     ctx.save();
+    let mainColor = '#38bdf8';
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      try {
+        const computed = getComputedStyle(document.documentElement).getPropertyValue('--main-color');
+        if (computed && computed.trim()) mainColor = computed.trim();
+      } catch (e) {}
+    }
+
     const grad = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartH);
-    grad.addColorStop(0, 'rgba(56, 189, 248, 0.25)');
-    grad.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
+    let gradColorStart = 'rgba(56, 189, 248, 0.25)';
+    let gradColorEnd = 'rgba(56, 189, 248, 0.0)';
+    if (mainColor.startsWith('#') && (mainColor.length === 7 || mainColor.length === 4)) {
+      let r = 56, g = 189, b = 248;
+      if (mainColor.length === 7) {
+        r = parseInt(mainColor.slice(1, 3), 16);
+        g = parseInt(mainColor.slice(3, 5), 16);
+        b = parseInt(mainColor.slice(5, 7), 16);
+      } else {
+        r = parseInt(mainColor[1] + mainColor[1], 16);
+        g = parseInt(mainColor[2] + mainColor[2], 16);
+        b = parseInt(mainColor[3] + mainColor[3], 16);
+      }
+      gradColorStart = `rgba(${r}, ${g}, ${b}, 0.25)`;
+      gradColorEnd = `rgba(${r}, ${g}, ${b}, 0.0)`;
+    }
+    grad.addColorStop(0, gradColorStart);
+    grad.addColorStop(1, gradColorEnd);
 
     ctx.beginPath();
     wpmHistory.forEach((pt, i) => {
@@ -146,7 +170,7 @@ class ChartView {
     ctx.fillStyle = grad;
     ctx.fill();
 
-    ctx.strokeStyle = '#38bdf8';
+    ctx.strokeStyle = mainColor;
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     wpmHistory.forEach((pt, i) => {
@@ -182,7 +206,7 @@ class ChartView {
     if (hoverIndex !== null && this.chartDataPoints[hoverIndex]) {
       const target = this.chartDataPoints[hoverIndex];
       ctx.save();
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+      ctx.strokeStyle = gradColorStart;
       ctx.lineWidth = 1;
       ctx.setLineDash([3, 3]);
       ctx.beginPath();
@@ -192,7 +216,7 @@ class ChartView {
       ctx.restore();
 
       ctx.save();
-      ctx.fillStyle = '#38bdf8';
+      ctx.fillStyle = mainColor;
       ctx.strokeStyle = '#000000';
       ctx.lineWidth = 2;
       ctx.beginPath();

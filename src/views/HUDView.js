@@ -178,6 +178,15 @@ class HUDView {
         if (handlers.onRestart) handlers.onRestart();
       });
     }
+
+    const levelHudCard = this.levelHudCard || ((typeof document !== 'undefined') ? document.getElementById('level-hud-card') : null);
+    if (levelHudCard) {
+      levelHudCard.style.cursor = 'pointer';
+      levelHudCard.title = 'Open Cosmetic Armory & Progression Unlocks';
+      levelHudCard.addEventListener('click', () => {
+        if (handlers.onOpenArmory) handlers.onOpenArmory();
+      });
+    }
   }
 
   setFocusOpacity(opacity) {
@@ -379,13 +388,13 @@ class HUDView {
     }, 950);
   }
 
-  updateHiddenModeState(enabled, method = 'char', distance = 2) {
+  updateHiddenModeState(enabled, method = 'word', distance = 1) {
     const btn = this.hdBtn || ((typeof document !== 'undefined') ? document.getElementById('hd-btn') : null);
     if (btn) {
       btn.classList.toggle('active', !!enabled);
       btn.setAttribute('aria-pressed', String(!!enabled));
       btn.title = enabled
-        ? `Hidden (HD) Mode: ON (${method === 'word' ? 'Word Vanish' : 'Character Horizon'}) - Click to disable`
+        ? `Hidden (HD) Mode: ON (${method === 'word' ? 'Word Vanish' : 'Combo Horizon'}) - Click to disable`
         : 'Toggle Hidden (HD) Look-Ahead Mode';
     }
 
@@ -396,7 +405,7 @@ class HUDView {
 
     const charBtn = this.hdModeChar || ((typeof document !== 'undefined') ? document.getElementById('hd-mode-char') : null);
     const wordBtn = this.hdModeWord || ((typeof document !== 'undefined') ? document.getElementById('hd-mode-word') : null);
-    if (charBtn) charBtn.classList.toggle('active', method === 'char');
+    if (charBtn) charBtn.classList.toggle('active', method === 'char' || method === 'combo');
     if (wordBtn) wordBtn.classList.toggle('active', method === 'word');
 
     const sliderGroup = this.hdWordSliderGroup || ((typeof document !== 'undefined') ? document.getElementById('hd-word-slider-group') : null);
@@ -461,7 +470,9 @@ class HUDView {
           ? 'TIER II MASTERY'
           : (ach.tier === 'crown'
               ? '👑 CROWN JEWEL'
-              : (ach.tier === 'apex' ? '⚡ APEX FEAT' : '🌟 SIGNATURE FEAT')));
+              : (ach.tier === 'cosmetic'
+                  ? '🎨 ARMORY UNLOCKED'
+                  : (ach.tier === 'apex' ? '⚡ APEX FEAT' : '🌟 SIGNATURE FEAT'))));
     const tierClass = `tier-${ach.tier}`;
 
     toast.className = `achievement-toast visible ${tierClass}`;
@@ -490,6 +501,47 @@ class HUDView {
     if (btn) {
       btn.classList.toggle('has-badge', Boolean(visible));
     }
+  }
+
+  /**
+   * Applies an OLED theme palette's CSS custom properties to the document root.
+   */
+  applyTheme(themeDef, rootEl = null) {
+    if (!themeDef || !themeDef.vars) return null;
+    this.activeThemeId = themeDef.id || 'oled_cyan';
+    const target = rootEl || ((typeof document !== 'undefined' && document.documentElement) ? document.documentElement : null);
+    if (target && target.style && typeof target.style.setProperty === 'function') {
+      Object.entries(themeDef.vars).forEach(([prop, val]) => {
+        target.style.setProperty(prop, val);
+      });
+    }
+    if (target && typeof target.setAttribute === 'function') {
+      target.setAttribute('data-theme', this.activeThemeId);
+    }
+    return this.activeThemeId;
+  }
+
+  /**
+   * Applies the active Flow FX atmosphere preset to the vignette overlay and document root.
+   */
+  applyFlowFx(flowFxId = 'adaptive_resonance', rootEl = null) {
+    const valid = ['adaptive_resonance', 'zen_trance', 'prismatic_aurora', 'cyberpunk_grid', 'solar_flame', 'hyperdrive_warp'];
+    const id = (typeof flowFxId === 'object' && flowFxId && flowFxId.id) ? flowFxId.id : flowFxId;
+    this.activeFlowFxId = valid.includes(id) ? id : 'adaptive_resonance';
+    const target = rootEl || ((typeof document !== 'undefined' && document.documentElement) ? document.documentElement : null);
+    if (target) {
+      if (target.dataset) {
+        target.dataset.flowFx = this.activeFlowFxId;
+      }
+      if (typeof target.setAttribute === 'function') {
+        target.setAttribute('data-flow-fx', this.activeFlowFxId);
+      }
+    }
+    if (this.flowVignetteOverlay && this.flowVignetteOverlay.classList) {
+      valid.forEach(fx => this.flowVignetteOverlay.classList.remove(`flow-fx-${fx}`));
+      this.flowVignetteOverlay.classList.add(`flow-fx-${this.activeFlowFxId}`);
+    }
+    return this.activeFlowFxId;
   }
 }
 

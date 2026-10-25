@@ -119,26 +119,32 @@ Rather than relying on flat English frequency ordering, TypeFlow executes a runt
 - **Pin Ground Zero:** Rank 1 is strictly locked to `"the"` with $\text{compositeScore} = -1$ to preserve the Level 1 starting state.
 - **Endgame Integrity:** The Epic tier (#701–1,000) guarantees polysyllabic, reach-heavy motor patterns rather than trivial short words (*particularly, environment, commercial, investment, collection*).
 
-### 4.2 Biomechanical Scoring & Sort Model
-Each word is evaluated against three physical friction variables:
-1. **Length Factor:** $\max(0, \text{length} - 3) \times 1.2$
-2. **Motor Pattern Base Cost (`PATTERN_COST`):**
-   - `HOME_CORE`: `+0.0`
-   - `ALTERNATING`: `+1.0`
-   - `SUFFIX_CURL`: `+2.5`
-   - `DOUBLE_BOUNCE`: `+3.5`
-   - `REACH_PINKY`: `+5.0`
-3. **Row Hurdle Penalty:** `+1.0` for every direct transition between `TOP_ROW` (`qwertyuiop`) and `BOT_ROW` (`zxcvbnm`) that skips the home row.
+### 4.2 Biomechanical Typability & Smoothness Sort Model (`score_words.py`)
+Rather than sorting words strictly by total character count (which erroneously pushed 2-letter words to the top), words are scored by **biomechanical typability friction** normalized per stroke and per transition:
+1. **Normalized Key Effort:** $\bar{C}_{\text{key}} = \frac{1}{|w|} \sum_{c \in w} \left(\text{RowCost}[c] \times \text{FingerCost}[c] + \text{CenterStretch}[c]\right)$
+2. **Normalized Transition Friction:** $\bar{C}_{\text{trans}} = \frac{1}{\max(1, |w| - 1)} \sum_{i=1}^{|w|-1} \text{trans}(w_i, w_{i+1})$
+   - **Hand Alternation Bonus:** $-0.45$ (Fluid Left $\leftrightarrow$ Right hand transitions)
+   - **Inward Roll Bonus:** $-0.20$ (Pinky/ring towards index finger)
+   - **Double Letter Tap:** $+0.25$ (Bounce tap cadence)
+   - **Outward Roll Friction:** $+0.35$ (Index towards outer fingers)
+   - **Row Hurdle Jump Penalty:** $+1.50$ (Top $\leftrightarrow$ Bottom row skipping home row on same hand)
+   - **Same-Finger Bigram (SFB) Penalty:** $+3.20$ (Same finger forced to jump between distinct keys)
+3. **Typing Flow Cadence & Rhythm Factor ($C_{\text{cadence}}$):**
+   - **Length 4–6:** $+0.00$ (Optimal flow zone: rolling finger phrases before a rhythmic spacebar tap)
+   - **Length 3:** $+0.15$ (Common functional connectors)
+   - **Length 2:** $+0.55$ (Spacebar hammering penalty: rapid 2-stroke cycles disrupt flow)
+   - **Length 7:** $+0.15$, **Length 8:** $+0.35$, **Length 9+:** $+0.35 + 0.15 \times (|w| - 8)$ (Endurance fatigue)
 
-$$\text{bioCost} = \max(0, \text{length} - 3) \times 1.2 + \sum_{t \in \text{tags}} \text{PATTERN\_COST}[t] + \text{HurdleCount}$$
+$$D_{\text{raw}} = \bar{C}_{\text{key}} + \bar{C}_{\text{trans}} + C_{\text{cadence}}$$
+$$\text{Ease} = 1.0 - \text{PercentileRank}(D_{\text{raw}}), \quad \text{Commonality} = 1.0 - 0.85 \times \frac{\text{freqIndex}}{999}$$
+$$\text{UnlockPriority} = \text{Ease} \times \text{Commonality}$$
 
-$$\text{compositeScore} = \begin{cases} -1.0 & \text{for 'the' (freqIndex 0)} \\ (\text{frequencyIndex} \times 0.55) + (\text{bioCost} \times 22.0) & \text{for all other words} \end{cases}$$
-
-Array is sorted ascending by `compositeScore`, assigning progression `rank = sortedIndex + 1`:
-- `Rank 1 – 100`: `COMMON` (+10 Base XP)
-- `Rank 101 – 350`: `UNCOMMON` (+25 Base XP)
-- `Rank 351 – 700`: `RARE` (+60 Base XP)
-- `Rank 701 – 1000`: `EPIC` (+150 Base XP)
+Rank 1 is strictly locked to `"the"` (Ground Zero). Words are partitioned into the 5-tier pyramid:
+- `Rank 1 – 40`: `STARTER` (8 Base XP, smooth high-frequency words)
+- `Rank 41 – 300`: `COMMON` (15 Base XP)
+- `Rank 301 – 600`: `UNCOMMON` (35 Base XP)
+- `Rank 601 – 850`: `RARE` (80 Base XP)
+- `Rank 851 – 1000`: `EPIC` (180 Base XP, polysyllabic & awkward-reach words)
 
 ### 4.3 Neuromuscular Motor Pattern Classifier (`detectMotorTags`)
 Evaluates each word against all 5 physical motor rules in strict priority order (1 $\rightarrow$ 5). Stores all matching patterns in `tags: []` (for SRS pattern heat spillover) and assigns `primaryPattern = tags[0]` (for UI chips, quests, and egg roll categorization):
@@ -244,7 +250,17 @@ Classic mode runs standard timed benchmarks (15s, 30s, 60s) with advanced teleme
 - **Fixed vs. Unfixed Error Dots:** Emerald markers `#34d399` indicate errors caught and fixed; red markers `#f87171` indicate unfixed mistakes.
 - **Interactive Inspection:** Full hover and touch tooltip displaying precise second-by-second performance.
 
-### 6.3 Global Keyboard Shortcuts
+### 6.3 Classic Mode Typability & Cadence Distribution
+To ensure Classic mode feels exceptionally smooth rather than choppy or staccato:
+- **Typability-Weighted Selection:** Word probability combines tier macro weight with a length typability multiplier:
+  - $\le 2$ letters: $0.45\times$ (dampens rapid spacebar hammering)
+  - $3$ letters: $0.80\times$ (moderates short connectors)
+  - $4$–$6$ letters: $1.20\times$ (golden typing zone for rolling rhythm and sustained cadence)
+  - $7$ letters: $1.00\times$, $8$ letters: $0.85\times$, $9+$ letters: $0.70\times$
+- **Rhythm Composition:** 4–6 letter words represent $\approx 78\%$ of the generated text stream, with 2-letter words lowered to $\approx 1.5\%$.
+- **Anti-Clumping Buffer:** Sliding buffer of 20 words strictly prevents consecutive duplicate words and clustering.
+
+### 6.4 Global Keyboard Shortcuts
 | Key Combo | Context | Action |
 | :--- | :--- | :--- |
 | <kbd>Tab</kbd> | Nest has eggs | Enters Hatch Mode (focuses active egg) |

@@ -14,6 +14,7 @@
   --main-color: #38bdf8;
   --main-color-hover: #7dd3fc;
   --caret-color: #38bdf8;
+  --accent: #38bdf8;
   --sub-color: #526071;
   --sub-alt-color: #121820;
   --border-color: #1a2332;
@@ -85,7 +86,7 @@ header {
   font-weight: 700;
   font-size: 18px;
   font-family: var(--font-sans);
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--main-color) 40%, transparent);
 }
 .logo-title {
   font-size: 22px;
@@ -122,8 +123,8 @@ header {
 .mode-tab.active {
   background: var(--sub-alt-color);
   color: var(--main-color);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.15);
+  border: 1px solid color-mix(in srgb, var(--main-color) 35%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--main-color) 20%, transparent);
 }
 .header-controls {
   display: flex;
@@ -158,8 +159,8 @@ header {
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .flow-diff-pill:focus-within {
-  border-color: rgba(56, 189, 248, 0.45);
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
+  border-color: color-mix(in srgb, var(--main-color) 45%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--main-color) 20%, transparent);
 }
 .diff-label {
   font-size: 11px;
@@ -181,7 +182,7 @@ header {
   transition: border-color 0.2s ease;
 }
 .diff-slider:hover {
-  border-color: rgba(56, 189, 248, 0.45);
+  border-color: color-mix(in srgb, var(--main-color) 45%, transparent);
 }
 .diff-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -191,13 +192,13 @@ header {
   border-radius: 50%;
   background: var(--main-color);
   border: 2px solid #000000;
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.7);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--main-color) 70%, transparent);
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .diff-slider::-webkit-slider-thumb:hover {
   transform: scale(1.18);
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.95);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--main-color) 95%, transparent);
 }
 .diff-slider::-moz-range-thumb {
   width: 14px;
@@ -205,7 +206,7 @@ header {
   border-radius: 50%;
   background: var(--main-color);
   border: 2px solid #000000;
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.7);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--main-color) 70%, transparent);
   cursor: pointer;
 }
 .diff-input-wrap {
@@ -220,7 +221,7 @@ header {
 }
 .diff-input-wrap:focus-within {
   border-color: var(--main-color);
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.35);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--main-color) 35%, transparent);
 }
 .diff-input {
   width: 36px;
@@ -289,8 +290,8 @@ header {
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .hd-config-pill:focus-within {
-  border-color: rgba(56, 189, 248, 0.4);
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
+  border-color: color-mix(in srgb, var(--main-color) 40%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--main-color) 15%, transparent);
 }
 .hd-mode-toggle {
   display: flex;
@@ -317,7 +318,7 @@ header {
 .hd-mode-btn.active {
   background: var(--sub-alt-color);
   color: var(--main-color);
-  box-shadow: 0 0 6px rgba(56, 189, 248, 0.2);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--main-color) 25%, transparent);
 }
 .hd-word-slider-group {
   display: flex;
@@ -358,9 +359,9 @@ header {
   font-size: 11px;
 }
 .hud-level-badge {
-  background: rgba(56, 189, 248, 0.18);
-  border: 1px solid rgba(56, 189, 248, 0.4);
-  color: #38bdf8;
+  background: color-mix(in srgb, var(--main-color) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--main-color) 40%, transparent);
+  color: var(--main-color);
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 4px;
@@ -385,9 +386,9 @@ header {
 .hud-level-bar-fill {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, #38bdf8, #34d399);
+  background: linear-gradient(90deg, var(--main-color), #34d399);
   border-radius: 3px;
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--main-color) 60%, transparent);
   transition: width 0.3s ease-out;
 }
 .config-pill {
@@ -440,9 +441,9 @@ header {
 }
 #hd-btn.active {
   color: var(--main-color);
-  border-color: rgba(56, 189, 248, 0.4);
-  background: rgba(56, 189, 248, 0.1);
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.25);
+  border-color: color-mix(in srgb, var(--main-color) 40%, transparent);
+  background: color-mix(in srgb, var(--main-color) 10%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--main-color) 25%, transparent);
 }
 main {
   flex: 1;
@@ -470,7 +471,7 @@ main {
   font-size: 34px;
   font-weight: 700;
   color: var(--main-color);
-  text-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
+  text-shadow: 0 0 16px color-mix(in srgb, var(--main-color) 30%, transparent);
   transition: opacity 0.2s;
   letter-spacing: -1px;
 }
@@ -526,9 +527,9 @@ main {
   display: flex;
   align-items: center;
   gap: 5px;
-  background: rgba(56, 189, 248, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.35);
-  color: #38bdf8;
+  background: color-mix(in srgb, var(--main-color) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--main-color) 35%, transparent);
+  color: var(--main-color);
   font-size: 12px;
   font-weight: 700;
   padding: 4px 10px;
@@ -555,11 +556,11 @@ main {
 }
 .xp-toast {
   position: absolute;
-  color: #38bdf8;
+  color: var(--main-color);
   font-family: var(--font-mono);
   font-size: 14px;
   font-weight: 700;
-  text-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--main-color) 80%, transparent);
   animation: floatToastUp 1s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
 }
 .xp-toast.bonus {
@@ -593,6 +594,9 @@ main {
   overflow: hidden;
   outline: none;
   cursor: default;
+  font-family: var(--font-mono);
+  font-size: var(--font-size);
+  letter-spacing: 0.5px;
 }
 .words-wrapper {
   display: flex;
@@ -653,7 +657,7 @@ main {
   width: 2.5px;
   height: 32px;
   background-color: var(--caret-color);
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.85);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--caret-color) 85%, transparent);
   border-radius: 2px;
   top: 0;
   left: 0;
@@ -818,7 +822,7 @@ main {
   font-weight: 700;
   line-height: 1.1;
   color: var(--main-color);
-  text-shadow: 0 0 20px rgba(56, 189, 248, 0.35);
+  text-shadow: 0 0 20px color-mix(in srgb, var(--main-color) 35%, transparent);
   letter-spacing: -2px;
 }
 .stat-card.hero.acc .stat-value {
@@ -926,7 +930,7 @@ main {
   border-radius: 8px;
   font-size: 12px;
   pointer-events: none;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 10px rgba(56, 189, 248, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 10px color-mix(in srgb, var(--main-color) 20%, transparent);
   opacity: 0;
   transition: opacity 0.15s ease;
   z-index: 30;
@@ -989,12 +993,12 @@ main {
   align-items: center;
   gap: 10px;
   transition: all 0.2s ease;
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--main-color) 30%, transparent);
 }
 .btn-primary:hover {
   background: var(--main-color-hover);
   transform: translateY(-1px);
-  box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--main-color) 50%, transparent);
 }
 .btn-primary svg {
   fill: currentColor;
@@ -1052,7 +1056,7 @@ footer {
   flex-direction: column;
   gap: 20px;
   padding: 26px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.95), 0 0 24px rgba(56, 189, 248, 0.12);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.95), 0 0 24px color-mix(in srgb, var(--main-color) 12%, transparent);
 }
 .modal-header {
   display: flex;
@@ -1128,8 +1132,8 @@ footer {
   gap: 4px;
 }
 .pb-card.highlight {
-  border-color: rgba(56, 189, 248, 0.4);
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.1);
+  border-color: color-mix(in srgb, var(--main-color) 40%, transparent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--main-color) 10%, transparent);
 }
 .pb-label {
   font-size: 12px;
@@ -1196,9 +1200,9 @@ footer {
   border-color: var(--sub-color);
 }
 .stats-tab.active {
-  background: rgba(56, 189, 248, 0.12);
-  border-color: #38bdf8;
-  color: #38bdf8;
+  background: color-mix(in srgb, var(--main-color) 12%, transparent);
+  border-color: var(--main-color);
+  color: var(--main-color);
   font-weight: 600;
 }
 .stats-pane {
@@ -1230,9 +1234,9 @@ footer {
 .rpg-level-chip {
   font-size: 18px;
   font-weight: 700;
-  color: #38bdf8;
-  background: rgba(56, 189, 248, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: var(--main-color);
+  background: color-mix(in srgb, var(--main-color) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--main-color) 30%, transparent);
   border-radius: 8px;
   padding: 4px 10px;
   font-family: var(--font-mono);
@@ -1259,7 +1263,7 @@ footer {
 .rpg-bar-fill {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, #38bdf8, #818cf8);
+  background: linear-gradient(90deg, var(--main-color), #818cf8);
   border-radius: 4px;
   transition: width 0.3s ease;
 }
@@ -1359,9 +1363,9 @@ footer {
   border: 1px solid rgba(52, 211, 153, 0.35);
 }
 .motor-status-pill.developing {
-  background: rgba(56, 189, 248, 0.15);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.35);
+  background: color-mix(in srgb, var(--main-color) 15%, transparent);
+  color: var(--main-color);
+  border: 1px solid color-mix(in srgb, var(--main-color) 35%, transparent);
 }
 .motor-status-pill.locked {
   background: rgba(255, 255, 255, 0.05);
@@ -1430,9 +1434,9 @@ footer {
   border-color: var(--sub-color);
 }
 .deck-filter-btn.active {
-  background: rgba(56, 189, 248, 0.12);
-  color: #38bdf8;
-  border-color: #38bdf8;
+  background: color-mix(in srgb, var(--main-color) 12%, transparent);
+  color: var(--main-color);
+  border-color: var(--main-color);
 }
 .deck-words-scroll {
   display: flex;
@@ -1459,7 +1463,7 @@ footer {
 }
 .deck-word-chip:hover {
   transform: translateY(-1px);
-  border-color: #38bdf8;
+  border-color: var(--main-color);
 }
 .deck-chip-srs {
   font-size: 11px;
@@ -1497,29 +1501,102 @@ footer {
   z-index: 5;
   opacity: 1;
 }
-.flow-vignette-overlay::before {
+.flow-vignette-overlay::before,
+.flow-vignette-overlay.flow-fx-adaptive_resonance::before {
   content: '';
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse at 0% 0%, rgba(56, 189, 248, 0.85) 0%, rgba(14, 165, 233, 0.35) 25%, transparent 50%),
-    radial-gradient(ellipse at 100% 0%, rgba(56, 189, 248, 0.85) 0%, rgba(14, 165, 233, 0.35) 25%, transparent 50%),
-    radial-gradient(ellipse at 0% 100%, rgba(56, 189, 248, 0.85) 0%, rgba(14, 165, 233, 0.35) 25%, transparent 50%),
-    radial-gradient(ellipse at 100% 100%, rgba(56, 189, 248, 0.85) 0%, rgba(14, 165, 233, 0.35) 25%, transparent 50%);
+    radial-gradient(ellipse at 0% 0%, color-mix(in srgb, var(--main-color) 85%, transparent) 0%, color-mix(in srgb, var(--caret-color) 35%, transparent) 25%, transparent 50%),
+    radial-gradient(ellipse at 100% 0%, color-mix(in srgb, var(--main-color) 85%, transparent) 0%, color-mix(in srgb, var(--caret-color) 35%, transparent) 25%, transparent 50%),
+    radial-gradient(ellipse at 0% 100%, color-mix(in srgb, var(--main-color) 85%, transparent) 0%, color-mix(in srgb, var(--caret-color) 35%, transparent) 25%, transparent 50%),
+    radial-gradient(ellipse at 100% 100%, color-mix(in srgb, var(--main-color) 85%, transparent) 0%, color-mix(in srgb, var(--caret-color) 35%, transparent) 25%, transparent 50%);
   opacity: var(--portal-alpha, 0);
   transition: opacity 0.3s ease-out;
   pointer-events: none;
 }
-.flow-vignette-overlay::after {
+.flow-vignette-overlay::after,
+.flow-vignette-overlay.flow-fx-adaptive_resonance::after {
   content: '';
   position: absolute;
   inset: 0;
-  box-shadow: inset 0 0 140px rgba(56, 189, 248, 0.75),
-              inset 0 0 60px rgba(45, 212, 191, 0.45),
-              inset 0 0 25px rgba(14, 165, 233, 0.65);
+  box-shadow: inset 0 0 140px color-mix(in srgb, var(--main-color) 75%, transparent),
+              inset 0 0 60px color-mix(in srgb, var(--caret-color) 45%, transparent),
+              inset 0 0 25px color-mix(in srgb, var(--main-color) 65%, transparent);
   opacity: var(--vignette-alpha, 0);
   transition: opacity 0.3s ease-out;
   pointer-events: none;
+}
+.flow-vignette-overlay.flow-fx-zen_trance::before {
+  background: radial-gradient(ellipse at center, transparent 42%, rgba(0, 0, 0, 0.82) 100%);
+}
+.flow-vignette-overlay.flow-fx-zen_trance::after {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22),
+              inset 0 0 45px rgba(255, 255, 255, 0.06);
+}
+.flow-vignette-overlay.flow-fx-prismatic_aurora::before {
+  background:
+    radial-gradient(ellipse at 15% 0%, rgba(0, 255, 136, 0.75) 0%, rgba(0, 204, 255, 0.35) 32%, transparent 60%),
+    radial-gradient(ellipse at 85% 0%, rgba(129, 140, 248, 0.75) 0%, rgba(244, 114, 182, 0.35) 32%, transparent 60%),
+    radial-gradient(ellipse at 0% 100%, rgba(0, 204, 255, 0.7) 0%, rgba(129, 140, 248, 0.3) 30%, transparent 55%),
+    radial-gradient(ellipse at 100% 100%, rgba(244, 114, 182, 0.7) 0%, rgba(0, 255, 136, 0.3) 30%, transparent 55%);
+  animation: auroraHueShift 8s ease-in-out infinite alternate;
+}
+.flow-vignette-overlay.flow-fx-prismatic_aurora::after {
+  box-shadow: inset 0 0 135px rgba(0, 255, 136, 0.45),
+              inset 0 0 65px rgba(129, 140, 248, 0.45),
+              inset 0 0 25px rgba(244, 114, 182, 0.55);
+}
+@keyframes auroraHueShift {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(45deg); }
+}
+.flow-vignette-overlay.flow-fx-cyberpunk_grid::before {
+  background:
+    repeating-linear-gradient(90deg, rgba(232, 121, 249, 0.28) 0px, rgba(232, 121, 249, 0.28) 1px, transparent 1px, transparent 48px),
+    repeating-linear-gradient(0deg, rgba(34, 211, 238, 0.24) 0px, rgba(34, 211, 238, 0.24) 1px, transparent 1px, transparent 36px),
+    radial-gradient(ellipse at 0% 100%, rgba(232, 121, 249, 0.65) 0%, transparent 45%),
+    radial-gradient(ellipse at 100% 100%, rgba(34, 211, 238, 0.65) 0%, transparent 45%);
+  -webkit-mask-image: radial-gradient(ellipse at center, transparent 50%, black 95%);
+  mask-image: radial-gradient(ellipse at center, transparent 50%, black 95%);
+}
+.flow-vignette-overlay.flow-fx-cyberpunk_grid::after {
+  box-shadow: inset 0 0 0 1.5px rgba(232, 121, 249, 0.65),
+              inset 0 0 110px rgba(232, 121, 249, 0.45),
+              inset 0 0 38px rgba(34, 211, 238, 0.65);
+}
+.flow-vignette-overlay.flow-fx-solar_flame::before {
+  background:
+    radial-gradient(ellipse at 0% 100%, rgba(251, 191, 36, 0.9) 0%, rgba(249, 115, 22, 0.65) 22%, rgba(220, 38, 38, 0.3) 42%, transparent 62%),
+    radial-gradient(ellipse at 100% 100%, rgba(251, 191, 36, 0.9) 0%, rgba(249, 115, 22, 0.65) 22%, rgba(220, 38, 38, 0.3) 42%, transparent 62%),
+    radial-gradient(ellipse at 50% 105%, rgba(249, 115, 22, 0.8) 0%, rgba(220, 38, 38, 0.4) 30%, transparent 55%),
+    radial-gradient(ellipse at 0% 0%, rgba(220, 38, 38, 0.6) 0%, rgba(249, 115, 22, 0.25) 25%, transparent 48%),
+    radial-gradient(ellipse at 100% 0%, rgba(220, 38, 38, 0.6) 0%, rgba(249, 115, 22, 0.25) 25%, transparent 48%);
+  filter: url(#tf-flame-filter);
+}
+.flow-vignette-overlay.flow-fx-solar_flame::after {
+  box-shadow: inset 0 -60px 120px rgba(249, 115, 22, 0.65),
+              inset 0 0 95px rgba(220, 38, 38, 0.55),
+              inset 0 0 28px rgba(251, 191, 36, 0.75);
+}
+.flow-vignette-overlay.flow-fx-hyperdrive_warp::before {
+  background:
+    repeating-conic-gradient(
+      from 0deg at 50% 50%,
+      rgba(56, 189, 248, 0.48) 0deg 0.7deg,
+      transparent 0.7deg 5.5deg,
+      rgba(129, 140, 248, 0.42) 5.5deg 6.1deg,
+      transparent 6.1deg 11deg,
+      rgba(248, 250, 252, 0.35) 11deg 11.4deg,
+      transparent 11.4deg 16deg
+    );
+  -webkit-mask-image: radial-gradient(circle at center, transparent 56%, black 94%);
+  mask-image: radial-gradient(circle at center, transparent 56%, black 94%);
+}
+.flow-vignette-overlay.flow-fx-hyperdrive_warp::after {
+  box-shadow: inset 0 0 130px rgba(56, 189, 248, 0.55),
+              inset 0 0 60px rgba(129, 140, 248, 0.5),
+              inset 0 0 22px rgba(248, 250, 252, 0.45);
 }
 .flow-vignette-overlay.breathing::after {
   animation: flowBreatheLoop 3.4s ease-in-out infinite alternate;
@@ -1543,12 +1620,14 @@ footer,
   transition: opacity 0.15s ease-out;
 }
 .caret.caret-rainbow {
-  width: 4px;
   background: transparent !important;
   overflow: hidden;
-  box-shadow: 0 0 5px rgba(56, 189, 248, 0.8),
-              0 0 9px rgba(255, 0, 85, 0.35) !important;
-  border-radius: 2px;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--caret-color) 80%, transparent),
+              0 0 12px color-mix(in srgb, var(--main-color) 45%, transparent) !important;
+}
+#caret.caret-style-line.caret-rainbow,
+#caret.caret-style-prism.caret-rainbow {
+  width: 3.5px;
 }
 .caret.caret-rainbow::before {
   content: '';
@@ -1570,6 +1649,80 @@ footer,
   animation: barberPoleDown 1.0s linear infinite !important;
   will-change: transform;
 }
+.caret.caret-rainbow.caret-fx-theme_overdrive::before {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--main-color) 0px,
+    var(--caret-color) 10px,
+    #ffffff 20px,
+    var(--caret-color) 30px,
+    var(--main-color) 40px
+  );
+}
+.caret.caret-rainbow.caret-fx-theme_overdrive {
+  box-shadow: 0 0 10px var(--caret-color),
+              0 0 20px var(--main-color) !important;
+}
+.caret.caret-rainbow.caret-fx-solar_flare::before {
+  background: repeating-linear-gradient(
+    0deg,
+    #dc2626 0px,
+    #f97316 12px,
+    #fbbf24 24px,
+    #fef08a 36px,
+    #f97316 48px
+  );
+  animation: barberPoleUp 0.75s linear infinite !important;
+}
+.caret.caret-rainbow.caret-fx-solar_flare {
+  box-shadow: 0 0 8px rgba(249, 115, 22, 0.9),
+              0 0 18px rgba(251, 191, 36, 0.6) !important;
+}
+.caret.caret-rainbow.caret-fx-holo_glitch::before {
+  background: repeating-linear-gradient(
+    0deg,
+    #22d3ee 0px,
+    #22d3ee 4px,
+    #ffffff 4px,
+    #ffffff 6px,
+    #f43f5e 6px,
+    #f43f5e 10px
+  );
+  animation: barberPoleDown 0.45s steps(6) infinite !important;
+}
+.caret.caret-rainbow.caret-fx-holo_glitch {
+  box-shadow: -2px 0 6px rgba(244, 63, 94, 0.9),
+              2px 0 6px rgba(34, 211, 238, 0.9) !important;
+}
+.caret.caret-rainbow.caret-fx-frost_sparkle::before {
+  background: repeating-linear-gradient(
+    135deg,
+    #38bdf8 0px,
+    #e0f2fe 12px,
+    #ffffff 24px,
+    #818cf8 36px,
+    #38bdf8 48px
+  );
+}
+.caret.caret-rainbow.caret-fx-frost_sparkle {
+  box-shadow: 0 0 10px rgba(224, 242, 254, 0.9),
+              0 0 20px rgba(56, 189, 248, 0.65) !important;
+}
+.caret.caret-rainbow.caret-fx-plasma_arc::before {
+  background: repeating-linear-gradient(
+    135deg,
+    #a855f7 0px,
+    #ec4899 12px,
+    #ffffff 24px,
+    #38bdf8 36px,
+    #a855f7 48px
+  );
+  animation: barberPoleDown 0.65s linear infinite !important;
+}
+.caret.caret-rainbow.caret-fx-plasma_arc {
+  box-shadow: 0 0 10px rgba(236, 72, 153, 0.85),
+              0 0 22px rgba(168, 85, 247, 0.7) !important;
+}
 @keyframes barberPoleDown {
   0% {
     transform: translateY(0);
@@ -1578,11 +1731,19 @@ footer,
     transform: translateY(48px);
   }
 }
+@keyframes barberPoleUp {
+  0% {
+    transform: translateY(48px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
 .xp-toast.rainbow {
   background: linear-gradient(135deg, #ff0055, #ffcc00, #00ff88, #00ccff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.8));
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--main-color) 80%, transparent));
   font-weight: 800;
 }
 .flow-multiplier-badge {
@@ -1602,34 +1763,34 @@ footer,
 .momentum-bar-fill {
   height: 100%;
   width: 0%;
-  background: #38bdf8;
+  background: var(--main-color);
   transition: background 0.3s ease;
 }
 .momentum-bar-fill.rainbow {
   background: linear-gradient(90deg, #ff0055, #ffcc00, #00ff88, #00ccff);
 }
 .flow-multiplier-badge.rainbow-max {
-  background: linear-gradient(135deg, rgba(255, 0, 85, 0.18), rgba(0, 204, 255, 0.18));
-  border-color: #38bdf8;
-  color: #38bdf8;
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.6), 0 0 28px rgba(255, 0, 85, 0.35);
+  background: linear-gradient(135deg, rgba(255, 0, 85, 0.18), color-mix(in srgb, var(--main-color) 18%, transparent));
+  border-color: var(--main-color);
+  color: var(--main-color);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--main-color) 60%, transparent), 0 0 28px rgba(255, 0, 85, 0.35);
   animation: badgeRainbowPulse 1.8s ease-in-out infinite alternate;
 }
 .flow-multiplier-badge.cushion-active {
-  box-shadow: 0 0 22px rgba(56, 189, 248, 0.95), 0 0 38px rgba(255, 0, 85, 0.6) !important;
+  box-shadow: 0 0 22px color-mix(in srgb, var(--main-color) 95%, transparent), 0 0 38px rgba(255, 0, 85, 0.6) !important;
   border-color: #00ff88 !important;
 }
 .flow-multiplier-badge.cushion-active .mult-icon {
   animation: cushionBoltPulse 0.75s ease-in-out infinite alternate;
 }
 @keyframes cushionBoltPulse {
-  0% { transform: scale(1); filter: drop-shadow(0 0 2px #38bdf8); }
+  0% { transform: scale(1); filter: drop-shadow(0 0 2px var(--main-color)); }
   100% { transform: scale(1.3); filter: drop-shadow(0 0 8px #ff0055); }
 }
 @keyframes badgeRainbowPulse {
   0% {
-    border-color: #38bdf8;
-    box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+    border-color: var(--main-color);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--main-color) 50%, transparent);
   }
   50% {
     border-color: #f43f5e;
@@ -1652,12 +1813,12 @@ footer,
   transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
 }
 .egg-nest.charging {
-  border-color: rgba(56, 189, 248, 0.45);
-  box-shadow: 0 0 calc(var(--nest-glow, 0.2) * 16px) rgba(56, 189, 248, calc(var(--nest-glow, 0.2) * 0.5));
+  border-color: color-mix(in srgb, var(--main-color) 45%, transparent);
+  box-shadow: 0 0 calc(var(--nest-glow, 0.2) * 16px) color-mix(in srgb, var(--main-color) calc(var(--nest-glow, 0.2) * 50%), transparent);
 }
 .egg-nest.high-combo {
-  border-color: rgba(56, 189, 248, 0.75);
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.6), 0 0 28px rgba(45, 212, 191, 0.3);
+  border-color: color-mix(in srgb, var(--main-color) 75%, transparent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--main-color) 60%, transparent), 0 0 28px rgba(45, 212, 191, 0.3);
   animation: nestComboPulse 1.2s ease-in-out infinite alternate;
 }
 .egg-nest.nest-full {
@@ -1671,12 +1832,12 @@ footer,
   animation: nestEggMaterialize 0.6s cubic-bezier(0.1, 0.9, 0.2, 1);
 }
 @keyframes nestComboPulse {
-  0% { box-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
-  100% { box-shadow: 0 0 20px rgba(56, 189, 248, 0.8), 0 0 30px rgba(52, 211, 153, 0.4); }
+  0% { box-shadow: 0 0 10px color-mix(in srgb, var(--main-color) 40%, transparent); }
+  100% { box-shadow: 0 0 20px color-mix(in srgb, var(--main-color) 80%, transparent), 0 0 30px rgba(52, 211, 153, 0.4); }
 }
 @keyframes nestEggMaterialize {
   0% { transform: scale(1); filter: brightness(1); }
-  35% { transform: scale(1.05); filter: brightness(1.7) drop-shadow(0 0 16px #38bdf8); border-color: #38bdf8; }
+  35% { transform: scale(1.05); filter: brightness(1.7) drop-shadow(0 0 16px var(--main-color)); border-color: var(--main-color); }
   100% { transform: scale(1); filter: brightness(1); }
 }
 .nest-incubation-track {
@@ -1694,8 +1855,8 @@ footer,
 .nest-incubation-fill {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, #38bdf8 0%, #2dd4bf 70%, #34d399 100%);
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.7);
+  background: linear-gradient(90deg, var(--main-color) 0%, #2dd4bf 70%, #34d399 100%);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--main-color) 70%, transparent);
   transition: width 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .nest-slot {
@@ -1718,19 +1879,19 @@ footer,
   opacity: 0.35;
 }
 .nest-slot.has-egg {
-  border-color: rgba(56, 189, 248, 0.45);
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
+  border-color: color-mix(in srgb, var(--main-color) 45%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--main-color) 15%, transparent);
   cursor: pointer;
 }
 .nest-slot .egg-glyph {
   font-size: 18px;
   line-height: 1;
-  filter: drop-shadow(0 0 4px var(--slot-egg-color, #38bdf8));
+  filter: drop-shadow(0 0 4px var(--slot-egg-color, var(--main-color)));
   transition: transform 0.15s ease;
 }
 .nest-slot.hatch-focused {
-  border-color: #38bdf8 !important;
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.7), inset 0 0 8px rgba(56, 189, 248, 0.3) !important;
+  border-color: var(--main-color) !important;
+  box-shadow: 0 0 16px color-mix(in srgb, var(--main-color) 70%, transparent), inset 0 0 8px color-mix(in srgb, var(--main-color) 30%, transparent) !important;
   transform: scale(1.08);
 }
 .nest-crack-prompt {
@@ -1739,7 +1900,7 @@ footer,
   top: -24px;
   left: 50%;
   transform: translateX(-50%);
-  background: #0ea5e9;
+  background: var(--main-color);
   color: #000000;
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
@@ -1748,7 +1909,7 @@ footer,
   border-radius: 4px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  box-shadow: 0 0 8px rgba(14, 165, 233, 0.65);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--main-color) 65%, transparent);
   white-space: nowrap;
   z-index: 10;
 }
@@ -1823,7 +1984,7 @@ footer,
 }
 @keyframes hintBlink {
   0%, 100% { opacity: 0.45; }
-  50% { opacity: 1; color: #38bdf8; }
+  50% { opacity: 1; color: var(--main-color); }
 }
 .achievement-toast {
   position: fixed;
@@ -1870,12 +2031,12 @@ footer,
   text-transform: uppercase;
   color: #94a3b8;
 }
-.achievement-toast .toast-tier.tier-1 { color: #38bdf8; }
+.achievement-toast .toast-tier.tier-1 { color: var(--main-color); }
 .achievement-toast .toast-tier.tier-2 { color: #fbbf24; }
 .achievement-toast .toast-tier.tier-apex { color: #f43f5e; text-shadow: 0 0 8px rgba(244, 63, 94, 0.6); }
 .achievement-toast .toast-tier.tier-crown { color: #ec4899; text-shadow: 0 0 10px rgba(236, 72, 153, 0.8); }
 .achievement-toast .toast-tier.tier-feat { color: #a855f7; text-shadow: 0 0 8px rgba(168, 85, 247, 0.6); }
-.achievement-toast.tier-1 { border-color: rgba(56, 189, 248, 0.4); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 20px rgba(56, 189, 248, 0.25); }
+.achievement-toast.tier-1 { border-color: color-mix(in srgb, var(--main-color) 40%, transparent); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 20px color-mix(in srgb, var(--main-color) 25%, transparent); }
 .achievement-toast.tier-2 { border-color: rgba(251, 191, 36, 0.5); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 22px rgba(251, 191, 36, 0.3); }
 .achievement-toast.tier-apex { border-color: rgba(244, 63, 94, 0.6); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 24px rgba(244, 63, 94, 0.35); }
 .achievement-toast.tier-crown { border-color: rgba(236, 72, 153, 0.7); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 30px rgba(236, 72, 153, 0.45); }
@@ -1938,7 +2099,7 @@ footer,
 .trophy-summary-count {
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
-  color: var(--accent, #38bdf8);
+  color: var(--main-color);
 }
 .trophy-summary-track {
   width: 100%;
@@ -1949,7 +2110,7 @@ footer,
 }
 .trophy-summary-fill {
   height: 100%;
-  background: linear-gradient(90deg, #38bdf8, #818cf8, #f59e0b);
+  background: linear-gradient(90deg, var(--main-color), #818cf8, #f59e0b);
   border-radius: 3px;
   transition: width 0.4s ease-out;
 }
@@ -1975,9 +2136,9 @@ footer,
   color: #f8fafc;
 }
 .trophy-filter-btn.active {
-  background: rgba(56, 189, 248, 0.15);
-  border-color: rgba(56, 189, 248, 0.4);
-  color: #38bdf8;
+  background: color-mix(in srgb, var(--main-color) 15%, transparent);
+  border-color: color-mix(in srgb, var(--main-color) 40%, transparent);
+  color: var(--main-color);
   font-weight: 600;
 }
 .trophies-grid {
@@ -2011,7 +2172,7 @@ footer,
   background: rgba(255, 255, 255, 0.03);
 }
 .trophy-card.tier-1.unlocked {
-  border-color: rgba(56, 189, 248, 0.35);
+  border-color: color-mix(in srgb, var(--main-color) 35%, transparent);
 }
 .trophy-card.tier-2.unlocked {
   border-color: rgba(251, 191, 36, 0.4);
@@ -2062,7 +2223,7 @@ footer,
   letter-spacing: 0.5px;
   color: #94a3b8;
 }
-.trophy-card.tier-1 .trophy-tier-badge { color: #38bdf8; }
+.trophy-card.tier-1 .trophy-tier-badge { color: var(--main-color); }
 .trophy-card.tier-2 .trophy-tier-badge { color: #fbbf24; }
 .trophy-card.tier-apex .trophy-tier-badge { color: #f43f5e; }
 .trophy-card.tier-crown .trophy-tier-badge { color: #ec4899; }
@@ -2103,15 +2264,278 @@ footer,
 }
 .trophy-mini-fill {
   height: 100%;
-  background: var(--accent, #38bdf8);
+  background: var(--main-color);
   border-radius: 2px;
   transition: width 0.3s ease;
+}
+.level-hud-card {
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+.level-hud-card:hover {
+  border-color: var(--main-color);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--main-color) 20%, transparent);
+}
+#caret.caret-style-line {
+  width: 2.5px;
+  height: 32px;
+  margin-top: 0;
+  opacity: 1;
+  border-radius: 2px;
+}
+#caret.caret-style-underline {
+  width: calc(1ch + 1.5px);
+  height: 3.5px;
+  margin-top: calc(var(--font-size) * 1.05);
+  border-radius: 2px;
+  opacity: 1;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--caret-color) 80%, transparent);
+}
+#caret.caret-style-block {
+  width: calc(1ch + 1.5px);
+  height: calc(var(--font-size) * 1.15);
+  margin-top: -1px;
+  opacity: 0.42;
+  border-radius: 3px;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--caret-color) 40%, transparent);
+}
+#caret.caret-style-capsule {
+  width: 5px;
+  height: 32px;
+  margin-top: 0;
+  border-radius: 99px;
+  opacity: 1;
+  box-shadow: 0 0 14px var(--caret-color), 0 0 24px var(--main-color);
+}
+.achievement-toast .toast-tier.tier-cosmetic {
+  color: #34d399;
+  text-shadow: 0 0 8px rgba(52, 211, 153, 0.6);
+}
+.achievement-toast.tier-cosmetic {
+  border-color: rgba(52, 211, 153, 0.55);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 24px rgba(52, 211, 153, 0.3);
+}
+.armory-scroll-container {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-height: 430px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.armory-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.armory-section-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-color);
+}
+.armory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+}
+.armory-card {
+  background: var(--bg-secondary, #0a0a0c);
+  border: 1px solid var(--border-color, #1a1a20);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  transition: all 0.18s ease;
+  position: relative;
+}
+.armory-card.unlocked {
+  cursor: pointer;
+}
+.armory-card.unlocked:hover {
+  border-color: var(--main-color);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+}
+.armory-card.equipped {
+  border-color: var(--main-color);
+  background: color-mix(in srgb, var(--main-color) 6%, transparent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--main-color) 18%, transparent);
+}
+.armory-card.locked {
+  opacity: 0.55;
+  border-style: dashed;
+}
+.armory-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.armory-icon-wrap {
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.armory-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-grow: 1;
+}
+.armory-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+.theme-swatches {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.theme-swatch-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  display: inline-block;
+}
+.armory-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--sub-color);
+}
+.armory-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-align: center;
+}
+.armory-badge.equipped {
+  background: rgba(34, 197, 94, 0.14);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+}
+.armory-badge.unlocked {
+  background: color-mix(in srgb, var(--main-color) 8%, transparent);
+  color: var(--main-color);
+  border: 1px solid color-mix(in srgb, var(--main-color) 25%, transparent);
+}
+.armory-badge.locked {
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--sub-color);
+  border: 1px solid var(--border-color);
+}
+.armory-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.armory-filter-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  color: var(--sub-color);
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 99px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.armory-filter-btn:hover {
+  color: var(--text-color);
+  border-color: color-mix(in srgb, var(--main-color) 40%, var(--border-color));
+}
+.armory-filter-btn.active {
+  background: color-mix(in srgb, var(--main-color) 14%, transparent);
+  color: var(--main-color);
+  border-color: var(--main-color);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--main-color) 20%, transparent);
+}
+#ghost-caret.ghost-style-phantom_line {
+  width: 2.5px;
+  height: 32px;
+  margin-top: 0;
+  background-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+  border: none;
+  border-radius: 2px;
+}
+#ghost-caret.ghost-style-theme_specter {
+  width: 2.5px;
+  height: 32px;
+  margin-top: 0;
+  background-color: color-mix(in srgb, var(--main-color) 65%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--main-color) 55%, transparent);
+  border: none;
+  border-radius: 2px;
+}
+#ghost-caret.ghost-style-hologram_runner {
+  width: calc(1ch + 1.5px);
+  height: 3.5px;
+  margin-top: calc(var(--font-size) * 1.05);
+  background-color: rgba(34, 211, 238, 0.75);
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.65);
+  border: none;
+  border-radius: 2px;
+}
+#ghost-caret.ghost-style-wireframe_block {
+  width: calc(1ch + 1.5px);
+  height: calc(var(--font-size) * 1.15);
+  margin-top: -1px;
+  background-color: rgba(56, 189, 248, 0.08);
+  border: 1.5px dashed rgba(56, 189, 248, 0.7);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+  border-radius: 3px;
+}
+#ghost-caret.ghost-style-golden_hare {
+  width: 4px;
+  height: 32px;
+  margin-top: 0;
+  background-color: rgba(251, 191, 36, 0.8);
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.65);
+  border: none;
+  border-radius: 99px;
+}
+#ghost-caret.ghost-style-shadow_rival {
+  width: calc(1ch + 1.5px);
+  height: calc(var(--font-size) * 1.15);
+  margin-top: -1px;
+  background-color: rgba(244, 63, 94, 0.16);
+  border: none;
+  border-bottom: 2.5px solid rgba(244, 63, 94, 0.85);
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.35);
+  border-radius: 3px;
 }
   </style>
 </head>
 <body>
   <div class="achievement-toast" id="achievement-toast"></div>
-  <div class="flow-vignette-overlay" id="flow-vignette-overlay"></div>
+  <svg width="0" height="0" style="position: absolute; pointer-events: none;" aria-hidden="true">
+    <defs>
+      <filter id="tf-flame-filter" x="-10%" y="-10%" width="120%" height="120%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.018 0.075" numOctaves="3" seed="4">
+          <animate attributeName="baseFrequency" dur="3.6s" values="0.018 0.075; 0.024 0.11; 0.018 0.075" repeatCount="indefinite" />
+        </feTurbulence>
+        <feDisplacementMap in="SourceGraphic" scale="22" />
+      </filter>
+    </defs>
+  </svg>
+  <div class="flow-vignette-overlay flow-fx-adaptive_resonance" id="flow-vignette-overlay"></div>
   <div class="app-container">
     <header>
       <div class="header-left">
@@ -2138,7 +2562,7 @@ footer,
             <span class="diff-unit">wpm</span>
           </div>
         </div>
-        <div class="level-hud-card" id="level-hud-card" title="Player Level & XP Progress">
+        <div class="level-hud-card" id="level-hud-card" title="Player Level & XP Progress • Click to Open Cosmetic Armory">
           <div class="level-hud-info">
             <span class="hud-level-badge" id="hud-level-badge">Lv. 1</span>
             <span class="hud-level-title" id="hud-level-title">Novice Typist</span>
@@ -2161,13 +2585,13 @@ footer,
           </button>
           <div class="hd-config-pill" id="hd-config-pill" style="display: none;" title="Hidden Words Count">
             <div class="hd-mode-toggle" id="hd-mode-toggle">
-              <button type="button" class="hd-mode-btn active" id="hd-mode-char" data-mode="char" title="Character Horizon">Char</button>
-              <button type="button" class="hd-mode-btn" id="hd-mode-word" data-mode="word" title="Word Vanish">Word</button>
+              <button type="button" class="hd-mode-btn active" id="hd-mode-word" data-mode="word" title="Word Vanish">Word</button>
+              <button type="button" class="hd-mode-btn" id="hd-mode-char" data-mode="char" title="Combo Horizon">Combo</button>
             </div>
-            <div class="hd-word-slider-group" id="hd-word-slider-group" style="display: none;" title="Hidden Words Count">
+            <div class="hd-word-slider-group" id="hd-word-slider-group" style="display: flex;" title="Hidden Words Count">
               <span class="hd-label">Hide:</span>
-              <input type="range" id="hd-words-slider" class="diff-slider" min="1" max="6" step="1" value="2" aria-label="Hidden words count slider">
-              <span class="hd-val" id="hd-words-val">2 words</span>
+              <input type="range" id="hd-words-slider" class="diff-slider" min="1" max="6" step="1" value="1" aria-label="Hidden words count slider">
+              <span class="hd-val" id="hd-words-val">1 word</span>
             </div>
           </div>
         </div>
@@ -2349,6 +2773,7 @@ footer,
                 <button class="stats-tab active" id="tab-stats-flow" data-tab="flow">🎮 Flow RPG & Mastery</button>
                 <button class="stats-tab" id="tab-stats-classic" data-tab="classic">⏱️ Classic Records</button>
                 <button class="stats-tab" id="tab-stats-trophies" data-tab="trophies">🏆 Trophies</button>
+                <button class="stats-tab" id="tab-stats-armory" data-tab="armory">🎨 Armory</button>
               </div>
             </div>
             <button class="icon-btn close-modal-btn" id="close-stats-btn" title="Close Stats">✕</button>
@@ -2486,6 +2911,52 @@ footer,
             <div class="trophies-grid" id="trophies-grid">
             </div>
           </div>
+          <div class="stats-pane" id="pane-stats-armory" style="display: none;">
+            <div class="trophy-summary-bar">
+              <div class="trophy-summary-left">
+                <span class="trophy-summary-title">Cosmetic Armory</span>
+                <span class="trophy-summary-count" id="armory-count">6 / 34 unlocked (18%)</span>
+              </div>
+              <div class="trophy-summary-track">
+                <div class="trophy-summary-fill" id="armory-progress-bar" style="width: 18%;"></div>
+              </div>
+            </div>
+            <div class="trophy-filters armory-filters" id="armory-filters">
+              <button class="trophy-filter-btn armory-filter-btn active" data-filter="all">All</button>
+              <button class="trophy-filter-btn armory-filter-btn" data-filter="theme">🎨 Themes</button>
+              <button class="trophy-filter-btn armory-filter-btn" data-filter="flowFx">🌌 Flow FX</button>
+              <button class="trophy-filter-btn armory-filter-btn" data-filter="caret">│ Caret Shapes</button>
+              <button class="trophy-filter-btn armory-filter-btn" data-filter="caretFx">✨ Caret FX</button>
+              <button class="trophy-filter-btn armory-filter-btn" data-filter="ghostStyle">👻 Ghost Pacer</button>
+              <button class="trophy-filter-btn armory-filter-btn" data-filter="sound">🔊 Sounds</button>
+            </div>
+            <div class="armory-scroll-container">
+              <div class="armory-section" data-armory-section="theme">
+                <div class="armory-section-title">🎨 OLED Stage Themes</div>
+                <div class="armory-grid" id="armory-themes-grid"></div>
+              </div>
+              <div class="armory-section" data-armory-section="flowFx">
+                <div class="armory-section-title">🌌 Flow State Atmospheres (Flow FX)</div>
+                <div class="armory-grid" id="armory-flowfx-grid"></div>
+              </div>
+              <div class="armory-section" data-armory-section="caret">
+                <div class="armory-section-title">│ Caret Geometries</div>
+                <div class="armory-grid" id="armory-carets-grid"></div>
+              </div>
+              <div class="armory-section" data-armory-section="caretFx">
+                <div class="armory-section-title">✨ Flow Caret Modifiers (Independent)</div>
+                <div class="armory-grid" id="armory-caretfx-grid"></div>
+              </div>
+              <div class="armory-section" data-armory-section="ghostStyle">
+                <div class="armory-section-title">👻 Ghost Cursor Pacer Styles</div>
+                <div class="armory-grid" id="armory-ghost-grid"></div>
+              </div>
+              <div class="armory-section" data-armory-section="sound">
+                <div class="armory-section-title">🔊 Mechanical Switch Sound Packs</div>
+                <div class="armory-grid" id="armory-sounds-grid"></div>
+              </div>
+            </div>
+          </div>
           <div class="modal-footer space-between" style="margin-top: 18px;">
             <div style="display: flex; gap: 10px; align-items: center;">
               <button class="btn-danger-outline" id="reset-rpg-stats-btn" title="Reset Flow RPG progress back to Level 1, 0 XP, and 1 Word">Reset RPG (Ground Zero) ↺</button>
@@ -2502,7 +2973,7 @@ footer,
         <span><span class="shortcut-badge">esc</span> - pause / hatchery</span>
       </div>
       <div class="footer-right">
-        <span>TypeFlow v3.5 • Flow RPG Edition</span>
+        <span>TypeFlow v4.0 • Flow RPG Edition</span>
       </div>
     </footer>
   </div>
@@ -2762,13 +3233,24 @@ if (!_BigramLedger && typeof require !== 'undefined') {
   } catch (e) {}
 }
 const RAW_WORDS =
-  "the of he to it do as for we or by she if at go and in so me his her be but up on us use our out who its get all you see make with day they how ask man may can them this two new let no big way work when own also take one then life off him that here their few put what eye such down too high than sit not end yes find turn hand year your job far good feel will world yet same well now time last four some law set show talk week tell give other keep seem which ago word come first back would help hear pay car my bad could air right there add head old want mean city each girl these die call both child have case hour sure into body game cut war lead name play six kid very study age try boy over where know live more issue those food why like five win door send real while else meet drug book field walk story area about just arm read most lot able black small three line home wife write team hard side away foot still today sell hit wait form road only spend house fall oil view half son guy might stop late should even stay fact open run room low eat full site pick less tax thing speak plan sense town think light from hold white stand state land care any learn later need least cost during night system social offer hair art woman raise through build major look risk lose rate film leave buy ever move power though water pass early best rule wear much easy always fire idea father per people little former star hope health grow kind class others base pull draw next part value change again seek every term reach goal market test wall role must step thank never figure type top hot red lie dog whose drive fight problem data rise really many join third level result fill mother true clear focus course push south whether friend public point mind maybe after either west before large worker rest long begin cause kill sign itself without member return fine table paper baby drop throw watch lay carry toward list money family cup near month free quite eight past often bank history box face parent teach movie happen enough love future group page east cover great stock among within almost start leg share already store soon player image ten board himself society music fail plant remain death blue rock allow enter poor across whole period local news sex couple dark doctor another deal firm listen size single until bill person hang perhaps occur party act note teacher once series wrong court heart tree bed event nearly author american save reason window catch thus laugh fly place ready choose together suggest phone culture create student dead fish official although shoot upon matter voice young model bit left close price letter since provide song appear nature foreign effort visit glass season card short require office moment staff floor leader seat force fund nation school agency miss against order shake bring behind agree guess legal along product media likely patient main sea around loss avoid chair sort lawyer different gun sister finally herself usually ball happy stage bar current policy break sport argue cold claim space serious final energy better someone serve disease business race entire radio possible quickly blood crime factor under fear bag report difficult daughter gas onto include several thought program theory career sound picture however north natural wide between remember discuss rather quality adult prove huge style truth pain stuff record heat item myself private skill scene believe action weight building simply material sing tend worry tough yard strong above nothing arrive attack trial general rich range check memory pretty thousand task second dream church clearly ability medical college language shot forward activity question national street chance animal probably artist edge cell hotel defense spring center owner simple network ahead heavy produce nor safe design growth summer actually research whom civil analysis writer realize manage coach benefit choice vote hospital prepare various method enjoy trip answer special camera deep apply present human agent article finish color beyond meeting feeling total born middle follow measure million manager green military source husband forget exist similar explain interest position score effect message billion century personal officer morning nice behavior become beat brother including outside remove something skin consider identify pressure wonder yourself wheat sexual scale because cultural budget process themselves charge mouth individual despite authority finger available standard front situation sometimes treat reveal island religious unit indicate inside ground approach industry minute according shadow campaign security represent threat subject relate reality imagine soldier forest weapon discover mental federal purpose station peace respond response element reduce legend project financial mention support professor political tonight perform common movement country detail director piece popular science expect spirit dinner castle police exactly victim increase silver address trouble journey accept computer instead service machine anyone decide release compare expert degree establish everyone involve marriage whisper galaxy condition majority republican whatever challenge apart amount control impact western success ancient garden capital describe contain physical recent candidate example pattern everybody anything concern scientist fellow somebody victory courage citizen statement modern company stellar continue character education cancer number shoulder positive indeed suddenly congress attention throughout specific government protect significant beautiful ocean diamond crystal management difference strategy kitchen affect practice maintain everything partner treatment improve politics information resource target traffic notice travel television central horizon reflect prevent silence debate audience knowledge golden operation evidence evening quarter starlight receive develop decision section property decade structure painting discussion certain especially election democrat employee hundred experience surface determine important mystery production population account consumer relationship particular agreement magazine colleague recently champion commercial training generation understand interview newspaper investment economic institution violence environment direction democratic harmony traditional recognize particularly performance executive conference certainly community economy international thunder mountain environmental development necessary opportunity organization collection technology administration";
+  "the their she for they with make them other world work when her also then first use which there this such would could life right that down these through hand turn if high what here ask than and four study good take issue our last where should week eye small but well story child those big let sit seem black end system little city about feel girl social keep though three body out both your during father he his word die year of sure same write spend still off while do talk show name may always field send head problem health whether food others us house will today else hear market former air door drug sense people see tell help find lead light change hour all game man play able each without meet offer back sell public its own yet stand cut road form later speak mean wife learn least it course raise me half set really power case figure or foot major class either history six book so time walk white call law early hard go itself day return worker want some land pick build result get hair ago put site society who happen cost might add yes mother state already risk value view how player full town fall come parent thank real south toward future wait himself less rule film fight american fire whose to late perhaps give you thing far focus friend read member together clear water seek night before another new plan arm throw third woman into goal teacher reach two too although stay job period official rise away cause suggest five pay enough different listen couple we eight way series paper think across within table almost line boy stock easy area student doctor drive push stop team author nearly dog sign single can against open as live pass by culture family have foreign choose carry lie share list term very wear letter matter remain store fill patient leave few star draw over possible plant provide board car hit nature window business bad occur finally usually care enter person age quite know again teach appear herself base current agency product require rate point home difficult lawyer most step maybe laugh wall blue west type sister rock war serious per pull glass reason disease room discuss thought firm daughter at oil leg between past remember drop movie quality dark hope natural lay more test season quickly probably effort hang visit national entire like nation near someone create shoot cover ready material question level theory actually side rest fact guess picture staff fine shake image activity fish every east legal rather building avoid data chair program private wrong likely baby eat leader thousand school weight never language several career only something watch ability fly fail include page just including clearly moment however better general poor factor office analysis energy hospital themselves attack network bill policy behind hot large college research bank stuff pretty one position interest after adult forward join nothing according style meeting begin tough happy worry situation final writer military box personal defense method stage radio available bit medical prepare realize various claim manager sometimes present phone benefit feeling arrive seat manage money often around spring report measure month billion owner catch consider memory article court believe message pressure individual tax approach behavior authority rich death represent coach allow produce close size best card ahead whole among identify camera civil simply middle yourself lose soon political heavy artist husband republican dream explain standard action million myself item group media special song religious street role ten win event cultural start hotel true cup floor range growth budget tend local top professor ball yard similar century him design heat officer campaign industry outside financial heart simple prove fear agent animal score need task total music indicate party brother island answer shadow grow shot strong order crime argue hold purpose response element short son main security finish even great ever reality born establish legend discover scale condition apply finger miss morning sexual wheat mental information truth church forget relate spirit chance despite vote summer forest idea above popular threat record imagine process government station sing look address journey sea soldier challenge respond beyond movement increase marriage attention sport mention castle support blood safe agree computer trial character onto center significant statement everybody release whisper not perform mind management tonight throughout ancient choice save skill exist difference candidate majority charge everything scientist thus gas instead pattern dinner machine weapon second left trouble education voice note whatever western because price galaxy physical pain now director everyone until stellar exactly subject wonder remove science model capital part bar mouth silver kill upon courage inside victory somebody suddenly place project victim bag citizen free beautiful positive television follow move along sound wide especially up reveal compare treatment cold next kid federal deal check contain from shoulder relationship anything whom effect success sort detail kind strategy much young crystal specific congress space dead starlight enjoy maintain operation population scene source discussion describe politics experience example continue green news involve diamond knowledge fellow partner loss horizon since country traffic act garden north production structure accept concern must painting old audience common practice break huge kitchen particular bring international force tree important property particularly fund quarter prevent determine environment control expert edge service commercial sex resource institution silence understand generation improve colleague become agreement traditional protect long modern degree ground impact many employee reflect front investment beat target treat serve cancer try company deep guy newspaper apart evidence reduce anyone why love democratic decision mystery lot amount evening performance face champion consumer democrat minute police election account environmental magazine interview travel low central color nor under expect conference golden affect trip debate indeed notice buy section peace direction recognize recently surface training art skin cell red develop certain executive violence race in certainly development ocean decide hundred recent human receive economic once community opportunity on organization harmony necessary administration number mountain run decade collection piece thunder nice be unit technology any economy gun bed no my";
 const RAW_WORDS_LIST = RAW_WORDS.trim().split(/\s+/).slice(0, 1000);
-const CLASSIC_WEIGHTS = RAW_WORDS_LIST.map((_, i) => {
-  if (i < 100) return 0.60 / 100;
-  if (i < 350) return 0.25 / 250;
-  if (i < 700) return 0.12 / 350;
-  return 0.03 / 300;
+function getClassicTypabilityMultiplier(word) {
+  const len = word.length;
+  if (len <= 2) return 0.45;
+  if (len === 3) return 0.80;
+  if (len >= 4 && len <= 6) return 1.20;
+  if (len === 7) return 1.00;
+  if (len === 8) return 0.85;
+  return 0.70;
+}
+const CLASSIC_WEIGHTS = RAW_WORDS_LIST.map((word, i) => {
+  let base;
+  if (i < 100) base = 0.58 / 100;
+  else if (i < 350) base = 0.26 / 250;
+  else if (i < 700) base = 0.12 / 350;
+  else base = 0.04 / 300;
+  return base * getClassicTypabilityMultiplier(word);
 });
 const CLASSIC_TOTAL_WEIGHT = CLASSIC_WEIGHTS.reduce((a, b) => a + b, 0);
 const LEFT_HAND = new Set("qwertasdfgzxcvb".split(""));
@@ -3434,6 +3916,9 @@ class WordsModel {
 if (typeof window !== 'undefined') {
   window.RAW_WORDS = RAW_WORDS;
   window.RAW_WORDS_LIST = RAW_WORDS_LIST;
+  window.CLASSIC_WEIGHTS = CLASSIC_WEIGHTS;
+  window.CLASSIC_TOTAL_WEIGHT = CLASSIC_TOTAL_WEIGHT;
+  window.getClassicTypabilityMultiplier = getClassicTypabilityMultiplier;
   window.RANKED_WORDS = RANKED_WORDS;
   window.DICTIONARY = DICTIONARY;
   window.PATTERN_COST = PATTERN_COST;
@@ -3464,6 +3949,9 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     RAW_WORDS,
     RAW_WORDS_LIST,
+    CLASSIC_WEIGHTS,
+    CLASSIC_TOTAL_WEIGHT,
+    getClassicTypabilityMultiplier,
     RANKED_WORDS,
     DICTIONARY,
     PATTERN_COST,
@@ -3726,8 +4214,8 @@ class SessionModel extends _EventEmitter {
     this.mode = options.mode || 'flow'; // 'classic' | 'flow'
     this.duration = options.duration || 30;
     this.hiddenMode = options.hiddenMode || false;
-    this.hiddenMethod = options.hiddenMethod || 'char';
-    this.hiddenWordDistance = options.hiddenWordDistance || 2;
+    this.hiddenMethod = (options.hiddenMethod === 'char' || options.hiddenMethod === 'combo') ? 'char' : (options.hiddenMethod || 'word');
+    this.hiddenWordDistance = (options.hiddenWordDistance !== undefined) ? options.hiddenWordDistance : 1;
     this.timeLeft = this.duration;
     this.isActive = false;
     this.isFinished = false;
@@ -3799,11 +4287,11 @@ class SessionModel extends _EventEmitter {
     this.hiddenMode = Boolean(enabled);
   }
   setHiddenMethod(method) {
-    this.hiddenMethod = (method === 'word') ? 'word' : 'char';
+    this.hiddenMethod = (method === 'char' || method === 'combo') ? 'char' : 'word';
   }
   setHiddenWordDistance(dist) {
     const d = parseInt(dist, 10);
-    this.hiddenWordDistance = (d >= 1 && d <= 6) ? d : 2;
+    this.hiddenWordDistance = (d >= 1 && d <= 6) ? d : 1;
   }
   setWords(words) {
     this.words = words || [];
@@ -5015,8 +5503,8 @@ class AchievementsModel {
         consecutiveApexWords = 0,
         flowSeconds = 0,
         isHidden = false,
-        hiddenMethod = 'char',
-        hiddenWordDistance = 2,
+        hiddenMethod = 'word',
+        hiddenWordDistance = 1,
         hiddenCombo = 0,
         hiddenStreak = 0,
         beatGhost = false,
@@ -5036,7 +5524,7 @@ class AchievementsModel {
         if (hiddenWordDistance >= 2 && hiddenStreak >= 20) tryUnlock('vanishing_act');
         if (hiddenWordDistance >= 4 && hiddenStreak >= 25) tryUnlock('mind_palace');
       }
-      if (isHidden && hiddenMethod === 'char') {
+      if (isHidden && (hiddenMethod === 'char' || hiddenMethod === 'combo')) {
         if (hiddenCombo >= 35) tryUnlock('shadow_walker');
         if (hiddenCombo >= 70) tryUnlock('into_the_fog');
       }
@@ -5141,6 +5629,591 @@ if (typeof window !== 'undefined') {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { AchievementsModel, ACHIEVEMENTS };
 }
+const COSMETIC_THEMES = {
+  oled_cyan: {
+    id: 'oled_cyan',
+    category: 'theme',
+    title: 'Electric Sky',
+    icon: '⚡',
+    desc: 'True OLED pitch black paired with electric sky blue and crisp slate.',
+    reqLevel: 1,
+    reqTrophies: [],
+    reqLabel: 'Default (Lv. 1)',
+    swatches: ['#000000', '#38bdf8', '#526071', '#f1f5f9'],
+    vars: {
+      '--bg-color': '#000000',
+      '--bg-secondary': '#0b0f14',
+      '--main-color': '#38bdf8',
+      '--main-color-hover': '#7dd3fc',
+      '--caret-color': '#38bdf8',
+      '--accent': '#38bdf8',
+      '--sub-color': '#526071',
+      '--sub-alt-color': '#121820',
+      '--border-color': '#1a2332',
+      '--text-color': '#f1f5f9'
+    }
+  },
+  sakura_stream: {
+    id: 'sakura_stream',
+    category: 'theme',
+    title: 'Sakura Stream',
+    icon: '🌸',
+    desc: 'Soft midnight charcoal with pastel blossom pink, rose glow, and warm ivory.',
+    reqLevel: 3,
+    reqTrophies: [],
+    reqLabel: 'Reach Lv. 3',
+    swatches: ['#07050a', '#f472b6', '#fb7185', '#fdf2f8'],
+    vars: {
+      '--bg-color': '#07050a',
+      '--bg-secondary': '#120d18',
+      '--main-color': '#f472b6',
+      '--main-color-hover': '#f9a8d4',
+      '--caret-color': '#fb7185',
+      '--accent': '#f472b6',
+      '--sub-color': '#7c657e',
+      '--sub-alt-color': '#1b1324',
+      '--border-color': '#2d1f3b',
+      '--text-color': '#fdf2f8'
+    }
+  },
+  phosphor_crt: {
+    id: 'phosphor_crt',
+    category: 'theme',
+    title: 'Phosphor Terminal',
+    icon: '🖥️',
+    desc: 'Classic hacker monochrome CRT obsidian with matrix emerald and phosphor mint.',
+    reqLevel: 6,
+    reqTrophies: ['steady_cadence'],
+    reqLabel: 'Lv. 6 or Steady Cadence Trophy',
+    swatches: ['#020804', '#10b981', '#34d399', '#ecfdf5'],
+    vars: {
+      '--bg-color': '#020804',
+      '--bg-secondary': '#07140c',
+      '--main-color': '#10b981',
+      '--main-color-hover': '#34d399',
+      '--caret-color': '#34d399',
+      '--accent': '#10b981',
+      '--sub-color': '#3b6e56',
+      '--sub-alt-color': '#0b1e13',
+      '--border-color': '#133322',
+      '--text-color': '#ecfdf5'
+    }
+  },
+  cyberpunk_neon: {
+    id: 'cyberpunk_neon',
+    category: 'theme',
+    title: 'Cyberpunk Neon',
+    icon: '🌆',
+    desc: 'High-contrast synthwave void with hot magenta and radioactive cyber cyan.',
+    reqLevel: 10,
+    reqTrophies: ['cruising_60'],
+    reqLabel: 'Lv. 10 or Cruising Altitude Trophy',
+    swatches: ['#080312', '#e879f9', '#22d3ee', '#fae8ff'],
+    vars: {
+      '--bg-color': '#080312',
+      '--bg-secondary': '#120824',
+      '--main-color': '#e879f9',
+      '--main-color-hover': '#f0abfc',
+      '--caret-color': '#22d3ee',
+      '--accent': '#e879f9',
+      '--sub-color': '#735796',
+      '--sub-alt-color': '#1a0c33',
+      '--border-color': '#2e1659',
+      '--text-color': '#fae8ff'
+    }
+  },
+  nord_frost: {
+    id: 'nord_frost',
+    category: 'theme',
+    title: 'Nord Frost',
+    icon: '❄️',
+    desc: 'Glacial deep slate with arctic indigo, polar ice, and frosted snow white.',
+    reqLevel: 15,
+    reqTrophies: ['silver_stream'],
+    reqLabel: 'Lv. 15 or Silver Stream Trophy',
+    swatches: ['#090d16', '#818cf8', '#a5b4fc', '#eef2ff'],
+    vars: {
+      '--bg-color': '#090d16',
+      '--bg-secondary': '#111827',
+      '--main-color': '#818cf8',
+      '--main-color-hover': '#a5b4fc',
+      '--caret-color': '#818cf8',
+      '--accent': '#818cf8',
+      '--sub-color': '#64748b',
+      '--sub-alt-color': '#1e293b',
+      '--border-color': '#334155',
+      '--text-color': '#eef2ff'
+    }
+  },
+  obsidian_gold: {
+    id: 'obsidian_gold',
+    category: 'theme',
+    title: 'Sovereign Gold',
+    icon: '👑',
+    desc: 'Royal pitch obsidian with sovereign gold luminescence and warm champagne.',
+    reqLevel: 20,
+    reqTrophies: [],
+    reqTrophyCount: 10,
+    reqLabel: 'Lv. 20 or 10+ Trophies Unlocked',
+    swatches: ['#060502', '#fbbf24', '#fcd34d', '#fefce8'],
+    vars: {
+      '--bg-color': '#060502',
+      '--bg-secondary': '#120f07',
+      '--main-color': '#fbbf24',
+      '--main-color-hover': '#fcd34d',
+      '--caret-color': '#fbbf24',
+      '--accent': '#fbbf24',
+      '--sub-color': '#786b49',
+      '--sub-alt-color': '#1c170b',
+      '--border-color': '#362d16',
+      '--text-color': '#fefce8'
+    }
+  }
+};
+const COSMETIC_CARETS = {
+  line: {
+    id: 'line',
+    category: 'caret',
+    title: 'Precision Bar',
+    icon: '│',
+    desc: 'Clean 3px vertical bar with subpixel horizontal glide.',
+    reqLevel: 1,
+    reqTrophies: [],
+    reqLabel: 'Default (Lv. 1)'
+  },
+  underline: {
+    id: 'underline',
+    category: 'caret',
+    title: 'Low-Profile Runner',
+    icon: '▁',
+    desc: 'Sleek 3px horizontal underline gliding beneath the active character.',
+    reqLevel: 2,
+    reqTrophies: [],
+    reqLabel: 'Reach Lv. 2'
+  },
+  block: {
+    id: 'block',
+    category: 'caret',
+    title: 'Retro Terminal Block',
+    icon: '█',
+    desc: 'Translucent full-character terminal block cursor with crisp accent trim.',
+    reqLevel: 4,
+    reqTrophies: [],
+    reqLabel: 'Reach Lv. 4'
+  },
+  capsule: {
+    id: 'capsule',
+    category: 'caret',
+    title: 'Pulse Capsule',
+    icon: '⬭',
+    desc: 'Rounded glowing pill caret with a subtle rhythmic breathing aura.',
+    reqLevel: 8,
+    reqTrophies: ['sustained_current'],
+    reqLabel: 'Lv. 8 or Sustained Current Trophy'
+  },
+  prism: {
+    id: 'prism',
+    category: 'caret',
+    title: 'Permanent Prism',
+    icon: '🌈',
+    desc: 'Keeps the 100% Flow iridescent rainbow barber-pole aura active at all times.',
+    reqLevel: 12,
+    reqTrophies: ['zen_master', 'overclocked'],
+    reqLabel: 'Lv. 12 or Zen Master / Overclocked'
+  }
+};
+const COSMETIC_SOUNDS = {
+  clicky_blue: {
+    id: 'clicky_blue',
+    category: 'sound',
+    title: 'Box Blue (Clicky)',
+    icon: '🟦',
+    desc: 'Crisp high-frequency mechanical click with flow-streak semitone pitch scaling.',
+    reqLevel: 1,
+    reqTrophies: [],
+    reqLabel: 'Default (Lv. 1)'
+  },
+  thoccy_linear: {
+    id: 'thoccy_linear',
+    category: 'sound',
+    title: 'Gateron Ink (Thoccy)',
+    icon: '⬛',
+    desc: 'Deep, muted low-frequency acoustic thock with warm sub-bass resonance.',
+    reqLevel: 3,
+    reqTrophies: [],
+    reqLabel: 'Reach Lv. 3'
+  },
+  tactile_brown: {
+    id: 'tactile_brown',
+    category: 'sound',
+    title: 'Tactile Brown',
+    icon: '🟫',
+    desc: 'Rounded mid-range dual-transient tactile bump with gentle acoustic warmth.',
+    reqLevel: 5,
+    reqTrophies: [],
+    reqLabel: 'Reach Lv. 5'
+  },
+  zen_droplet: {
+    id: 'zen_droplet',
+    category: 'sound',
+    title: 'Zen Water Droplet',
+    icon: '💧',
+    desc: 'Organic upward pitch-bent harmonic droplet for a calming zen atmosphere.',
+    reqLevel: 9,
+    reqTrophies: ['shadow_walker'],
+    reqLabel: 'Lv. 9 or Shadow Walker Trophy'
+  },
+  typewriter: {
+    id: 'typewriter',
+    category: 'sound',
+    title: 'Vintage Striker',
+    icon: '📠',
+    desc: 'Crisp metallic striker impact with a subtle carriage chime on spacebar.',
+    reqLevel: 14,
+    reqTrophies: ['marksman'],
+    reqLabel: 'Lv. 14 or Marksman Trophy'
+  }
+};
+const COSMETIC_FLOW_FX = {
+  adaptive_resonance: {
+    id: 'adaptive_resonance',
+    category: 'flowFx',
+    title: 'Adaptive Resonance',
+    icon: '🔮',
+    desc: '100% theme-reactive portals and perimeter glow dynamically matched to your equipped theme.',
+    reqLevel: 1,
+    reqTrophies: [],
+    reqLabel: 'Default (Lv. 1)',
+    swatches: ['var(--main-color)', 'var(--caret-color)', 'var(--sub-color)']
+  },
+  zen_trance: {
+    id: 'zen_trance',
+    category: 'flowFx',
+    title: 'Zen Trance',
+    icon: '🌑',
+    desc: 'Zero chromatic distraction. Deep velvet focus vignette with a razor-thin luminance hairline.',
+    reqLevel: 2,
+    reqTrophies: [],
+    reqLabel: 'Reach Lv. 2',
+    swatches: ['#000000', '#334155', '#e2e8f0']
+  },
+  prismatic_aurora: {
+    id: 'prismatic_aurora',
+    category: 'flowFx',
+    title: 'Prismatic Aurora',
+    icon: '🌌',
+    desc: 'Ethereal northern lights ribbons undulating across the screen borders with iridescent refraction.',
+    reqLevel: 7,
+    reqTrophies: ['sustained_current'],
+    reqLabel: 'Lv. 7 or Sustained Current Trophy',
+    swatches: ['#00ff88', '#00ccff', '#818cf8', '#f472b6']
+  },
+  cyberpunk_grid: {
+    id: 'cyberpunk_grid',
+    category: 'flowFx',
+    title: 'Cyberpunk Grid',
+    icon: '🕸️',
+    desc: 'Synthwave wireframe laser frame with perspective corner grids and subtle CRT scanlines.',
+    reqLevel: 11,
+    reqTrophies: ['flow_architect'],
+    reqLabel: 'Lv. 11 or Flow Architect Trophy',
+    swatches: ['#e879f9', '#22d3ee', '#7928ca']
+  },
+  solar_flame: {
+    id: 'solar_flame',
+    category: 'flowFx',
+    title: 'Solar Inferno',
+    icon: '🔥',
+    desc: 'Procedural organic flames generated via SVG turbulence filters with rising combustion embers.',
+    reqLevel: 16,
+    reqTrophies: ['unstoppable_current', 'supersonic_90'],
+    reqLabel: 'Lv. 16 or Unstoppable / Supersonic',
+    swatches: ['#dc2626', '#f97316', '#fbbf24', '#fef08a']
+  },
+  hyperdrive_warp: {
+    id: 'hyperdrive_warp',
+    category: 'flowFx',
+    title: 'Hyperdrive Warp',
+    icon: '🚀',
+    desc: 'Sci-fi velocity tunnel with radial speedline streaks around the viewport periphery.',
+    reqLevel: 19,
+    reqTrophies: ['flow_grandmaster', 'mach_1'],
+    reqLabel: 'Lv. 19 or Grandmaster / Mach 1',
+    swatches: ['#38bdf8', '#818cf8', '#f8fafc']
+  }
+};
+const COSMETIC_CARET_FX = {
+  rainbow_prism: {
+    id: 'rainbow_prism',
+    category: 'caretFx',
+    title: 'Prismatic Rainbow',
+    icon: '🌈',
+    desc: 'Classic 135° diagonal chromatic spectrum sliding continuously across any caret shape.',
+    reqLevel: 1,
+    reqTrophies: [],
+    reqLabel: 'Default (Lv. 1)',
+    swatches: ['#ff0055', '#ffcc00', '#00ff88', '#00ccff']
+  },
+  theme_overdrive: {
+    id: 'theme_overdrive',
+    category: 'caretFx',
+    title: 'Theme Overdrive',
+    icon: '⚡',
+    desc: 'Supercharged high-contrast aura cycling between your theme accent and a white-hot core.',
+    reqLevel: 4,
+    reqTrophies: [],
+    reqLabel: 'Reach Lv. 4',
+    swatches: ['var(--main-color)', 'var(--caret-color)', '#ffffff']
+  },
+  solar_flare: {
+    id: 'solar_flare',
+    category: 'caretFx',
+    title: 'Solar Flare',
+    icon: '☀️',
+    desc: 'Blazing thermal gradient rising from cherry red and ember orange to solar gold.',
+    reqLevel: 8,
+    reqTrophies: ['hot_streak'],
+    reqLabel: 'Lv. 8 or Hot Streak Trophy',
+    swatches: ['#dc2626', '#f97316', '#fbbf24', '#fef08a']
+  },
+  holo_glitch: {
+    id: 'holo_glitch',
+    category: 'caretFx',
+    title: 'Holo Glitch',
+    icon: '👾',
+    desc: 'Digital scanline bands with high-frequency micro-jitter and RGB chromatic split.',
+    reqLevel: 13,
+    reqTrophies: ['clutch_recovery'],
+    reqLabel: 'Lv. 13 or Clutch Recovery Trophy',
+    swatches: ['#f43f5e', '#ffffff', '#22d3ee']
+  },
+  frost_sparkle: {
+    id: 'frost_sparkle',
+    category: 'caretFx',
+    title: 'Ethereal Frost',
+    icon: '❄️',
+    desc: 'Shimmering diamond cyan, polar ice, and snow-white crystalline refraction.',
+    reqLevel: 15,
+    reqTrophies: ['ice_veins'],
+    reqLabel: 'Lv. 15 or Ice in the Veins Trophy',
+    swatches: ['#38bdf8', '#e0f2fe', '#ffffff', '#818cf8']
+  },
+  plasma_arc: {
+    id: 'plasma_arc',
+    category: 'caretFx',
+    title: 'Plasma Arc',
+    icon: '⚛️',
+    desc: 'High-voltage electric violet, hot magenta, and arc-white plasma flicker.',
+    reqLevel: 18,
+    reqTrophies: ['overclocked'],
+    reqLabel: 'Lv. 18 or Overclocked Trophy',
+    swatches: ['#a855f7', '#ec4899', '#38bdf8', '#ffffff']
+  }
+};
+const COSMETIC_GHOST_STYLES = {
+  phantom_line: {
+    id: 'phantom_line',
+    category: 'ghostStyle',
+    title: 'Phantom Beam',
+    icon: '👻',
+    desc: 'Classic semi-transparent ethereal white vertical pacer beam.',
+    reqLevel: 1,
+    reqTrophies: [],
+    reqLabel: 'Default (Lv. 1)',
+    swatches: ['#ffffff', '#94a3b8']
+  },
+  hologram_runner: {
+    id: 'hologram_runner',
+    category: 'ghostStyle',
+    title: 'Hologram Runner',
+    icon: '▁',
+    desc: 'Full-character glowing cyan underline runner skimming beneath target letters.',
+    reqLevel: 3,
+    reqTrophies: ['pace_setter'],
+    reqLabel: 'Lv. 3 or Pace Setter Trophy',
+    swatches: ['#22d3ee', '#0ea5e9']
+  },
+  theme_specter: {
+    id: 'theme_specter',
+    category: 'ghostStyle',
+    title: 'Theme Specter',
+    icon: '💠',
+    desc: 'Vertical pacer beam tinted dynamically with your active theme accent and glow.',
+    reqLevel: 5,
+    reqTrophies: [],
+    reqLabel: 'Reach Lv. 5',
+    swatches: ['var(--main-color)', 'var(--caret-color)']
+  },
+  wireframe_block: {
+    id: 'wireframe_block',
+    category: 'ghostStyle',
+    title: 'Wireframe Box',
+    icon: '▢',
+    desc: 'Full-character hollow terminal wireframe box framing the target pace character.',
+    reqLevel: 6,
+    reqTrophies: ['ghost_whisperer'],
+    reqLabel: 'Lv. 6 or Ghost Whisperer Trophy',
+    swatches: ['#38bdf8', '#0f172a']
+  },
+  golden_hare: {
+    id: 'golden_hare',
+    category: 'ghostStyle',
+    title: 'Golden Hare',
+    icon: '🏆',
+    desc: 'Championship radiant gold vertical capsule with warm amber luminescence.',
+    reqLevel: 10,
+    reqTrophies: ['shadow_conqueror'],
+    reqLabel: 'Lv. 10 or Shadow Conqueror Trophy',
+    swatches: ['#fbbf24', '#f59e0b', '#fef08a']
+  },
+  shadow_rival: {
+    id: 'shadow_rival',
+    category: 'ghostStyle',
+    title: 'Crimson Rival',
+    icon: '⚔️',
+    desc: 'Translucent dark-crimson block cursor with a razor-sharp crimson bottom edge.',
+    reqLevel: 14,
+    reqTrophies: ['ghost_duelist'],
+    reqLabel: 'Lv. 14 or Ghost Duelist Trophy',
+    swatches: ['#f43f5e', '#881337']
+  }
+};
+const DEFAULT_EQUIPPED_COSMETICS = {
+  theme: 'oled_cyan',
+  flowFx: 'adaptive_resonance',
+  caret: 'line',
+  caretFx: 'rainbow_prism',
+  ghostStyle: 'phantom_line',
+  sound: 'clicky_blue'
+};
+class CosmeticsModel {
+  constructor() {
+    this.themes = COSMETIC_THEMES;
+    this.flowFx = COSMETIC_FLOW_FX;
+    this.carets = COSMETIC_CARETS;
+    this.caretFx = COSMETIC_CARET_FX;
+    this.ghostStyles = COSMETIC_GHOST_STYLES;
+    this.sounds = COSMETIC_SOUNDS;
+    this.allById = Object.assign(
+      {},
+      COSMETIC_THEMES,
+      COSMETIC_FLOW_FX,
+      COSMETIC_CARETS,
+      COSMETIC_CARET_FX,
+      COSMETIC_GHOST_STYLES,
+      COSMETIC_SOUNDS
+    );
+  }
+  getItem(id) {
+    return this.allById[id] || null;
+  }
+  getTheme(id) {
+    return this.themes[id] || this.themes.oled_cyan;
+  }
+  getFlowFx(id) {
+    return this.flowFx[id] || this.flowFx.adaptive_resonance;
+  }
+  getCaret(id) {
+    return this.carets[id] || this.carets.line;
+  }
+  getCaretFx(id) {
+    return this.caretFx[id] || this.caretFx.rainbow_prism;
+  }
+  getGhostStyle(id) {
+    return this.ghostStyles[id] || this.ghostStyles.phantom_line;
+  }
+  getSound(id) {
+    return this.sounds[id] || this.sounds.clicky_blue;
+  }
+  listByCategory(category) {
+    if (category === 'theme' || category === 'themes') return Object.values(this.themes);
+    if (category === 'flowFx' || category === 'flowfx') return Object.values(this.flowFx);
+    if (category === 'caret' || category === 'carets') return Object.values(this.carets);
+    if (category === 'caretFx' || category === 'caretfx') return Object.values(this.caretFx);
+    if (category === 'ghostStyle' || category === 'ghost') return Object.values(this.ghostStyles);
+    if (category === 'sound' || category === 'sounds') return Object.values(this.sounds);
+    return [];
+  }
+  listAll() {
+    return [
+      ...Object.values(this.themes),
+      ...Object.values(this.flowFx),
+      ...Object.values(this.carets),
+      ...Object.values(this.caretFx),
+      ...Object.values(this.ghostStyles),
+      ...Object.values(this.sounds)
+    ];
+  }
+  getTotalCount() {
+    return this.listAll().length;
+  }
+  isUnlocked(id, level = 1, unlockedAchievements = {}) {
+    const item = this.allById[id];
+    if (!item) return false;
+    const lv = Math.max(1, Number(level) || 1);
+    if (lv >= (item.reqLevel || 1)) return true;
+    const achMap = unlockedAchievements || {};
+    if (Array.isArray(item.reqTrophies) && item.reqTrophies.length > 0) {
+      if (item.reqTrophies.some(tId => Boolean(achMap[tId]))) {
+        return true;
+      }
+    }
+    if (typeof item.reqTrophyCount === 'number' && item.reqTrophyCount > 0) {
+      const unlockedCount = Object.keys(achMap).length;
+      if (unlockedCount >= item.reqTrophyCount) {
+        return true;
+      }
+    }
+    return false;
+  }
+  getUnlockedCount(level = 1, unlockedAchievements = {}) {
+    return this.listAll().filter(item => this.isUnlocked(item.id, level, unlockedAchievements)).length;
+  }
+  getAnnotatedItems(category, level = 1, unlockedAchievements = {}, equipped = {}) {
+    const eq = Object.assign({}, DEFAULT_EQUIPPED_COSMETICS, equipped);
+    return this.listByCategory(category).map(item => {
+      const unlocked = this.isUnlocked(item.id, level, unlockedAchievements);
+      const isEquipped = eq[item.category] === item.id;
+      return Object.assign({}, item, {
+        unlocked,
+        equipped: isEquipped,
+        unlockLabel: item.reqLabel || item.unlockLabel || ''
+      });
+    });
+  }
+  getNewlyUnlockedOnLevelUp(oldLevel, newLevel, unlockedAchievements = {}) {
+    const prevLv = Math.max(1, Number(oldLevel) || 1);
+    const nextLv = Math.max(1, Number(newLevel) || 1);
+    if (nextLv <= prevLv) return [];
+    return this.listAll().filter(item => {
+      const wasUnlocked = this.isUnlocked(item.id, prevLv, unlockedAchievements);
+      const nowUnlocked = this.isUnlocked(item.id, nextLv, unlockedAchievements);
+      return !wasUnlocked && nowUnlocked;
+    });
+  }
+}
+if (typeof window !== 'undefined') {
+  window.COSMETIC_THEMES = COSMETIC_THEMES;
+  window.COSMETIC_FLOW_FX = COSMETIC_FLOW_FX;
+  window.COSMETIC_CARETS = COSMETIC_CARETS;
+  window.COSMETIC_CARET_FX = COSMETIC_CARET_FX;
+  window.COSMETIC_GHOST_STYLES = COSMETIC_GHOST_STYLES;
+  window.COSMETIC_SOUNDS = COSMETIC_SOUNDS;
+  window.DEFAULT_EQUIPPED_COSMETICS = DEFAULT_EQUIPPED_COSMETICS;
+  window.CosmeticsModel = CosmeticsModel;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    COSMETIC_THEMES,
+    COSMETIC_FLOW_FX,
+    COSMETIC_CARETS,
+    COSMETIC_CARET_FX,
+    COSMETIC_GHOST_STYLES,
+    COSMETIC_SOUNDS,
+    DEFAULT_EQUIPPED_COSMETICS,
+    CosmeticsModel
+  };
+}
 const STORAGE_KEYS = {
   CLASSIC_STATS: 'typeflow_classic_stats_v1',
   GAME_SAVE:     'typeflow_game_save_v2',
@@ -5175,8 +6248,8 @@ const DEFAULT_GAME_SAVE = {
   lifetimeWords: 0,
   highStreak: 0,
   hiddenMode: false,
-  hiddenMethod: 'char',
-  hiddenWordDistance: 2,
+  hiddenMethod: 'word',
+  hiddenWordDistance: 1,
   ghostCursor: false,
   ghostSpeed: 50,
   achievements: {},
@@ -5189,6 +6262,14 @@ const DEFAULT_GAME_SAVE = {
     tests92Consistency: 0,
     testsHiddenMode: 0,
     eggsHatchedTotal: 0
+  },
+  equippedCosmetics: {
+    theme: 'oled_cyan',
+    flowFx: 'adaptive_resonance',
+    caret: 'line',
+    caretFx: 'rainbow_prism',
+    ghostStyle: 'phantom_line',
+    sound: 'clicky_blue'
   }
 };
 function safeGetLocalStorage() {
@@ -5319,17 +6400,32 @@ class StorageService {
       if (typeof state.hiddenMode !== 'boolean') {
         state.hiddenMode = false;
       }
-      if (state.hiddenMethod !== 'char' && state.hiddenMethod !== 'word') {
+      if (state.hiddenMethod !== 'char' && state.hiddenMethod !== 'word' && state.hiddenMethod !== 'combo') {
+        state.hiddenMethod = 'word';
+      } else if (state.hiddenMethod === 'combo') {
         state.hiddenMethod = 'char';
       }
       if (typeof state.hiddenWordDistance !== 'number' || isNaN(state.hiddenWordDistance) || state.hiddenWordDistance < 1 || state.hiddenWordDistance > 5) {
-        state.hiddenWordDistance = 2;
+        state.hiddenWordDistance = 1;
       }
       if (typeof state.ghostCursor !== 'boolean') {
         state.ghostCursor = false;
       }
       if (typeof state.ghostSpeed !== 'number' || isNaN(state.ghostSpeed) || state.ghostSpeed <= 0) {
         state.ghostSpeed = 50;
+      }
+      const defaultCosmetics = {
+        theme: 'oled_cyan',
+        flowFx: 'adaptive_resonance',
+        caret: 'line',
+        caretFx: 'rainbow_prism',
+        ghostStyle: 'phantom_line',
+        sound: 'clicky_blue'
+      };
+      if (!state.equippedCosmetics || typeof state.equippedCosmetics !== 'object') {
+        state.equippedCosmetics = Object.assign({}, defaultCosmetics);
+      } else {
+        state.equippedCosmetics = Object.assign({}, defaultCosmetics, state.equippedCosmetics);
       }
       return state;
     } catch (e) {
@@ -5613,6 +6709,7 @@ class StorageService {
         if (prev.achievements) fresh.achievements = prev.achievements;
         if (prev.achievementCounters) fresh.achievementCounters = prev.achievementCounters;
         if (prev.achievementRetroSynced) fresh.achievementRetroSynced = prev.achievementRetroSynced;
+        if (prev.equippedCosmetics) fresh.equippedCosmetics = prev.equippedCosmetics;
       }
       this.saveGameSave(fresh);
       return fresh;
@@ -5682,15 +6779,16 @@ class StorageService {
       if (s) {
         const val = s.getItem(STORAGE_KEYS.HIDDEN_METHOD);
         if (val === 'char' || val === 'word') return val;
+        if (val === 'combo') return 'char';
       }
       const save = this.getGameSave();
-      return (save.hiddenMethod === 'word') ? 'word' : 'char';
+      return (save.hiddenMethod === 'char') ? 'char' : 'word';
     } catch (e) {
-      return 'char';
+      return 'word';
     }
   }
   setHiddenMethod(val) {
-    const method = (val === 'word') ? 'word' : 'char';
+    const method = (val === 'char' || val === 'combo') ? 'char' : 'word';
     try {
       const s = this._getStorage();
       if (s) s.setItem(STORAGE_KEYS.HIDDEN_METHOD, method);
@@ -5711,14 +6809,14 @@ class StorageService {
       }
       const save = this.getGameSave();
       const dist = parseInt(save.hiddenWordDistance, 10);
-      return (!isNaN(dist) && dist >= 1 && dist <= 6) ? dist : 2;
+      return (!isNaN(dist) && dist >= 1 && dist <= 6) ? dist : 1;
     } catch (e) {
-      return 2;
+      return 1;
     }
   }
   setHiddenWordDistance(val) {
     const parsed = parseInt(val, 10);
-    const dist = isNaN(parsed) ? 2 : Math.max(1, Math.min(6, parsed));
+    const dist = isNaN(parsed) ? 1 : Math.max(1, Math.min(6, parsed));
     try {
       const s = this._getStorage();
       if (s) s.setItem(STORAGE_KEYS.HIDDEN_WORD_DIST, String(dist));
@@ -5883,6 +6981,37 @@ class StorageService {
     }
     return newlyUnlocked;
   }
+  getEquippedCosmetics() {
+    const save = this.getGameSave();
+    return Object.assign(
+      {
+        theme: 'oled_cyan',
+        flowFx: 'adaptive_resonance',
+        caret: 'line',
+        caretFx: 'rainbow_prism',
+        ghostStyle: 'phantom_line',
+        sound: 'clicky_blue'
+      },
+      save.equippedCosmetics || {}
+    );
+  }
+  setEquippedCosmetic(category, id) {
+    if (!category || !id) return this.getEquippedCosmetics();
+    const save = this.getGameSave();
+    if (!save.equippedCosmetics || typeof save.equippedCosmetics !== 'object') {
+      save.equippedCosmetics = {
+        theme: 'oled_cyan',
+        flowFx: 'adaptive_resonance',
+        caret: 'line',
+        caretFx: 'rainbow_prism',
+        ghostStyle: 'phantom_line',
+        sound: 'clicky_blue'
+      };
+    }
+    save.equippedCosmetics[category] = id;
+    this.saveGameSave(save);
+    return Object.assign({}, save.equippedCosmetics);
+  }
 }
 const storageService = new StorageService();
 const StorageManager = storageService;
@@ -5908,6 +7037,7 @@ class AudioService {
   constructor() {
     this.audioCtx = null;
     this.soundEnabled = false;
+    this.soundPack = 'clicky_blue';
     try {
       if (typeof localStorage !== 'undefined') {
         this.soundEnabled = localStorage.getItem('typeflow_sound_enabled') === 'true';
@@ -5915,6 +7045,18 @@ class AudioService {
     } catch (e) {
       this.soundEnabled = false;
     }
+  }
+  setSoundPack(packId) {
+    const valid = ['clicky_blue', 'thoccy_linear', 'tactile_brown', 'zen_droplet', 'typewriter'];
+    if (valid.includes(packId)) {
+      this.soundPack = packId;
+    } else {
+      this.soundPack = 'clicky_blue';
+    }
+    return this.soundPack;
+  }
+  getSoundPack() {
+    return this.soundPack || 'clicky_blue';
   }
   init() {
     if (!this.audioCtx) {
@@ -5953,24 +7095,124 @@ class AudioService {
   toggle() {
     return this.setEnabled(!this.soundEnabled);
   }
+  _triggerSwitchNote(packId, isSpace = false, streakStep = 0, timeOffset = 0) {
+    if (!this.audioCtx) return;
+    const ctx = this.audioCtx;
+    const now = ctx.currentTime + timeOffset;
+    const pitchSemitones = Math.min(18, streakStep || 0);
+    const pitchMult = Math.pow(1.05946, pitchSemitones);
+    const jitter = (Math.random() * 16) - 8;
+    if (packId === 'thoccy_linear') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const startFreq = ((isSpace ? 115 : 155) + jitter * 0.4) * Math.pow(1.03, pitchSemitones);
+      const endFreq = isSpace ? 48 : 65;
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(startFreq, now);
+      osc.frequency.exponentialRampToValueAtTime(endFreq, now + (isSpace ? 0.055 : 0.042));
+      gain.gain.setValueAtTime(0.14, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + (isSpace ? 0.06 : 0.045));
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.065);
+      return;
+    }
+    if (packId === 'tactile_brown') {
+      const oscBody = ctx.createOscillator();
+      const gainBody = ctx.createGain();
+      const bodyFreq = ((isSpace ? 200 : 265) + jitter * 0.5) * Math.pow(1.04, pitchSemitones);
+      oscBody.type = 'triangle';
+      oscBody.frequency.setValueAtTime(bodyFreq, now);
+      oscBody.frequency.exponentialRampToValueAtTime(95, now + 0.038);
+      gainBody.gain.setValueAtTime(0.11, now);
+      gainBody.gain.exponentialRampToValueAtTime(0.001, now + 0.042);
+      oscBody.connect(gainBody);
+      gainBody.connect(ctx.destination);
+      oscBody.start(now);
+      oscBody.stop(now + 0.048);
+      const oscBump = ctx.createOscillator();
+      const gainBump = ctx.createGain();
+      oscBump.type = 'sine';
+      oscBump.frequency.setValueAtTime(bodyFreq * 2.1, now);
+      gainBump.gain.setValueAtTime(0.045, now);
+      gainBump.gain.exponentialRampToValueAtTime(0.001, now + 0.016);
+      oscBump.connect(gainBump);
+      gainBump.connect(ctx.destination);
+      oscBump.start(now);
+      oscBump.stop(now + 0.02);
+      return;
+    }
+    if (packId === 'zen_droplet') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const baseFreq = ((isSpace ? 290 : 390) + jitter * 0.6) * pitchMult;
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(baseFreq, now);
+      osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.62, now + (isSpace ? 0.06 : 0.048));
+      gain.gain.setValueAtTime(0.09, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + (isSpace ? 0.065 : 0.052));
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.07);
+      return;
+    }
+    if (packId === 'typewriter') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const startFreq = isSpace ? 240 : (640 + jitter);
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(startFreq, now);
+      osc.frequency.exponentialRampToValueAtTime(isSpace ? 90 : 170, now + 0.028);
+      gain.gain.setValueAtTime(0.075, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.032);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.036);
+      if (isSpace) {
+        const bell = ctx.createOscillator();
+        const bellGain = ctx.createGain();
+        bell.type = 'sine';
+        bell.frequency.setValueAtTime(1318.5 * Math.pow(1.02, Math.min(12, streakStep || 0)), now);
+        bellGain.gain.setValueAtTime(0.035, now);
+        bellGain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+        bell.connect(bellGain);
+        bellGain.connect(ctx.destination);
+        bell.start(now);
+        bell.stop(now + 0.15);
+      }
+      return;
+    }
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const baseFreq = isSpace ? 320 : 480;
+    const freq = (baseFreq + jitter) * pitchMult;
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, now);
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + (isSpace ? 0.05 : 0.035));
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.06);
+  }
   playKey(isSpace = false, streakStep = 0) {
     if (!this.soundEnabled || !this.audioCtx) return;
     try {
       this.init();
-      const ctx = this.audioCtx;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const baseFreq = isSpace ? 320 : 480;
-      const pitchSemitones = Math.min(18, streakStep || 0);
-      const freq = (baseFreq + (Math.random() * 25 - 12)) * Math.pow(1.05946, pitchSemitones);
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, ctx.currentTime);
-      gain.gain.setValueAtTime(0.08, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (isSpace ? 0.05 : 0.035));
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.06);
+      this._triggerSwitchNote(this.soundPack || 'clicky_blue', isSpace, streakStep, 0);
+    } catch (e) {}
+  }
+  previewSoundPack(packId) {
+    try {
+      this.init();
+      if (!this.audioCtx) return;
+      const targetPack = packId || this.soundPack || 'clicky_blue';
+      this._triggerSwitchNote(targetPack, false, 2, 0.0);
+      this._triggerSwitchNote(targetPack, false, 4, 0.075);
+      this._triggerSwitchNote(targetPack, true, 6, 0.155);
     } catch (e) {}
   }
   playFracture() {
@@ -6115,8 +7357,12 @@ class StageView {
     this.scrollOffset = 0;
     this.wordElements = [];
     this.hiddenMode = false;
-    this.hiddenMethod = 'char';
-    this.hiddenWordDistance = 2;
+    this.hiddenMethod = 'word';
+    this.hiddenWordDistance = 1;
+    this.caretStyle = 'line';
+    this.caretFx = 'rainbow_prism';
+    this.ghostStyle = 'phantom_line';
+    this.isFlowRainbow = false;
   }
   bindEvents(handlers = {}) {
     const handleBoxClick = () => {
@@ -6482,8 +7728,35 @@ class StageView {
     }
   }
   setCaretRainbow(isApex) {
+    this.isFlowRainbow = Boolean(isApex);
     if (!this.caret) return;
-    this.caret.classList.toggle('caret-rainbow', isApex);
+    this.caret.classList.toggle('caret-rainbow', this.isFlowRainbow || this.caretStyle === 'prism');
+  }
+  setCaretStyle(styleId = 'line') {
+    const valid = ['line', 'underline', 'block', 'capsule', 'prism'];
+    this.caretStyle = valid.includes(styleId) ? styleId : 'line';
+    if (!this.caret) return this.caretStyle;
+    valid.forEach(s => this.caret.classList.remove(`caret-style-${s}`));
+    this.caret.classList.add(`caret-style-${this.caretStyle}`);
+    this.caret.classList.toggle('caret-rainbow', this.isFlowRainbow || this.caretStyle === 'prism');
+    return this.caretStyle;
+  }
+  setCaretFx(fxId = 'rainbow_prism') {
+    const valid = ['rainbow_prism', 'theme_overdrive', 'solar_flare', 'holo_glitch', 'frost_sparkle', 'plasma_arc'];
+    this.caretFx = valid.includes(fxId) ? fxId : 'rainbow_prism';
+    if (!this.caret) return this.caretFx;
+    valid.forEach(fx => this.caret.classList.remove(`caret-fx-${fx}`));
+    this.caret.classList.add(`caret-fx-${this.caretFx}`);
+    this.caret.classList.toggle('caret-rainbow', this.isFlowRainbow || this.caretStyle === 'prism');
+    return this.caretFx;
+  }
+  setGhostStyle(ghostStyleId = 'phantom_line') {
+    const valid = ['phantom_line', 'hologram_runner', 'theme_specter', 'wireframe_block', 'golden_hare', 'shadow_rival'];
+    this.ghostStyle = valid.includes(ghostStyleId) ? ghostStyleId : 'phantom_line';
+    if (!this.ghostCaret) return this.ghostStyle;
+    valid.forEach(gs => this.ghostCaret.classList.remove(`ghost-style-${gs}`));
+    this.ghostCaret.classList.add(`ghost-style-${this.ghostStyle}`);
+    return this.ghostStyle;
   }
   setPacePaused(isPaused) {
     if (!this.wordsBox) return;
@@ -6526,12 +7799,12 @@ class StageView {
     }
   }
   setHiddenMethod(method) {
-    this.hiddenMethod = (method === 'word') ? 'word' : 'char';
+    this.hiddenMethod = (method === 'char' || method === 'combo') ? 'char' : 'word';
     this._clearHiddenStyling();
   }
   setHiddenWordDistance(dist) {
     const d = parseInt(dist, 10);
-    this.hiddenWordDistance = (d >= 1 && d <= 6) ? d : 2;
+    this.hiddenWordDistance = (d >= 1 && d <= 6) ? d : 1;
   }
   _clearHiddenStyling() {
     if (!this.wordElements) return;
@@ -7013,6 +8286,14 @@ class HUDView {
         if (handlers.onRestart) handlers.onRestart();
       });
     }
+    const levelHudCard = this.levelHudCard || ((typeof document !== 'undefined') ? document.getElementById('level-hud-card') : null);
+    if (levelHudCard) {
+      levelHudCard.style.cursor = 'pointer';
+      levelHudCard.title = 'Open Cosmetic Armory & Progression Unlocks';
+      levelHudCard.addEventListener('click', () => {
+        if (handlers.onOpenArmory) handlers.onOpenArmory();
+      });
+    }
   }
   setFocusOpacity(opacity) {
     if (typeof document !== 'undefined' && document.documentElement) {
@@ -7165,13 +8446,13 @@ class HUDView {
       if (toast.parentNode) toast.parentNode.removeChild(toast);
     }, 950);
   }
-  updateHiddenModeState(enabled, method = 'char', distance = 2) {
+  updateHiddenModeState(enabled, method = 'word', distance = 1) {
     const btn = this.hdBtn || ((typeof document !== 'undefined') ? document.getElementById('hd-btn') : null);
     if (btn) {
       btn.classList.toggle('active', !!enabled);
       btn.setAttribute('aria-pressed', String(!!enabled));
       btn.title = enabled
-        ? `Hidden (HD) Mode: ON (${method === 'word' ? 'Word Vanish' : 'Character Horizon'}) - Click to disable`
+        ? `Hidden (HD) Mode: ON (${method === 'word' ? 'Word Vanish' : 'Combo Horizon'}) - Click to disable`
         : 'Toggle Hidden (HD) Look-Ahead Mode';
     }
     const pill = this.hdConfigPill || ((typeof document !== 'undefined') ? document.getElementById('hd-config-pill') : null);
@@ -7180,7 +8461,7 @@ class HUDView {
     }
     const charBtn = this.hdModeChar || ((typeof document !== 'undefined') ? document.getElementById('hd-mode-char') : null);
     const wordBtn = this.hdModeWord || ((typeof document !== 'undefined') ? document.getElementById('hd-mode-word') : null);
-    if (charBtn) charBtn.classList.toggle('active', method === 'char');
+    if (charBtn) charBtn.classList.toggle('active', method === 'char' || method === 'combo');
     if (wordBtn) wordBtn.classList.toggle('active', method === 'word');
     const sliderGroup = this.hdWordSliderGroup || ((typeof document !== 'undefined') ? document.getElementById('hd-word-slider-group') : null);
     if (sliderGroup) {
@@ -7234,7 +8515,9 @@ class HUDView {
           ? 'TIER II MASTERY'
           : (ach.tier === 'crown'
               ? '👑 CROWN JEWEL'
-              : (ach.tier === 'apex' ? '⚡ APEX FEAT' : '🌟 SIGNATURE FEAT')));
+              : (ach.tier === 'cosmetic'
+                  ? '🎨 ARMORY UNLOCKED'
+                  : (ach.tier === 'apex' ? '⚡ APEX FEAT' : '🌟 SIGNATURE FEAT'))));
     const tierClass = `tier-${ach.tier}`;
     toast.className = `achievement-toast visible ${tierClass}`;
     toast.innerHTML = `
@@ -7260,6 +8543,39 @@ class HUDView {
     if (btn) {
       btn.classList.toggle('has-badge', Boolean(visible));
     }
+  }
+  applyTheme(themeDef, rootEl = null) {
+    if (!themeDef || !themeDef.vars) return null;
+    this.activeThemeId = themeDef.id || 'oled_cyan';
+    const target = rootEl || ((typeof document !== 'undefined' && document.documentElement) ? document.documentElement : null);
+    if (target && target.style && typeof target.style.setProperty === 'function') {
+      Object.entries(themeDef.vars).forEach(([prop, val]) => {
+        target.style.setProperty(prop, val);
+      });
+    }
+    if (target && typeof target.setAttribute === 'function') {
+      target.setAttribute('data-theme', this.activeThemeId);
+    }
+    return this.activeThemeId;
+  }
+  applyFlowFx(flowFxId = 'adaptive_resonance', rootEl = null) {
+    const valid = ['adaptive_resonance', 'zen_trance', 'prismatic_aurora', 'cyberpunk_grid', 'solar_flame', 'hyperdrive_warp'];
+    const id = (typeof flowFxId === 'object' && flowFxId && flowFxId.id) ? flowFxId.id : flowFxId;
+    this.activeFlowFxId = valid.includes(id) ? id : 'adaptive_resonance';
+    const target = rootEl || ((typeof document !== 'undefined' && document.documentElement) ? document.documentElement : null);
+    if (target) {
+      if (target.dataset) {
+        target.dataset.flowFx = this.activeFlowFxId;
+      }
+      if (typeof target.setAttribute === 'function') {
+        target.setAttribute('data-flow-fx', this.activeFlowFxId);
+      }
+    }
+    if (this.flowVignetteOverlay && this.flowVignetteOverlay.classList) {
+      valid.forEach(fx => this.flowVignetteOverlay.classList.remove(`flow-fx-${fx}`));
+      this.flowVignetteOverlay.classList.add(`flow-fx-${this.activeFlowFxId}`);
+    }
+    return this.activeFlowFxId;
   }
 }
 if (typeof window !== 'undefined') {
@@ -7364,9 +8680,32 @@ class ChartView {
     ctx.stroke();
     ctx.restore();
     ctx.save();
+    let mainColor = '#38bdf8';
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      try {
+        const computed = getComputedStyle(document.documentElement).getPropertyValue('--main-color');
+        if (computed && computed.trim()) mainColor = computed.trim();
+      } catch (e) {}
+    }
     const grad = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartH);
-    grad.addColorStop(0, 'rgba(56, 189, 248, 0.25)');
-    grad.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
+    let gradColorStart = 'rgba(56, 189, 248, 0.25)';
+    let gradColorEnd = 'rgba(56, 189, 248, 0.0)';
+    if (mainColor.startsWith('#') && (mainColor.length === 7 || mainColor.length === 4)) {
+      let r = 56, g = 189, b = 248;
+      if (mainColor.length === 7) {
+        r = parseInt(mainColor.slice(1, 3), 16);
+        g = parseInt(mainColor.slice(3, 5), 16);
+        b = parseInt(mainColor.slice(5, 7), 16);
+      } else {
+        r = parseInt(mainColor[1] + mainColor[1], 16);
+        g = parseInt(mainColor[2] + mainColor[2], 16);
+        b = parseInt(mainColor[3] + mainColor[3], 16);
+      }
+      gradColorStart = `rgba(${r}, ${g}, ${b}, 0.25)`;
+      gradColorEnd = `rgba(${r}, ${g}, ${b}, 0.0)`;
+    }
+    grad.addColorStop(0, gradColorStart);
+    grad.addColorStop(1, gradColorEnd);
     ctx.beginPath();
     wpmHistory.forEach((pt, i) => {
       const x = getX(i);
@@ -7379,7 +8718,7 @@ class ChartView {
     ctx.closePath();
     ctx.fillStyle = grad;
     ctx.fill();
-    ctx.strokeStyle = '#38bdf8';
+    ctx.strokeStyle = mainColor;
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     wpmHistory.forEach((pt, i) => {
@@ -7409,7 +8748,7 @@ class ChartView {
     if (hoverIndex !== null && this.chartDataPoints[hoverIndex]) {
       const target = this.chartDataPoints[hoverIndex];
       ctx.save();
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+      ctx.strokeStyle = gradColorStart;
       ctx.lineWidth = 1;
       ctx.setLineDash([3, 3]);
       ctx.beginPath();
@@ -7418,7 +8757,7 @@ class ChartView {
       ctx.stroke();
       ctx.restore();
       ctx.save();
-      ctx.fillStyle = '#38bdf8';
+      ctx.fillStyle = mainColor;
       ctx.strokeStyle = '#000000';
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -7508,9 +8847,11 @@ class ModalView {
     this.tabStatsFlow = elements.tabStatsFlow || (typeof document !== 'undefined' ? document.getElementById('tab-stats-flow') : null);
     this.tabStatsClassic = elements.tabStatsClassic || (typeof document !== 'undefined' ? document.getElementById('tab-stats-classic') : null);
     this.tabStatsTrophies = elements.tabStatsTrophies || (typeof document !== 'undefined' ? document.getElementById('tab-stats-trophies') : null);
+    this.tabStatsArmory = elements.tabStatsArmory || (typeof document !== 'undefined' ? document.getElementById('tab-stats-armory') : null);
     this.paneStatsFlow = elements.paneStatsFlow || (typeof document !== 'undefined' ? document.getElementById('pane-stats-flow') : null);
     this.paneStatsClassic = elements.paneStatsClassic || (typeof document !== 'undefined' ? document.getElementById('pane-stats-classic') : null);
     this.paneStatsTrophies = elements.paneStatsTrophies || (typeof document !== 'undefined' ? document.getElementById('pane-stats-trophies') : null);
+    this.paneStatsArmory = elements.paneStatsArmory || (typeof document !== 'undefined' ? document.getElementById('pane-stats-armory') : null);
     this.trophiesCountEl = elements.trophiesCountEl || (typeof document !== 'undefined' ? document.getElementById('trophies-count') : null);
     this.trophiesProgressBar = elements.trophiesProgressBar || (typeof document !== 'undefined' ? document.getElementById('trophies-progress-bar') : null);
     this.trophiesGrid = elements.trophiesGrid || (typeof document !== 'undefined' ? document.getElementById('trophies-grid') : null);
@@ -7518,6 +8859,16 @@ class ModalView {
     this.currentTrophyFilter = 'all';
     this.currentAchievementsModel = null;
     this.currentStorageService = null;
+    this.armoryCountEl = elements.armoryCountEl || (typeof document !== 'undefined' ? document.getElementById('armory-count') : null);
+    this.armoryProgressBar = elements.armoryProgressBar || (typeof document !== 'undefined' ? document.getElementById('armory-progress-bar') : null);
+    this.armoryThemesGrid = elements.armoryThemesGrid || (typeof document !== 'undefined' ? document.getElementById('armory-themes-grid') : null);
+    this.armoryFlowFxGrid = elements.armoryFlowFxGrid || (typeof document !== 'undefined' ? document.getElementById('armory-flowfx-grid') : null);
+    this.armoryCaretsGrid = elements.armoryCaretsGrid || (typeof document !== 'undefined' ? document.getElementById('armory-carets-grid') : null);
+    this.armoryCaretFxGrid = elements.armoryCaretFxGrid || (typeof document !== 'undefined' ? document.getElementById('armory-caretfx-grid') : null);
+    this.armoryGhostGrid = elements.armoryGhostGrid || (typeof document !== 'undefined' ? document.getElementById('armory-ghost-grid') : null);
+    this.armorySoundsGrid = elements.armorySoundsGrid || (typeof document !== 'undefined' ? document.getElementById('armory-sounds-grid') : null);
+    this.armoryFilterBtns = elements.armoryFilterBtns || (typeof document !== 'undefined' ? document.querySelectorAll('.armory-filter-btn') : []);
+    this.currentArmoryFilter = 'all';
     this.statsRpgLevel = elements.statsRpgLevel || (typeof document !== 'undefined' ? document.getElementById('stats-rpg-level') : null);
     this.statsRpgTitle = elements.statsRpgTitle || (typeof document !== 'undefined' ? document.getElementById('stats-rpg-title') : null);
     this.statsRpgXp = elements.statsRpgXp || (typeof document !== 'undefined' ? document.getElementById('stats-rpg-xp') : null);
@@ -7583,12 +8934,15 @@ class ModalView {
     const isFlow = tabName === 'flow';
     const isClassic = tabName === 'classic';
     const isTrophies = tabName === 'trophies';
+    const isArmory = tabName === 'armory';
     if (this.tabStatsFlow) this.tabStatsFlow.classList.toggle('active', isFlow);
     if (this.tabStatsClassic) this.tabStatsClassic.classList.toggle('active', isClassic);
     if (this.tabStatsTrophies) this.tabStatsTrophies.classList.toggle('active', isTrophies);
+    if (this.tabStatsArmory) this.tabStatsArmory.classList.toggle('active', isArmory);
     if (this.paneStatsFlow) this.paneStatsFlow.style.display = isFlow ? 'flex' : 'none';
     if (this.paneStatsClassic) this.paneStatsClassic.style.display = isClassic ? 'flex' : 'none';
     if (this.paneStatsTrophies) this.paneStatsTrophies.style.display = isTrophies ? 'flex' : 'none';
+    if (this.paneStatsArmory) this.paneStatsArmory.style.display = isArmory ? 'flex' : 'none';
   }
   bindEvents(handlers = {}) {
     if (this.tabStatsFlow) {
@@ -7601,6 +8955,12 @@ class ModalView {
       this.tabStatsTrophies.addEventListener('click', () => {
         this.switchStatsTab('trophies');
         if (handlers.onSelectTrophiesTab) handlers.onSelectTrophiesTab();
+      });
+    }
+    if (this.tabStatsArmory) {
+      this.tabStatsArmory.addEventListener('click', () => {
+        this.switchStatsTab('armory');
+        if (handlers.onSelectArmoryTab) handlers.onSelectArmoryTab();
       });
     }
     if (this.nextTestBtn) {
@@ -7640,6 +9000,32 @@ class ModalView {
     }
     this.setupDeckFilters();
     this.setupTrophyFilters();
+    this.setupArmoryFilters();
+  }
+  setupArmoryFilters() {
+    const btns = (this.armoryFilterBtns && this.armoryFilterBtns.length > 0)
+      ? this.armoryFilterBtns
+      : (typeof document !== 'undefined' ? document.querySelectorAll('.armory-filter-btn') : []);
+    if (btns && btns.length > 0) {
+      btns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          btns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          this.currentArmoryFilter = btn.dataset.filter || 'all';
+          this.filterArmorySections(this.currentArmoryFilter);
+        });
+      });
+    }
+  }
+  filterArmorySections(filter = 'all') {
+    this.currentArmoryFilter = filter || 'all';
+    const sections = (typeof document !== 'undefined') ? document.querySelectorAll('.armory-section[data-armory-section]') : [];
+    if (sections && sections.length > 0) {
+      sections.forEach(sec => {
+        const secKey = sec.dataset.armorySection;
+        sec.style.display = (this.currentArmoryFilter === 'all' || secKey === this.currentArmoryFilter) ? 'flex' : 'none';
+      });
+    }
   }
   setupTrophyFilters() {
     const btns = (this.trophyFilterBtns && this.trophyFilterBtns.length > 0)
@@ -7910,6 +9296,76 @@ class ModalView {
       this.trophiesGrid.appendChild(card);
     });
   }
+  renderArmory(cosmeticsModel, storageService, handlers = {}) {
+    if (!cosmeticsModel) return;
+    const gameSave = (storageService && storageService.getGameSave) ? storageService.getGameSave() : { level: 1, achievements: {} };
+    const level = gameSave.level || 1;
+    const unlockedAchievements = gameSave.achievements || ((storageService && storageService.getAchievements) ? storageService.getAchievements() : {});
+    const equipped = (storageService && storageService.getEquippedCosmetics)
+      ? storageService.getEquippedCosmetics()
+      : { theme: 'oled_cyan', caret: 'line', sound: 'clicky_blue' };
+    const totalCount = cosmeticsModel.getTotalCount();
+    const unlockedCount = cosmeticsModel.getUnlockedCount(level, unlockedAchievements);
+    const pct = totalCount > 0 ? Math.round((unlockedCount / totalCount) * 100) : 0;
+    if (this.armoryCountEl) {
+      this.armoryCountEl.textContent = `${unlockedCount} / ${totalCount} unlocked (${pct}%)`;
+    }
+    if (this.armoryProgressBar) {
+      this.armoryProgressBar.style.width = `${pct}%`;
+    }
+    const renderCategoryGrid = (gridEl, category) => {
+      if (!gridEl) return;
+      const doc = (gridEl && gridEl.ownerDocument)
+        ? gridEl.ownerDocument
+        : ((typeof document !== 'undefined') ? document : null);
+      if (!doc) return;
+      gridEl.innerHTML = '';
+      const items = cosmeticsModel.getAnnotatedItems(category, level, unlockedAchievements, equipped);
+      items.forEach(item => {
+        const card = doc.createElement('div');
+        card.className = `armory-card ${item.unlocked ? 'unlocked' : 'locked'} ${item.equipped ? 'equipped' : ''}`;
+        card.dataset.id = item.id;
+        card.dataset.category = item.category;
+        let swatchesHtml = '';
+        if (Array.isArray(item.swatches) && item.swatches.length > 0) {
+          const dots = item.swatches.map(c => `<span class="theme-swatch-dot" style="background: ${c};"></span>`).join('');
+          swatchesHtml = `<div class="theme-swatches">${dots}</div>`;
+        }
+        let badgeHtml = '';
+        if (item.equipped) {
+          badgeHtml = `<div class="armory-badge equipped">✓ Equipped</div>`;
+        } else if (item.unlocked) {
+          badgeHtml = `<div class="armory-badge unlocked">${category === 'sound' ? '🔊 Click to Equip & Preview' : 'Click to Equip'}</div>`;
+        } else {
+          badgeHtml = `<div class="armory-badge locked">🔒 ${item.unlockLabel}</div>`;
+        }
+        card.innerHTML = `
+          <div class="armory-card-header">
+            <div class="armory-icon-wrap">${item.icon}</div>
+            <div class="armory-title-wrap">
+              <div class="armory-title">${item.title}</div>
+              ${swatchesHtml}
+            </div>
+          </div>
+          <div class="armory-desc">${item.desc}</div>
+          ${badgeHtml}
+        `;
+        if (item.unlocked && handlers.onEquipCosmetic) {
+          card.addEventListener('click', () => {
+            handlers.onEquipCosmetic(item.category, item.id);
+          });
+        }
+        gridEl.appendChild(card);
+      });
+    };
+    renderCategoryGrid(this.armoryThemesGrid, 'theme');
+    renderCategoryGrid(this.armoryFlowFxGrid, 'flowFx');
+    renderCategoryGrid(this.armoryCaretsGrid, 'caret');
+    renderCategoryGrid(this.armoryCaretFxGrid, 'caretFx');
+    renderCategoryGrid(this.armoryGhostGrid, 'ghostStyle');
+    renderCategoryGrid(this.armorySoundsGrid, 'sound');
+    this.filterArmorySections(this.currentArmoryFilter);
+  }
 }
 if (typeof window !== 'undefined') {
   window.ModalView = ModalView;
@@ -8095,6 +9551,12 @@ if (!_AchievementsModel && typeof require !== 'undefined') {
     _AchievementsModel = require('../models/AchievementsModel.js').AchievementsModel;
   } catch (e) {}
 }
+var _CosmeticsModel = (typeof CosmeticsModel !== 'undefined') ? CosmeticsModel : null;
+if (!_CosmeticsModel && typeof require !== 'undefined') {
+  try {
+    _CosmeticsModel = require('../models/CosmeticsModel.js').CosmeticsModel;
+  } catch (e) {}
+}
 class GameController {
   constructor(deps = {}) {
     this.wordsModel = deps.wordsModel || new WordsModel();
@@ -8111,6 +9573,14 @@ class GameController {
       this.achievementsModel = new AMClass(savedAchievements);
     } else {
       this.achievementsModel = null;
+    }
+    const CMClass = deps.cosmeticsModelClass || _CosmeticsModel || (typeof CosmeticsModel !== 'undefined' ? CosmeticsModel : null);
+    if (deps.cosmeticsModel) {
+      this.cosmeticsModel = deps.cosmeticsModel;
+    } else if (CMClass) {
+      this.cosmeticsModel = new CMClass();
+    } else {
+      this.cosmeticsModel = null;
     }
     this.flowStartTime = null;
     this.consecutiveApexWords = 0;
@@ -8193,6 +9663,7 @@ class GameController {
     this.flowModel.highStreak = gameState.highStreak || 0;
     this.flowModel.eggCharge = gameState.eggCharge || 0.0;
     this.eggNestModel.syncBasket(gameState.eggBasket || []);
+    this.applyEquippedCosmetics();
     this.hudView.setMode(this.currentMode, this.sessionModel.duration);
     this.hudView.syncTargetWpm(gameState.targetWpm || 40);
     this.updateLevelHud();
@@ -8204,8 +9675,8 @@ class GameController {
     );
     this.hudView.updateSoundState(this.audioService.isEnabled());
     const isHidden = this.storageService.getHiddenMode ? this.storageService.getHiddenMode() : false;
-    const hiddenMethod = this.storageService.getHiddenMethod ? this.storageService.getHiddenMethod() : 'char';
-    const hiddenWordDistance = this.storageService.getHiddenWordDistance ? this.storageService.getHiddenWordDistance() : 2;
+    const hiddenMethod = this.storageService.getHiddenMethod ? this.storageService.getHiddenMethod() : 'word';
+    const hiddenWordDistance = this.storageService.getHiddenWordDistance ? this.storageService.getHiddenWordDistance() : 1;
     this.sessionModel.setHiddenMode(isHidden);
     this.sessionModel.setHiddenMethod(hiddenMethod);
     this.sessionModel.setHiddenWordDistance(hiddenWordDistance);
@@ -8250,7 +9721,8 @@ class GameController {
       onHiddenWordDistanceChange: (dist) => this.setHiddenWordDistance(dist),
       onGhostToggle: () => this.toggleGhostCursor(),
       onGhostSpeedChange: (speed) => this.updateGhostSpeed(speed),
-      onRestart: () => this.resetTest()
+      onRestart: () => this.resetTest(),
+      onOpenArmory: () => this.openStats('armory')
     });
     this.nestView.bindEvents({
       onSlotClick: (slotIdx) => {
@@ -8312,6 +9784,9 @@ class GameController {
         if (this.achievementsModel) {
           this.modalView.renderTrophies(this.achievementsModel, this.storageService);
         }
+      },
+      onSelectArmoryTab: () => {
+        this.renderArmoryModal();
       }
     });
     this.chartView.bindEvents();
@@ -8334,6 +9809,54 @@ class GameController {
         }
       }
     }
+  }
+  applyEquippedCosmetics() {
+    if (!this.cosmeticsModel || !this.storageService || !this.storageService.getEquippedCosmetics) return;
+    const equipped = this.storageService.getEquippedCosmetics();
+    const themeDef = this.cosmeticsModel.getTheme(equipped.theme);
+    if (this.hudView && this.hudView.applyTheme && themeDef) {
+      this.hudView.applyTheme(themeDef);
+    }
+    if (this.hudView && this.hudView.applyFlowFx) {
+      this.hudView.applyFlowFx(equipped.flowFx || 'adaptive_resonance');
+    }
+    if (this.stageView && this.stageView.setCaretStyle) {
+      this.stageView.setCaretStyle(equipped.caret || 'line');
+    }
+    if (this.stageView && this.stageView.setCaretFx) {
+      this.stageView.setCaretFx(equipped.caretFx || 'rainbow_prism');
+    }
+    if (this.stageView && this.stageView.setGhostStyle) {
+      this.stageView.setGhostStyle(equipped.ghostStyle || 'phantom_line');
+    }
+    if (this.audioService && this.audioService.setSoundPack) {
+      this.audioService.setSoundPack(equipped.sound || 'clicky_blue');
+    }
+  }
+  renderArmoryModal() {
+    if (this.cosmeticsModel && this.modalView && this.modalView.renderArmory) {
+      this.modalView.renderArmory(this.cosmeticsModel, this.storageService, {
+        onEquipCosmetic: (category, id) => this.equipCosmetic(category, id)
+      });
+    }
+  }
+  equipCosmetic(category, id) {
+    if (!this.cosmeticsModel || !this.storageService) return false;
+    const gameSave = this.storageService.getGameSave ? this.storageService.getGameSave() : { level: 1, achievements: {} };
+    const level = gameSave.level || 1;
+    const unlockedAchievements = gameSave.achievements || ((this.storageService.getAchievements) ? this.storageService.getAchievements() : {});
+    if (!this.cosmeticsModel.isUnlocked(id, level, unlockedAchievements)) {
+      return false;
+    }
+    if (this.storageService.setEquippedCosmetic) {
+      this.storageService.setEquippedCosmetic(category, id);
+    }
+    this.applyEquippedCosmetics();
+    if (category === 'sound' && this.audioService && this.audioService.previewSoundPack) {
+      this.audioService.previewSoundPack(id);
+    }
+    this.renderArmoryModal();
+    return true;
   }
   triggerAchievementEvent(eventType, payload = {}) {
     if (!this.achievementsModel) return;
@@ -8968,6 +10491,28 @@ class GameController {
           this.nestView.render(this.eggNestModel);
           this.hudView.spawnXpToast(`LVL UP! 🎁 ${bonusEgg.name}`, 1.0, wordEl, true);
         }
+        if (this.cosmeticsModel && this.cosmeticsModel.getNewlyUnlockedOnLevelUp) {
+          const unlockedCosmetics = this.cosmeticsModel.getNewlyUnlockedOnLevelUp(
+            xpRes.oldLevel,
+            xpRes.newLevel,
+            curSave.achievements || {}
+          );
+          if (unlockedCosmetics && unlockedCosmetics.length > 0) {
+            for (const item of unlockedCosmetics) {
+              if (this.hudView && this.hudView.showAchievementToast) {
+                this.hudView.showAchievementToast({
+                  tier: 'cosmetic',
+                  icon: item.icon,
+                  title: item.title,
+                  desc: `Unlocked ${item.category} in the Cosmetic Armory!`
+                });
+              }
+            }
+            if (this.hudView && this.hudView.setStatsBadgeVisible) {
+              this.hudView.setStatsBadgeVisible(true);
+            }
+          }
+        }
       }
       if (evalRes.eggRollSuccess) {
         const freshSave = this.storageService.getGameSave();
@@ -9203,6 +10748,7 @@ class GameController {
     if (this.achievementsModel && this.modalView.renderTrophies) {
       this.modalView.renderTrophies(this.achievementsModel, this.storageService);
     }
+    this.renderArmoryModal();
     if (this.hudView && this.hudView.setStatsBadgeVisible) {
       this.hudView.setStatsBadgeVisible(false);
     }

@@ -27,8 +27,8 @@ class SessionModel extends _EventEmitter {
     this.mode = options.mode || 'flow'; // 'classic' | 'flow'
     this.duration = options.duration || 30; // seconds for classic
     this.hiddenMode = options.hiddenMode || false;
-    this.hiddenMethod = options.hiddenMethod || 'char';
-    this.hiddenWordDistance = options.hiddenWordDistance || 2;
+    this.hiddenMethod = (options.hiddenMethod === 'char' || options.hiddenMethod === 'combo') ? 'char' : (options.hiddenMethod || 'word');
+    this.hiddenWordDistance = (options.hiddenWordDistance !== undefined) ? options.hiddenWordDistance : 1;
     this.timeLeft = this.duration;
     this.isActive = false;
     this.isFinished = false;
@@ -119,12 +119,12 @@ class SessionModel extends _EventEmitter {
   }
 
   setHiddenMethod(method) {
-    this.hiddenMethod = (method === 'word') ? 'word' : 'char';
+    this.hiddenMethod = (method === 'char' || method === 'combo') ? 'char' : 'word';
   }
 
   setHiddenWordDistance(dist) {
     const d = parseInt(dist, 10);
-    this.hiddenWordDistance = (d >= 1 && d <= 6) ? d : 2;
+    this.hiddenWordDistance = (d >= 1 && d <= 6) ? d : 1;
   }
 
   setWords(words) {

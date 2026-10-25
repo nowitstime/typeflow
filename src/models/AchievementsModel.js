@@ -485,8 +485,8 @@ class AchievementsModel {
         consecutiveApexWords = 0,
         flowSeconds = 0,
         isHidden = false,
-        hiddenMethod = 'char',
-        hiddenWordDistance = 2,
+        hiddenMethod = 'word',
+        hiddenWordDistance = 1,
         hiddenCombo = 0,
         hiddenStreak = 0,
         beatGhost = false,
@@ -518,7 +518,7 @@ class AchievementsModel {
       }
 
       // Character Horizon Combo
-      if (isHidden && hiddenMethod === 'char') {
+      if (isHidden && (hiddenMethod === 'char' || hiddenMethod === 'combo')) {
         if (hiddenCombo >= 35) tryUnlock('shadow_walker');
         if (hiddenCombo >= 70) tryUnlock('into_the_fog');
       }

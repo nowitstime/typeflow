@@ -262,6 +262,7 @@ it('clears all faded lookahead words up to 12 words ahead when combo breaks to 0
   const stageView = new StageView({ wordsBox });
   stageView.wordElements = wordEls;
   stageView.setHiddenMode(true);
+  stageView.setHiddenMethod('char');
 
   // Simulate high combo (combo = 60), which sets opacity on words 1 and 2
   stageView.updateHiddenHorizon(0, 0, 60, false);

@@ -26,9 +26,11 @@ class ModalView {
     this.tabStatsFlow = elements.tabStatsFlow || (typeof document !== 'undefined' ? document.getElementById('tab-stats-flow') : null);
     this.tabStatsClassic = elements.tabStatsClassic || (typeof document !== 'undefined' ? document.getElementById('tab-stats-classic') : null);
     this.tabStatsTrophies = elements.tabStatsTrophies || (typeof document !== 'undefined' ? document.getElementById('tab-stats-trophies') : null);
+    this.tabStatsArmory = elements.tabStatsArmory || (typeof document !== 'undefined' ? document.getElementById('tab-stats-armory') : null);
     this.paneStatsFlow = elements.paneStatsFlow || (typeof document !== 'undefined' ? document.getElementById('pane-stats-flow') : null);
     this.paneStatsClassic = elements.paneStatsClassic || (typeof document !== 'undefined' ? document.getElementById('pane-stats-classic') : null);
     this.paneStatsTrophies = elements.paneStatsTrophies || (typeof document !== 'undefined' ? document.getElementById('pane-stats-trophies') : null);
+    this.paneStatsArmory = elements.paneStatsArmory || (typeof document !== 'undefined' ? document.getElementById('pane-stats-armory') : null);
 
     // Trophies Elements
     this.trophiesCountEl = elements.trophiesCountEl || (typeof document !== 'undefined' ? document.getElementById('trophies-count') : null);
@@ -38,6 +40,18 @@ class ModalView {
     this.currentTrophyFilter = 'all';
     this.currentAchievementsModel = null;
     this.currentStorageService = null;
+
+    // Armory Elements
+    this.armoryCountEl = elements.armoryCountEl || (typeof document !== 'undefined' ? document.getElementById('armory-count') : null);
+    this.armoryProgressBar = elements.armoryProgressBar || (typeof document !== 'undefined' ? document.getElementById('armory-progress-bar') : null);
+    this.armoryThemesGrid = elements.armoryThemesGrid || (typeof document !== 'undefined' ? document.getElementById('armory-themes-grid') : null);
+    this.armoryFlowFxGrid = elements.armoryFlowFxGrid || (typeof document !== 'undefined' ? document.getElementById('armory-flowfx-grid') : null);
+    this.armoryCaretsGrid = elements.armoryCaretsGrid || (typeof document !== 'undefined' ? document.getElementById('armory-carets-grid') : null);
+    this.armoryCaretFxGrid = elements.armoryCaretFxGrid || (typeof document !== 'undefined' ? document.getElementById('armory-caretfx-grid') : null);
+    this.armoryGhostGrid = elements.armoryGhostGrid || (typeof document !== 'undefined' ? document.getElementById('armory-ghost-grid') : null);
+    this.armorySoundsGrid = elements.armorySoundsGrid || (typeof document !== 'undefined' ? document.getElementById('armory-sounds-grid') : null);
+    this.armoryFilterBtns = elements.armoryFilterBtns || (typeof document !== 'undefined' ? document.querySelectorAll('.armory-filter-btn') : []);
+    this.currentArmoryFilter = 'all';
 
     // RPG Stats Pane Elements
     this.statsRpgLevel = elements.statsRpgLevel || (typeof document !== 'undefined' ? document.getElementById('stats-rpg-level') : null);
@@ -113,14 +127,17 @@ class ModalView {
     const isFlow = tabName === 'flow';
     const isClassic = tabName === 'classic';
     const isTrophies = tabName === 'trophies';
+    const isArmory = tabName === 'armory';
 
     if (this.tabStatsFlow) this.tabStatsFlow.classList.toggle('active', isFlow);
     if (this.tabStatsClassic) this.tabStatsClassic.classList.toggle('active', isClassic);
     if (this.tabStatsTrophies) this.tabStatsTrophies.classList.toggle('active', isTrophies);
+    if (this.tabStatsArmory) this.tabStatsArmory.classList.toggle('active', isArmory);
 
     if (this.paneStatsFlow) this.paneStatsFlow.style.display = isFlow ? 'flex' : 'none';
     if (this.paneStatsClassic) this.paneStatsClassic.style.display = isClassic ? 'flex' : 'none';
     if (this.paneStatsTrophies) this.paneStatsTrophies.style.display = isTrophies ? 'flex' : 'none';
+    if (this.paneStatsArmory) this.paneStatsArmory.style.display = isArmory ? 'flex' : 'none';
   }
   bindEvents(handlers = {}) {
     if (this.tabStatsFlow) {
@@ -133,6 +150,12 @@ class ModalView {
       this.tabStatsTrophies.addEventListener('click', () => {
         this.switchStatsTab('trophies');
         if (handlers.onSelectTrophiesTab) handlers.onSelectTrophiesTab();
+      });
+    }
+    if (this.tabStatsArmory) {
+      this.tabStatsArmory.addEventListener('click', () => {
+        this.switchStatsTab('armory');
+        if (handlers.onSelectArmoryTab) handlers.onSelectArmoryTab();
       });
     }
 
@@ -177,6 +200,34 @@ class ModalView {
 
     this.setupDeckFilters();
     this.setupTrophyFilters();
+    this.setupArmoryFilters();
+  }
+
+  setupArmoryFilters() {
+    const btns = (this.armoryFilterBtns && this.armoryFilterBtns.length > 0)
+      ? this.armoryFilterBtns
+      : (typeof document !== 'undefined' ? document.querySelectorAll('.armory-filter-btn') : []);
+    if (btns && btns.length > 0) {
+      btns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          btns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          this.currentArmoryFilter = btn.dataset.filter || 'all';
+          this.filterArmorySections(this.currentArmoryFilter);
+        });
+      });
+    }
+  }
+
+  filterArmorySections(filter = 'all') {
+    this.currentArmoryFilter = filter || 'all';
+    const sections = (typeof document !== 'undefined') ? document.querySelectorAll('.armory-section[data-armory-section]') : [];
+    if (sections && sections.length > 0) {
+      sections.forEach(sec => {
+        const secKey = sec.dataset.armorySection;
+        sec.style.display = (this.currentArmoryFilter === 'all' || secKey === this.currentArmoryFilter) ? 'flex' : 'none';
+      });
+    }
   }
 
   setupTrophyFilters() {
@@ -484,6 +535,88 @@ class ModalView {
       `;
       this.trophiesGrid.appendChild(card);
     });
+  }
+
+  renderArmory(cosmeticsModel, storageService, handlers = {}) {
+    if (!cosmeticsModel) return;
+    const gameSave = (storageService && storageService.getGameSave) ? storageService.getGameSave() : { level: 1, achievements: {} };
+    const level = gameSave.level || 1;
+    const unlockedAchievements = gameSave.achievements || ((storageService && storageService.getAchievements) ? storageService.getAchievements() : {});
+    const equipped = (storageService && storageService.getEquippedCosmetics)
+      ? storageService.getEquippedCosmetics()
+      : { theme: 'oled_cyan', caret: 'line', sound: 'clicky_blue' };
+
+    const totalCount = cosmeticsModel.getTotalCount();
+    const unlockedCount = cosmeticsModel.getUnlockedCount(level, unlockedAchievements);
+    const pct = totalCount > 0 ? Math.round((unlockedCount / totalCount) * 100) : 0;
+
+    if (this.armoryCountEl) {
+      this.armoryCountEl.textContent = `${unlockedCount} / ${totalCount} unlocked (${pct}%)`;
+    }
+    if (this.armoryProgressBar) {
+      this.armoryProgressBar.style.width = `${pct}%`;
+    }
+
+    const renderCategoryGrid = (gridEl, category) => {
+      if (!gridEl) return;
+      const doc = (gridEl && gridEl.ownerDocument)
+        ? gridEl.ownerDocument
+        : ((typeof document !== 'undefined') ? document : null);
+      if (!doc) return;
+
+      gridEl.innerHTML = '';
+      const items = cosmeticsModel.getAnnotatedItems(category, level, unlockedAchievements, equipped);
+
+      items.forEach(item => {
+        const card = doc.createElement('div');
+        card.className = `armory-card ${item.unlocked ? 'unlocked' : 'locked'} ${item.equipped ? 'equipped' : ''}`;
+        card.dataset.id = item.id;
+        card.dataset.category = item.category;
+
+        let swatchesHtml = '';
+        if (Array.isArray(item.swatches) && item.swatches.length > 0) {
+          const dots = item.swatches.map(c => `<span class="theme-swatch-dot" style="background: ${c};"></span>`).join('');
+          swatchesHtml = `<div class="theme-swatches">${dots}</div>`;
+        }
+
+        let badgeHtml = '';
+        if (item.equipped) {
+          badgeHtml = `<div class="armory-badge equipped">✓ Equipped</div>`;
+        } else if (item.unlocked) {
+          badgeHtml = `<div class="armory-badge unlocked">${category === 'sound' ? '🔊 Click to Equip & Preview' : 'Click to Equip'}</div>`;
+        } else {
+          badgeHtml = `<div class="armory-badge locked">🔒 ${item.unlockLabel}</div>`;
+        }
+
+        card.innerHTML = `
+          <div class="armory-card-header">
+            <div class="armory-icon-wrap">${item.icon}</div>
+            <div class="armory-title-wrap">
+              <div class="armory-title">${item.title}</div>
+              ${swatchesHtml}
+            </div>
+          </div>
+          <div class="armory-desc">${item.desc}</div>
+          ${badgeHtml}
+        `;
+
+        if (item.unlocked && handlers.onEquipCosmetic) {
+          card.addEventListener('click', () => {
+            handlers.onEquipCosmetic(item.category, item.id);
+          });
+        }
+
+        gridEl.appendChild(card);
+      });
+    };
+
+    renderCategoryGrid(this.armoryThemesGrid, 'theme');
+    renderCategoryGrid(this.armoryFlowFxGrid, 'flowFx');
+    renderCategoryGrid(this.armoryCaretsGrid, 'caret');
+    renderCategoryGrid(this.armoryCaretFxGrid, 'caretFx');
+    renderCategoryGrid(this.armoryGhostGrid, 'ghostStyle');
+    renderCategoryGrid(this.armorySoundsGrid, 'sound');
+    this.filterArmorySections(this.currentArmoryFilter);
   }
 }
 

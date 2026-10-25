@@ -577,6 +577,7 @@ it('GameController.toggleHiddenMode toggles mode, updates views, and persists to
 it('typing keystrokes in Hidden Mode updates stage horizon and safety brake triggers on error', () => {
   const { controller } = createTestHarness();
   controller.init();
+  controller.setHiddenMethod('char');
   controller.toggleHiddenMode(); // Enable Hidden mode
 
   // First word is 'the'
@@ -786,9 +787,15 @@ it('typing incorrect letter in Hidden Flow Mode immediately breaks flow streak a
 it('GameController switches Hidden mode method and word distance, and handles Word Vanish mode during play', () => {
   const { controller } = createTestHarness();
   controller.init();
+  // Verify initial default is 'word' and 1
+  assert.strictEqual(controller.storageService.getHiddenMethod(), 'word');
+  assert.strictEqual(controller.storageService.getHiddenWordDistance(), 1);
+  assert.strictEqual(controller.sessionModel.hiddenMethod, 'word');
+  assert.strictEqual(controller.sessionModel.hiddenWordDistance, 1);
+
   controller.toggleHiddenMode(); // Enable Hidden Mode
 
-  // Switch to Word mode
+  // Switch distance to 2
   controller.setHiddenMethod('word');
   controller.setHiddenWordDistance(2);
 

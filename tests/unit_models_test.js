@@ -9,7 +9,7 @@ const path = require('path');
 
 const { EventEmitter } = require('../src/core/EventEmitter.js');
 const { CONSTANTS } = require('../src/core/Constants.js');
-const { WordsModel, DICTIONARY, RAW_WORDS, classifyWordMotor, getSrsWeightedRandomWords, getAnchorWords, createWordSandwich, calculateWordWeight } = require('../src/models/WordsModel.js');
+const { WordsModel, DICTIONARY, RAW_WORDS, classifyWordMotor, getSrsWeightedRandomWords, getAnchorWords, createWordSandwich, calculateWordWeight, getClassicTypabilityMultiplier } = require('../src/models/WordsModel.js');
 const { FlowModel } = require('../src/models/FlowModel.js');
 const { SessionModel } = require('../src/models/SessionModel.js');
 const { EggNestModel } = require('../src/models/EggNestModel.js');
@@ -165,6 +165,36 @@ it('rollNewEgg strictly excludes pending egg basket ranks and unlocked ranks', (
     assert.ok(!unlocked.includes(egg.wordRank), `Egg rank ${egg.wordRank} should not be in unlocked ranks`);
     assert.ok(![4, 5, 28].includes(egg.wordRank), `Egg rank ${egg.wordRank} ("${egg.word}") should not be in pending basket`);
   }
+});
+
+it('classic mode typability distribution produces smooth typing experience with reduced small word frequency', () => {
+  const model = new WordsModel();
+  // Multipliers damp small words (length <= 2) and boost the 4-6 letter flow zone
+  assert.strictEqual(getClassicTypabilityMultiplier('it'), 0.45);
+  assert.strictEqual(getClassicTypabilityMultiplier('the'), 0.80);
+  assert.strictEqual(getClassicTypabilityMultiplier('word'), 1.20);
+  assert.strictEqual(getClassicTypabilityMultiplier('through'), 1.00);
+
+  // Starter tier words must be ergonomic words (average length >= 3.8, not tiny 2-letter word spam)
+  const starterWords = model.dictionary.filter(w => w.tier === 'STARTER');
+  const avgStarterLen = starterWords.reduce((sum, w) => sum + w.word.length, 0) / starterWords.length;
+  assert.ok(avgStarterLen >= 3.8, `Starter tier average word length should be >= 3.8, got ${avgStarterLen}`);
+
+  // Classic batch generation over 1,400 words (20 batches)
+  const batch = [];
+  for (let b = 0; b < 20; b++) {
+    batch.push(...model.generateClassicBatch(70));
+  }
+  const len2Words = batch.filter(w => w.length <= 2).length;
+  const flowZoneWords = batch.filter(w => w.length >= 4 && w.length <= 6).length;
+
+  // 2-letter words must be kept low (<= 4% of stream, avoiding spacebar hammering)
+  const len2Pct = (len2Words / batch.length) * 100;
+  assert.ok(len2Pct <= 4.0, `Expected 2-letter words <= 4%, got ${len2Pct.toFixed(1)}%`);
+
+  // 4-6 letter words (the ideal typing flow zone) must dominate (>= 70%)
+  const flowPct = (flowZoneWords / batch.length) * 100;
+  assert.ok(flowPct >= 70.0, `Expected 4-6 letter words >= 70%, got ${flowPct.toFixed(1)}%`);
 });
 
 // 4. FlowModel Tests
@@ -1046,6 +1076,10 @@ it('SessionModel.calculateWordVanishEffectiveCount scales progressively with wor
   assert.strictEqual(SessionModel.calculateWordVanishEffectiveCount(20, 6), 6);
 
   // Instance methods
+  const defaultSession = new SessionModel();
+  assert.strictEqual(defaultSession.hiddenMethod, 'word');
+  assert.strictEqual(defaultSession.hiddenWordDistance, 1);
+
   const session = new SessionModel({ hiddenMode: true, hiddenMethod: 'word', hiddenWordDistance: 3 });
   assert.strictEqual(session.hiddenMethod, 'word');
   assert.strictEqual(session.hiddenWordDistance, 3);
