@@ -250,7 +250,8 @@ class ChartView {
 
       if (this.chartTooltip) {
         const sec = pt.item.second || pt.item.time || (closestIdx + 1);
-        if (this.tooltipTime) this.tooltipTime.textContent = `${sec}s`;
+        const momTag = (typeof pt.item.momentum === 'number') ? ` • ${pt.item.momentum}% Flow` : '';
+        if (this.tooltipTime) this.tooltipTime.textContent = `${sec}s${momTag}`;
         if (this.tooltipWpm) this.tooltipWpm.textContent = `${pt.item.wpm} WPM`;
         if (this.tooltipPace) this.tooltipPace.textContent = `${pt.item.burstWpm || pt.item.wpm} WPM`;
         if (this.tooltipRaw) this.tooltipRaw.textContent = `${pt.item.rawWpm || pt.item.raw || pt.item.wpm} WPM`;
@@ -278,7 +279,8 @@ class ChartView {
       if (this.chartHoverStats) {
         const sec = pt.item.second || pt.item.time || (closestIdx + 1);
         const errors = (typeof pt.item.errors === 'number') ? pt.item.errors : 0;
-        this.chartHoverStats.innerHTML = `<strong>${sec}s:</strong> Avg ${pt.item.wpm} WPM • Pace ${pt.item.burstWpm || pt.item.wpm} WPM • Raw ${pt.item.rawWpm || pt.item.raw || pt.item.wpm} WPM • ${errors} err`;
+        const momHover = (typeof pt.item.momentum === 'number') ? ` • ${pt.item.momentum}% Flow` : '';
+        this.chartHoverStats.innerHTML = `<strong>${sec}s:</strong> Avg ${pt.item.wpm} WPM • Pace ${pt.item.burstWpm || pt.item.wpm} WPM • Raw ${pt.item.rawWpm || pt.item.raw || pt.item.wpm} WPM${momHover} • ${errors} err`;
       }
     }
   }

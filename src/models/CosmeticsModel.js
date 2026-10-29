@@ -1,9 +1,12 @@
 /**
  * TypeFlow - CosmeticsModel
  * Pure headless model for Level Progression Unlocks & Cosmetic Armory (v4.0).
- * Defines 16 procedural cosmetics across 3 categories:
+ * Defines 32 procedural cosmetics across 6 categories:
  *   - 6 OLED Themes & Palettes
- *   - 5 Caret Geometries & Visual FX
+ *   - 6 Flow FX Atmospheres & Shaders
+ *   - 5 Caret Geometries & Physics
+ *   - 6 Caret FX Modifiers
+ *   - 4 Ghost Pacer Rival Styles
  *   - 5 Web Audio Mechanical Switch Sound Packs
  * Zero DOM or storage dependencies.
  */

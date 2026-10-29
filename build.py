@@ -240,29 +240,38 @@ def build():
               </div>
             </div>
 
-            <!-- In-Situ 3-Slot Egg Nest (Zero Modals, Hands-on-Keyboard) -->
-            <div class="egg-nest" id="egg-nest" title="Egg Nest (Max 3) • Press Tab to Hatch">
-              <div class="nest-slot" id="nest-slot-0" data-slot="0">
-                <span class="slot-dot">·</span>
-                <div class="nest-crack-prompt" id="crack-prompt-0">
-                  <span class="p-e">e</span><span class="p-g1">g</span><span class="p-g2">g</span>
+            <div class="flow-right-cluster">
+              <!-- Ambient Last Flow Run Recap Pill (;; Home-Row Shortcut) -->
+              <button class="flow-recap-pill" id="flow-recap-pill" style="display: none;" title="Tap ;; on home row or click to inspect last Flow Run">
+                <span class="recap-pill-icon">📈</span>
+                <span class="recap-pill-text" id="flow-recap-pill-text">Flow: 0 WPM • Peak 0</span>
+                <kbd class="key-hint">;;</kbd>
+              </button>
+
+              <!-- In-Situ 3-Slot Egg Nest (Zero Modals, Hands-on-Keyboard) -->
+              <div class="egg-nest" id="egg-nest" title="Egg Nest (Max 3) • Press Tab to Hatch">
+                <div class="nest-slot" id="nest-slot-0" data-slot="0">
+                  <span class="slot-dot">·</span>
+                  <div class="nest-crack-prompt" id="crack-prompt-0">
+                    <span class="p-e">e</span><span class="p-g1">g</span><span class="p-g2">g</span>
+                  </div>
                 </div>
-              </div>
-              <div class="nest-slot" id="nest-slot-1" data-slot="1">
-                <span class="slot-dot">·</span>
-                <div class="nest-crack-prompt" id="crack-prompt-1">
-                  <span class="p-e">e</span><span class="p-g1">g</span><span class="p-g2">g</span>
+                <div class="nest-slot" id="nest-slot-1" data-slot="1">
+                  <span class="slot-dot">·</span>
+                  <div class="nest-crack-prompt" id="crack-prompt-1">
+                    <span class="p-e">e</span><span class="p-g1">g</span><span class="p-g2">g</span>
+                  </div>
                 </div>
-              </div>
-              <div class="nest-slot" id="nest-slot-2" data-slot="2">
-                <span class="slot-dot">·</span>
-                <div class="nest-crack-prompt" id="crack-prompt-2">
-                  <span class="p-e">e</span><span class="p-g1">g</span><span class="p-g2">g</span>
+                <div class="nest-slot" id="nest-slot-2" data-slot="2">
+                  <span class="slot-dot">·</span>
+                  <div class="nest-crack-prompt" id="crack-prompt-2">
+                    <span class="p-e">e</span><span class="p-g1">g</span><span class="p-g2">g</span>
+                  </div>
                 </div>
-              </div>
-              <span class="nest-hint" id="nest-hint">tab: hatch</span>
-              <div class="nest-incubation-track" id="nest-incubation-track" title="Incubation Progress">
-                <div class="nest-incubation-fill" id="nest-incubation-fill"></div>
+                <span class="nest-hint" id="nest-hint">tab: hatch</span>
+                <div class="nest-incubation-track" id="nest-incubation-track" title="Incubation Progress">
+                  <div class="nest-incubation-fill" id="nest-incubation-fill"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -304,7 +313,7 @@ def build():
         </div>
       </section>
 
-      <!-- Classic Results Section -->
+      <!-- Classic Results & Flow Recap Section -->
       <section class="results-section" id="results-section">
         <div class="results-grid">
           <div class="hero-stats">
@@ -378,8 +387,8 @@ def build():
             <svg width="18" height="18" viewBox="0 0 24 24">
               <path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/>
             </svg>
-            <span>Next Test</span>
-            <span class="key-hint" style="background: rgba(0,0,0,0.18); border-color: rgba(0,0,0,0.2); color: #000000;">Tab + Enter</span>
+            <span id="next-test-btn-label">Next Test</span>
+            <span class="key-hint" id="next-test-btn-hint" style="background: rgba(0,0,0,0.18); border-color: rgba(0,0,0,0.2); color: #000000;">Tab + Enter</span>
           </button>
         </div>
       </section>
@@ -434,6 +443,26 @@ def build():
                   <span class="rpg-sub-val" id="stats-rpg-high-streak">0 words</span>
                 </div>
               </div>
+            </div>
+
+            <!-- Recent Flow Runs History Table -->
+            <div class="history-table-wrap" style="margin-bottom: 18px;">
+              <div class="history-table-title">⚡ Recent Flow Runs <span style="font-weight: 400; font-size: 11px; color: var(--sub-color); margin-left: 6px;">(Click a row to inspect timeline graph • Tap <kbd class="key-hint">;;</kbd> anytime in Flow Mode)</span></div>
+              <table class="history-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Duration</th>
+                    <th>Avg WPM</th>
+                    <th>Peak Pace</th>
+                    <th>Acc</th>
+                    <th>Deck Size</th>
+                  </tr>
+                </thead>
+                <tbody id="flow-history-tbody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
             </div>
 
             <!-- Keybr Motor Mastery Matrix -->

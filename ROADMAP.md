@@ -5,31 +5,21 @@ Every feature in this roadmap must preserve TypeFlow's core identity: **zero-dep
 
 ---
 
-## 1. Flow State Performance Recap & Timeline Graph
-Provide deep, retrospective insight into sustained Flow State runs without interrupting the kinetic typing flow.
+## 1. Flow State Performance Recap & Timeline Graph (Shipped in v4.1)
+Provide deep, retrospective insight into sustained Flow State runs without interrupting the kinetic typing flow, while reusing Classic Mode's `#results-section` and `ChartView` for a unified experience and minimal footprint.
 
-### 1.1 Flow Run Detection & Retention
-- **Flow Session Trigger:** Automatically record a "Flow Run" snapshot whenever the player sustains Flow ($\text{Momentum} \ge 85\%$) for at least **5 seconds** or **3+ consecutive words**.
-- **Non-Intrusive Access:**
-  - *In-Flow Stealth:* Never interrupt active gameplay with auto-modals when dropping out of Flow.
-  - *Retrospective Inspection:* Surface an accessible "Last Flow Run" button/chip in the HUD or Stats modal (`[Flow Recap]`).
-  - *Session Summary on Pause:* If the player pauses for $\ge 3\text{s}$ after a major Flow run or manually opens Stats, display the Flow run recap card.
-
-### 1.2 Telemetry Metrics
-- **Duration & Rhythm:** Total seconds spent inside sustained Flow and Apex.
-- **Volume & Diversity:** Total words typed, total characters, and **count of unique vocabulary words** encountered during the streak.
-- **Speed & Precision:** Average Flow WPM, peak instantaneous burst WPM, and accuracy percentage.
-- **Streak & Momentum Peak:** Highest combo streak reached and maximum flywheel momentum ($85\% \to 120\%$).
-
-### 1.3 Interactive Flow Timeline Graph
-- **Dual-Trace Canvas:** Render a timeline graph similar to Classic Mode's post-test view:
-  - *WPM Speed Curve:* Second-by-second rolling WPM.
-  - *Flywheel Momentum Line:* Gradient trace showing progression from Cruise ($85\%$) into Apex ($100\%\text{--}120\%$).
-- **Stumble & Error Markers:** Pinpoint exact seconds where typos, extra characters, or pacing dips occurred, highlighting fixed vs. uncorrected errors.
+### 1.1 Flow Run Qualification & Lenient Continuation Floor
+- **Start & Qualification:** Tracking begins when $\text{Momentum} \ge 85\%$, and a run only saves/surfaces if it reaches at least **5 seconds** AND **3+ clean words**.
+- **Lenient Continuation Floor ($\ge 50\%$):** Once active, the Flow Run survives minor stumbles or single-word errors as long as $\text{Momentum} \ge 50\%$, finalizing only when momentum drops below $50\%$, decays below $50\%$ on idle, or on session reset.
+- **Hands-on-Keyboard Invocation & AFK Dissolve:**
+  - *Contextual Recap Pill:* Compact pill next to the Egg Nest (`📈 Flow: 68 WPM • Peak 84 [;;]`).
+  - *Home-Row `;;` Shortcut:* Double-tapping semicolon (`;;` within 400ms) toggles the Flow Recap view; single `;` is ignored during word typing so it never causes a typo.
+  - *7s AFK Crossfade & Zero-Friction Wake:* After a qualifying Flow Run ends, 7 seconds of inactivity triggers a 1.0s dissolve into the Flow Recap view; typing any letter immediately dismisses the recap and routes that keystroke directly into the active word.
+- **Saved Flow History & Deck Size:** Persists up to 15 recent Flow Runs in `StorageService` (`flowHistory`) alongside the player's `unlockedWords` count, with clickable rows in the Lifetime Stats modal.
 
 ---
 
-## 2. Achievements & Milestone Badges (New)
+## 2. Achievements & Milestone Badges (Shipped in v3.5)
 A comprehensive, lightweight milestone trophy system rewarding speed, flow endurance, vocabulary mastery, and hidden mode discipline.
 
 ### 2.1 Achievement Categories
@@ -58,7 +48,7 @@ A comprehensive, lightweight milestone trophy system rewarding speed, flow endur
 
 ---
 
-## 3. Level Progression Unlocks & Cosmetic Armory (New)
+## 3. Level Progression Unlocks & Cosmetic Armory (Shipped in v4.0)
 Reward leveling up and vocabulary expansion with aesthetic customizations that let players personalize their typing experience.
 
 ### 3.1 Unlockable OLED Themes & Palettes
@@ -134,6 +124,25 @@ New playtesters need seamless onboarding without intrusive tutorial pop-ups.
 - **Surface Bigram Ledger in Stats:** Expose player's top 5 weakest and top 5 strongest bigrams from `BigramLedger`.
 - **Motor Pattern Recommendations:** Suggest targeted practice words or confidence drills based on specific weak transitions (e.g., `th`, `ou`, `er`).
 
+### 6.2 Dynamic Deck Difficulty & Typability Friction Score (Future)
+- **Active Deck Complexity Index:** Compute a composite difficulty score for the player's currently unlocked deck based on average word length, tier distribution (Starter vs. Rare/Epic), motor pattern weights (`REACH_PINKY`, `DOUBLE_BOUNCE`), and personal bigram friction.
+- **Run-Specific Stream Difficulty:** Record the exact typability difficulty rating of the words that actually spawned on screen during a Flow Run or Classic Test so players can compare WPM performance normalized against stream complexity.
+
+### 6.3 Verified Modifier Badging & Pure Hidden Scores (Classic & Flow Modes)
+- **Session Integrity Tripwire:** Track `verifiedHidden` across both Classic and Flow Mode sessions. The modifier mark is only awarded if Hidden Horizon remained active continuously from the very first keystroke through test completion without ever being toggled off mid-run.
+- **Modifier Badges on Scorecards & History:**
+  - *Results Card:* Prominent `[🕶️ HIDDEN]` modifier badge with configuration subtitle (`Word Vanish • 2 Words` or `Character Horizon`) next to the main WPM score.
+  - *Classic History Table (`#stats-history-tbody`):* Mode column displays `30s [HD]` or a dedicated `Mod` badge.
+  - *Flow History Table (`#flow-history-tbody`):* Qualifying Flow Runs retain `[HD]` tags in `flowHistory` so players can review their blindfolded flow streaks.
+- **Hidden Personal Bests (Split / Badged PBs):** Distinguish PBs achieved under blindfold conditions in the Classic Records card grid or provide a sub-tab toggle for pure Hidden high scores.
+
+### 6.4 Sudden Death / Hardcore Mode ("Pro Mode")
+- **Zero-Tolerance Precision Mechanics:**
+  - *Instant Fail / Restart on Error:* Any mistyped character (or uncorrected error submitted with Space) immediately halts the session with an acoustic fracture sound and subtle red vignette flash, allowing instant restart with <kbd>Tab</kbd> or <kbd>Enter</kbd>.
+  - *Configurable Strictness:* Option to toggle between "Strict" (Backspace disabled entirely, requiring pure unhesitating forward momentum) and "Forgiving Sudden Death" (Backspace permitted for typo correction, but any uncorrected word submitted with Space ends the run).
+- **Sudden Death Telemetry & Records:** Track "Longest Clean Word Run before Death" (e.g., 25, 50, 100 words clean) and award high-tier precision trophies.
+- **Cross-Mode Applicability:** Can be enabled as an optional modifier in Classic Mode (e.g., 30s Sudden Death) or as a high-stakes Flow Mode variant (where a mistake instantly wipes momentum to 0% and requires spinning up the flywheel from a dead stop).
+
 ---
 
 ## 7. Balance, Physics & Audio Tuning
@@ -146,40 +155,17 @@ New playtesters need seamless onboarding without intrusive tutorial pop-ups.
 
 ---
 
-## 8. Flow FX Revamp, Custom Atmospheres & Caret Modifiers (Under Active Design)
-Decouple Flow FX from static blue and establish a modular, customizable atmospheric ecosystem integrated into the Cosmetic Armory.
+## 8. Flow FX, Atmospheres & Sensory Tuning (Phase 2 & Future)
+The v4.0 release shipped the core Cosmetic Armory with 6 Atmospheres, 6 Caret Modifiers, and 4 Ghost Pacer Styles (§8.1–§8.3). The remaining items below are staged for subsequent releases.
 
-### 8.1 Flow FX Styles as a 4th Armory Category
-- **Atmospheric Style Presets:**
-  - *Adaptive Resonance (Default Lv. 1):* 100% theme-reactive; dynamically derives corner portals, perimeter vignettes, and glows from `--main-color`, `--accent`, and background properties.
-  - *Prismatic Aurora (Unlockable):* Liquid northern lights ribbons undulating along screen borders with translucent iridescent refraction.
-  - *Cyberpunk Grid (Unlockable):* Synthwave/Tron wireframe laser borders with digital grid corner arcs and scanline pulses.
-  - *Solar Flame / Inferno (Unlockable):* Procedural fire generated via zero-dependency CSS/SVG `<feTurbulence>` filters and rising combustion embers.
-  - *Hyperdrive Speedlines (Unlockable):* Sleek peripheral optical warp lines that lengthen with momentum acceleration.
-  - *Zen Trance (Minimalist Lv. 1):* Zero color distraction; velvet edge vignette, pure luminance breathing, and deep peripheral focus dimming.
+### 8.1 Flow FX Styles (Shipped in v4.0)
+- *Shipped Presets:* Adaptive Resonance, Prismatic Aurora, Cyberpunk Grid, Solar Flame / Inferno (`<feTurbulence>`), Hyperdrive Speedlines, and Zen Trance.
 
-### 8.2 Universal Caret Flow Modifiers
-Enhance the player's equipped caret geometry (Line, Underline Runner, Block, Capsule) without overriding its shape:
-- *Prismatic Rainbow:* The classic shifting chromatic spectrum.
-- *Plasma Overdrive:* High-voltage electric aura pulsing with lightning micro-sparks.
-- *Solar Flare:* Fiery shifting gradient (cherry red, ember orange, solar gold) flaring on high-speed words.
-- *Holo Glitch:* Subtle scanlines, horizontal jitter, and RGB chromatic aberration split during Flow.
-- *Hyperdrive Tracer:* Motion blur wake trailing 2–3 ghost segments behind rapid cursor movement.
-- *Ethereal Frost:* Shimmering diamond cyan/white crystalline glow with sparkle particles.
-- *Customization Architecture:* Linked to equipped Flow FX by default, with an independent Caret Flow FX override option in the Armory.
+### 8.2 Universal Caret Flow Modifiers (Shipped in v4.0)
+- *Shipped Modifiers:* Clean Solid, Prismatic Rainbow, Plasma Overdrive, Solar Flare, Holo Glitch, and Hyperdrive Tracer.
 
-### 8.3 Ghost Caret (Pace Rabbit) Customization
-- **Selectable Ghost Shapes:**
-  - *Ghost Line (Default):* Classic semi-transparent vertical tracking line.
-  - *Ghost Runner:* Underline shadow skimming beneath upcoming words.
-  - *Ghost Wireframe Block:* Hollow terminal box outlining target pace letters.
-  - *Ghost Dot / Halo:* Hovering orb or chevron guiding rhythm.
-- **Ghost Personas & Palettes:**
-  - *Phantom White (Default):* Translucent mist.
-  - *Hologram Cyan:* Retro sci-fi wireframe.
-  - *Golden Hare:* Radiant championship gold shimmer.
-  - *Shadow Rival:* High-contrast smoke with crimson rim.
-- **Real-Time Pace Delta Tag (Optional):** Subtle floating chip attached to the ghost or player caret displaying instantaneous rhythm difference (`+4 WPM`, `-2 WPM`).
+### 8.3 Ghost Caret (Pace Rabbit) Customization (Shipped in v4.0)
+- *Shipped Styles:* Ghost Line, Ghost Runner, Ghost Wireframe Terminal, and Ghost Halo.
 
 ### 8.4 Tactile Overspin Cushion & Ambient Audio (Staged for Phase 2)
 - *Overspin Cushion Shield (100%–120%):* Crystalline/electrified perimeter aura visually arming the shield; "shield shatter / deflect" dispersion wave upon absorbing typos.
@@ -193,12 +179,20 @@ Enhance the player's equipped caret geometry (Line, Underline Runner, Block, Cap
 ---
 
 ## Completed Milestones (Shipped)
-- [x] **v4.0 Cosmetic Armory & Theme Engine:**
+- [x] **v4.1 Flow State Performance Recap & Timeline Graph:**
+  - *Qualification & Lenient Floor:* Starts at $\ge 85\%$ Flow (`>= 5s` and `>= 3` clean words required) and stays alive across mid-run stumbles down to a $\ge 50\%$ continuation floor.
+  - *Contextual Pill & `;;` Home-Row Shortcut:* Ambient recap pill next to the Egg Nest (`Flow: <wpm> WPM • Peak <peak> [;;]`) and instant `;;` double-tap toggle (with single `;` typo suppression).
+  - *7s AFK Crossfade & Zero-Friction Wake:* 1.0s dissolve into the Flow Recap after 7 seconds of post-run inactivity, waking and typing the first character directly into the active word on any keystroke.
+  - *Unified Timeline Graph & History:* Reuses `#results-section` and `ChartView` with per-second `% Flow` hover telemetry, plus 15-run `flowHistory` persistence with `unlockedWords` deck size and clickable rows in the Lifetime Stats modal.
+- [x] **v4.0 Cosmetic Armory & Atmospheric Flow Engine:**
   - *6 Full Themes:* OLED Cyan, Sakura Stream, Phosphor CRT, Cyberpunk Neon, Nord Frost, Obsidian Gold.
-  - *Dynamic Color Inheritance:* Universal `--main-color`, `--accent`, and `color-mix()` inheritance across all modals, buttons, sliders, levels, charts, and nests.
-  - *4 Caret Geometries:* Line, Low-Profile Runner (full-width underline), Classic Terminal (full-coverage block), and Capsule.
+  - *6 Flow FX Atmospheres:* Adaptive Resonance, Prismatic Aurora, Cyberpunk Grid, Solar Flame / Inferno, Hyperdrive Speedlines, Zen Trance.
+  - *5 Caret Geometries:* Line, Low-Profile Runner (full-width underline), Classic Terminal (full-coverage block), Capsule, and Permanent Prism.
+  - *6 Caret FX Modifiers:* Clean Solid, Prismatic Rainbow, Plasma Overdrive, Solar Flare, Holo Glitch, and Hyperdrive Tracer.
+  - *4 Ghost Pacer Styles:* Ghost Line, Ghost Runner, Ghost Terminal, and Ghost Halo.
   - *5 Mechanical Switch Sound Packs:* Default Box Blue, Thoccy Linear, Tactile Brown, Typewriter Bell, and Bubble Droplet.
-  - *Cosmetic Armory Drawer:* Tabbed modal interface with live preview cards, lock criteria, and instant equipment.
+  - *Cosmetic Armory Drawer:* Tabbed modal interface with live preview cards, lock criteria, level/trophy gating, and instant equipment across all 6 slots.
+  - *Dynamic Color Inheritance:* Universal `--main-color`, `--accent`, and `color-mix()` inheritance across all modals, buttons, sliders, levels, charts, and nests.
 - [x] **v3.5 Achievements & Trophies System:**
   - *35 Distinct Achievements:* Speed milestones, cadence consistency, typo recoveries, sustained flow, apex overspin, egg hatching, and vocabulary lexicon goals (including the 1,000-word Crown Jewel).
   - *Two-Tier Progression:* Entry milestones and mastery tiers to reward dedication without idle spam.

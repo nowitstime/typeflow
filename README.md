@@ -5,13 +5,13 @@
 **The OLED Kinetic Typing Trainer & Incremental Flow-State RPG**
 
 [![Live Demo](https://img.shields.io/badge/Play_Live-nowitstime.github.io%2Ftypeflow-38bdf8?style=for-the-badge&logo=googlechrome&logoColor=white)](https://nowitstime.github.io/typeflow/)
-[![Test Suite](https://img.shields.io/badge/Tests-167%20%2F%20167%20Passing-34d399?style=for-the-badge&logo=node.js&logoColor=white)](#-testing--verification)
+[![Test Suite](https://img.shields.io/badge/Tests-180%20%2F%20180%20Passing-34d399?style=for-the-badge&logo=node.js&logoColor=white)](#-testing--verification)
 [![Dependencies](https://img.shields.io/badge/Dependencies-Zero-a855f7?style=for-the-badge)](#%EF%B8%8F-architecture--engineering)
 [![License: MIT](https://img.shields.io/badge/License-MIT-fbbf24?style=for-the-badge)](LICENSE)
 
-*Begin at Ground Zero with a single word (`"the"`). Spin up the momentum flywheel, incubate word eggs directly on the home row, master 5 physical finger-motion buckets, race a 60fps ghost pacer, train working memory in Hidden Horizon mode, and unlock all 1,000 words of the Grand Lexicon.*
+*Begin at Ground Zero with a single word (`"the"`). Spin up the momentum flywheel, incubate word eggs directly on the home row, master 5 physical finger-motion buckets, race a 60fps ghost pacer, train working memory in Hidden Horizon mode, unlock all 1,000 words of the Grand Lexicon, and equip procedural cosmetics in the Cosmetic Armory.*
 
-[**🚀 Launch Live App**](https://nowitstime.github.io/typeflow/) · [**🏛️ Architecture**](#%EF%B8%8F-architecture--engineering) · [**🏆 Achievement System**](#-achievement-system--trophy-case) · [**⌨️ Shortcuts**](#%EF%B8%8F-keyboard-shortcuts)
+[**🚀 Launch Live App**](https://nowitstime.github.io/typeflow/) · [**🎨 Armory**](#-cosmetic-armory--customization-engine) · [**🏆 Achievements**](#-achievement-system--trophy-case) · [**🏛️ Architecture**](#%EF%B8%8F-architecture--engineering) · [**⌨️ Shortcuts**](#%EF%B8%8F-keyboard-shortcuts)
 
 </div>
 
@@ -27,6 +27,7 @@
   - [🕶️ Dual-Mode Hidden Horizon](#%EF%B8%8F-hidden-horizon-working-memory--blind-touch-typing)
   - [👻 60fps Ghost Cursor Pacer](#-60fps-ghost-cursor-pacer)
 - [🏆 Achievement System & Trophy Case](#-achievement-system--trophy-case)
+- [🎨 Cosmetic Armory & Customization Engine](#-cosmetic-armory--customization-engine)
 - [🏛️ Architecture & Engineering](#%EF%B8%8F-architecture--engineering)
 - [🧪 Testing & Verification](#-testing--verification)
 - [🛠️ Quick Start & Building](#%EF%B8%8F-quick-start--building)
@@ -39,7 +40,7 @@
 
 **TypeFlow** fuses the precision telemetry of **Monkeytype**, the biomechanical training of **Keybr**, and the tactile progression of an incremental roguelike—wrapped in an **OLED True Black (`#000000`) & Electric Sky Blue (`#38bdf8`)** interface.
 
-Built from the ground up in **vanilla ES6 JavaScript** with **zero external runtime dependencies**, the entire application—including a 1,000-word categorized lexicon, procedural Web Audio API sound synthesizer, canvas telemetry charts, and observable MVC engine—compiles into a single portable `index.html` (~341 KB) that runs anywhere offline or online.
+Built from the ground up in **vanilla ES6 JavaScript** with **zero external runtime dependencies**, the entire application—including a 1,000-word categorized lexicon, procedural Web Audio API sound synthesizer, canvas telemetry charts, 32-item cosmetic armory, and observable MVC engine—compiles into a single portable `index.html` (~402 KB) that runs anywhere offline or online.
 
 ---
 
@@ -104,6 +105,21 @@ TypeFlow features **35 hand-crafted achievements** across **7 categories**, desi
 
 ---
 
+## 🎨 Cosmetic Armory & Customization Engine
+
+TypeFlow features a modular **Cosmetic Armory** with **32 procedural cosmetics** across **6 categories**, unlocked progressively via Player Level milestones and Trophy achievements. Equipped items apply instantly with dynamic CSS variable inheritance across all stage widgets and modals without page reload.
+
+| Category | Available Options | Unlocking & Mechanics |
+| :--- | :--- | :--- |
+| **🎨 OLED Themes (6)** | **Electric Sky** (Default OLED Cyan), **Sakura Stream** (Lv. 3), **Phosphor CRT** (Lv. 6), **Cyberpunk Neon** (Lv. 10), **Nord Frost** (Lv. 15), **Obsidian Gold** (Lv. 25) | Live `--main-color`, `--bg-color`, and `color-mix()` inheritance across all modals, charts, buttons, and HUD badges. |
+| **🌌 Flow FX Atmospheres (6)** | **Adaptive Resonance** (Default), **Prismatic Aurora** (Lv. 5), **Cyberpunk Grid** (Lv. 8), **Solar Flame / Inferno** (Lv. 14, SVG `<feTurbulence>`), **Hyperdrive Speedlines** (Lv. 20), **Zen Trance** (Trophy: *Zen Master*) | Full-viewport reactive corner portals, perimeter vignettes, and procedural particle shaders scaling with momentum. |
+| **📍 Caret Geometries (5)** | **Line** (3px Bar), **Low-Profile Runner** (Full-width underline), **Classic Terminal** (Full-character block), **Capsule** (Pill runner), **Permanent Prism** (Lv. 12 or *Zen Master*) | Subpixel-smooth physical cursor geometry with automatic character tracking and line-centering. |
+| **✨ Caret FX Modifiers (6)** | **Clean Solid** (Default), **Prismatic Rainbow** (Chromatic spectrum), **Plasma Overdrive** (Pulsing high-voltage aura), **Solar Flare** (Fiery speed-reactive gradient), **Holo Glitch** (Chromatic aberration jitter), **Hyperdrive Tracer** (Multi-segment motion blur) | Universal visual overlays that augment whichever caret geometry is currently equipped. |
+| **👻 Ghost Pacer Styles (4)** | **Ghost Line** (Default mist bar), **Ghost Runner** (Underline skimming shadow), **Ghost Terminal** (Hollow terminal box), **Ghost Halo** (Hovering rhythm orb) | Customizes the 60fps virtual pacer rival to match personal visual preferences. |
+| **🔊 Switch Sound Packs (5)** | **Default Box Blue** (Crisp clicky), **Thoccy Linear** (Deep muted thoc), **Tactile Brown** (Subtle bump), **Typewriter Bell** (Retro striker impact), **Bubble Droplet** (Soothing organic droplet clicks) | 100% procedurally synthesized Web Audio API sound engines with semitone frequency scaling on active streaks. |
+
+---
+
 ## 🏛️ Architecture & Engineering
 
 TypeFlow uses a clean, decoupled **Observable Model-View-Controller (MVC)** architecture where all domain models are 100% headless and DOM-independent.
@@ -116,6 +132,7 @@ flowchart LR
     GC --> WM["WordsModel & BigramLedger<br/>(1,000 Words, 5 Buckets, SRS)"]
     GC --> ENM["EggNestModel<br/>(3-Slot Hatch State Machine)"]
     GC --> AM["AchievementsModel<br/>(35 Milestones & Feats)"]
+    GC --> CM["CosmeticsModel<br/>(32 Items across 6 Categories)"]
     GC --> SV["StageView / NestView / HUDView / ChartView / ModalView"]
     GC --> SS["StorageService & AudioService"]
 ```
@@ -134,7 +151,8 @@ lively-nobel/
 │   │   ├── FlowModel.js          # Kinetic flywheel physics, Apex cushion & egg charge
 │   │   ├── SessionModel.js       # Keystroke engine, cross-word revert & live WPM
 │   │   ├── EggNestModel.js       # 3-slot in-situ egg nest & 'e-g-g' fracture state machine
-│   │   └── AchievementsModel.js  # 35 achievements, Tier I/II math & progress evaluator
+│   │   ├── AchievementsModel.js  # 35 achievements, Tier I/II math & progress evaluator
+│   │   └── CosmeticsModel.js     # 32 procedural cosmetics across 6 categories & unlock rules
 │   ├── services/
 │   │   ├── StorageService.js     # Resilient localStorage persistence + memory fallback
 │   │   └── AudioService.js       # Web Audio API harmonic key clicks & unlock synthesizers
@@ -143,23 +161,24 @@ lively-nobel/
 │   │   ├── NestView.js           # 3-slot egg nest UI, incubation bar & fracture FX
 │   │   ├── HUDView.js            # Atmosphere vignette, mode bar & FIFO achievement toasts
 │   │   ├── ChartView.js          # Multi-curve canvas telemetry graph & hover tooltips
-│   │   └── ModalView.js          # 3-tab Lifetime Stats modal (Flow RPG, Classic, Trophies)
+│   │   └── ModalView.js          # 4-tab Lifetime Stats & Armory modal (RPG, Classic, Trophies, Armory)
 │   ├── controllers/
 │   │   ├── KeyboardController.js # Keystroke routing, input isolation & shortcuts
 │   │   └── GameController.js     # Central coordinator, physics ticker & telemetry wiring
 │   └── bootstrap.js              # Dependency injection & startup lifecycle
 ├── tests/
-│   ├── unit_models_test.js       # Headless unit tests for core models (54 tests)
+│   ├── unit_models_test.js       # Headless unit tests for core models (55 tests)
 │   ├── services_test.js          # Storage fallback, SRS & audio synth tests (16 tests)
 │   ├── views_test.js             # DOM-isolated view rendering tests (16 tests)
 │   ├── controllers_test.js       # Controller state machine & integration tests (23 tests)
+│   ├── cosmetics_test.js         # Cosmetic Armory, unlocks & style application (9 tests)
 │   ├── ghost_cursor_test.js      # 60fps ghost pacer & sandwich sync tests (12 tests)
 │   ├── bug_fixes_test.js         # Cross-mode & edge-case verification (12 tests)
 │   ├── recent_bugfixes_test.js   # Timer, word revert & deck explorer tests (9 tests)
 │   ├── edge_cases_stress_test.js # High-velocity burst & storage corruption tests (8 tests)
 │   └── achievements_test.js      # Achievements, toasts, trophies & retro-sync (17 tests)
 ├── build.py                      # Zero-dependency single-file bundler -> index.html
-├── index.html                    # Standalone distributable (~341 KB, works via file://)
+├── index.html                    # Standalone distributable (~402 KB, works via file://)
 ├── style.css                     # OLED True Black theme, animations & responsive HUD
 └── README.md                     # Project documentation
 ```
@@ -168,20 +187,21 @@ lively-nobel/
 
 ## 🧪 Testing & Verification
 
-TypeFlow is backed by **9 automated headless test suites** (**167 assertions total, 100% pass rate**) running directly in Node.js with zero external test runner dependencies.
+TypeFlow is backed by **10 automated headless test suites** (**180 assertions total, 100% pass rate**) running directly in Node.js with zero external test runner dependencies.
 
 ```bash
-# Run all 9 test suites at once
+# Run all 10 test suites at once
 for test in tests/*_test.js; do node "$test"; done
 ```
 
 Or run individual suites:
 
 ```bash
-node tests/unit_models_test.js       # 54 tests — Words, Flow, Session, EggNest & Bigram models
+node tests/unit_models_test.js       # 55 tests — Words, Flow, Session, EggNest & Bigram models
 node tests/services_test.js          # 16 tests — StorageService & Web Audio synthesis
 node tests/views_test.js             # 16 tests — Stage, Nest, HUD, Chart & Modal views
-node tests/controllers_test.js       # 23 tests — GameController & KeyboardController
+node tests/controllers_test.js       # 26 tests — GameController, KeyboardController & Flow Recap
+node tests/cosmetics_test.js         #  9 tests — Cosmetic Armory, unlocks & style application
 node tests/ghost_cursor_test.js      # 12 tests — Ghost pacer physics & sandwich offset sync
 node tests/bug_fixes_test.js         # 12 tests — Cross-mode & boundary regressions
 node tests/recent_bugfixes_test.js   #  9 tests — Classic timer, revert & deck filters
@@ -217,11 +237,12 @@ python3 build.py
 | <kbd>Char</kbd> | Typing Stage | Type character & advance subpixel caret |
 | <kbd>Space</kbd> | Typing Stage | Submit current word & evaluate Flow / SRS telemetry |
 | <kbd>Backspace</kbd> | Typing Stage | Delete character, or step back into previous word at index `0` |
+| <kbd>;</kbd><kbd>;</kbd> | Flow Mode | Toggle the **Flow State Performance Recap & Timeline Graph** |
 | <kbd>Tab</kbd> | Flow Mode (Eggs in Nest) | Enter **Hatch Mode** and focus the first available egg slot |
 | <kbd>e</kbd> $\rightarrow$ <kbd>g</kbd> $\rightarrow$ <kbd>g</kbd> | Hatch Mode Active | Fracture and hatch the focused egg to unlock a new word |
 | <kbd>Tab</kbd> / <kbd>Esc</kbd> | Hatch Mode Active | Exit Hatch Mode and return to the typing stage |
 | <kbd>Tab</kbd> | Classic Mode / Empty Nest | Quick-restart the current typing session |
-| <kbd>Esc</kbd> | Modal Open | Close the Lifetime Stats / Trophy Case modal |
+| <kbd>Esc</kbd> | Modal / Recap Open | Dismiss Flow Recap or close the Lifetime Stats / Trophy Case / Armory modal |
 
 ---
 
@@ -231,7 +252,8 @@ python3 build.py
 - [x] **v2.0 — Keybr Motor Buckets & In-Situ Egg Nest**: 5 physical finger-pattern buckets, 3-slot keyboard-native hatching (`e-g-g`), and cross-word backspace revert.
 - [x] **v3.0 — Observable MVC Refactor & Deterministic Incubation**: 15 modular ES6 classes, N-Gram Bigram EMA ledger, and sandwiched word induction.
 - [x] **v3.5 — Dual-Mode Hidden Horizon, 60fps Ghost Pacer & 35-Trophy Achievement System**: Character Horizon, Word Vanish (`1–6` words), virtual pacer rival, and multi-tier Trophy Case.
-- [ ] **v4.0 — Visual Polish & Level-Gated Cosmetic Unlocks**: Unlockable caret trails, custom mechanical key-click synth profiles, and OLED accent themes earned through RPG levels and Trophy milestones.
+- [x] **v4.0 — Cosmetic Armory & Atmospheric Flow Engine**: 32 items across 6 categories (Themes, Flow FX, Caret Geometries, Caret FX, Ghost Styles, Sound Packs), level/trophy unlock gating, and dynamic CSS palette inheritance.
+- [x] **v4.1 — Flow State Performance Recap & Timeline Graph**: Qualifying Flow Run recorder ($\ge 85\%$ start, $\ge 50\%$ continuation floor), home-row `;;` shortcut & contextual nest pill, 7s AFK crossfade with zero-friction typing wake, and 15-run history table with unlocked deck size.
 
 ---
 

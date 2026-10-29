@@ -62,7 +62,9 @@ const DEFAULT_GAME_SAVE = {
     caretFx: 'rainbow_prism',
     ghostStyle: 'phantom_line',
     sound: 'clicky_blue'
-  }
+  },
+  flowHistory: [],
+  lastFlowRun: null
 };
 
 function safeGetLocalStorage() {
@@ -236,6 +238,9 @@ class StorageService {
         state.equippedCosmetics = Object.assign({}, defaultCosmetics);
       } else {
         state.equippedCosmetics = Object.assign({}, defaultCosmetics, state.equippedCosmetics);
+      }
+      if (!Array.isArray(state.flowHistory)) {
+        state.flowHistory = [];
       }
       return state;
     } catch (e) {
@@ -890,6 +895,65 @@ class StorageService {
     save.equippedCosmetics[category] = id;
     this.saveGameSave(save);
     return Object.assign({}, save.equippedCosmetics);
+  }
+
+  recordFlowRun(runData) {
+    if (!runData || typeof runData !== 'object') return null;
+    try {
+      const save = this.getGameSave();
+      const unlockedCount = runData.unlockedWords || (Array.isArray(save.unlockedRanks) ? save.unlockedRanks.length : 1);
+      const entry = Object.assign({
+        id: Date.now(),
+        date: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+        mode: 'flow',
+        duration: 0,
+        wpm: 0,
+        rawWpm: 0,
+        peakWpm: 0,
+        accuracy: 100,
+        consistency: 100,
+        correctChars: 0,
+        incorrectChars: 0,
+        extraChars: 0,
+        missedChars: 0,
+        fixedErrors: 0,
+        wordsCount: 0,
+        cleanWords: 0,
+        unlockedWords: unlockedCount,
+        maxMomentum: 100,
+        wpmHistory: []
+      }, runData, { unlockedWords: unlockedCount });
+
+      save.lastFlowRun = entry;
+      if (!Array.isArray(save.flowHistory)) {
+        save.flowHistory = [];
+      }
+      save.flowHistory.unshift(entry);
+      if (save.flowHistory.length > 15) {
+        save.flowHistory.pop();
+      }
+      this.saveGameSave(save);
+      return entry;
+    } catch (e) {
+      console.error('[StorageService] Failed to record flow run:', e);
+      return null;
+    }
+  }
+
+  getLastFlowRun() {
+    const save = this.getGameSave();
+    if (save.lastFlowRun && typeof save.lastFlowRun === 'object') {
+      return save.lastFlowRun;
+    }
+    if (Array.isArray(save.flowHistory) && save.flowHistory.length > 0) {
+      return save.flowHistory[0];
+    }
+    return null;
+  }
+
+  getFlowHistory() {
+    const save = this.getGameSave();
+    return Array.isArray(save.flowHistory) ? save.flowHistory : [];
   }
 }
 

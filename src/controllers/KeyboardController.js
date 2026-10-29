@@ -8,6 +8,7 @@ class KeyboardController {
   constructor(handlers = {}) {
     this.handlers = handlers;
     this.lastTabPressTime = 0;
+    this.lastSemicolonTime = 0;
     this.lastKeyHandled = false;
 
     this._boundKeyDown = this.handleKeyDown.bind(this);
@@ -37,6 +38,19 @@ class KeyboardController {
     }
   }
 
+  _handleSemicolonPress() {
+    const now = Date.now();
+    if (now - this.lastSemicolonTime <= 400) {
+      this.lastSemicolonTime = 0;
+      if (this.handlers.onFlowRecapToggle) {
+        this.handlers.onFlowRecapToggle();
+      }
+      return true;
+    }
+    this.lastSemicolonTime = now;
+    return false;
+  }
+
   handleKeyDown(e) {
     const isStatsOpen = this.handlers.isStatsOpen ? this.handlers.isStatsOpen() : false;
     if (isStatsOpen) {
@@ -53,6 +67,7 @@ class KeyboardController {
 
     const isHatching = this.handlers.isHatching ? this.handlers.isHatching() : false;
     const isTestFinished = this.handlers.isTestFinished ? this.handlers.isTestFinished() : false;
+    const isFlowRecapOpen = this.handlers.isFlowRecapOpen ? this.handlers.isFlowRecapOpen() : false;
 
     // 1. Tab Navigation / Chord Handling
     if (e.key === 'Tab') {
@@ -76,11 +91,64 @@ class KeyboardController {
       }
     }
 
-    // 3. Escape key (exit hatch, close modals, or reset)
+    // 3. Escape key (exit hatch, close modals/recap, or reset)
     if (e.key === 'Escape') {
       e.preventDefault();
       if (this.handlers.onEscape) {
         this.handlers.onEscape();
+      }
+      return;
+    }
+
+    // 3b. Home-Row Double Semicolon (;;) Flow Recap Toggle
+    if (e.key === ';' && !e.ctrlKey && !e.altKey && !e.metaKey && !isHatching && !isTestFinished) {
+      e.preventDefault();
+      this.lastKeyHandled = true;
+      this._handleSemicolonPress();
+      return;
+    }
+
+    // 3c. Flow Recap Open state: Enter dismisses; letter/space wakes & resumes immediately
+    if (isFlowRecapOpen) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (this.handlers.onDismissFlowRecap) {
+          this.handlers.onDismissFlowRecap(false);
+        }
+        return;
+      }
+      if (e.key === ' ' || e.key === 'Spacebar' || e.code === 'Space') {
+        e.preventDefault();
+        this.lastKeyHandled = true;
+        if (this.handlers.onDismissFlowRecap) {
+          this.handlers.onDismissFlowRecap(true);
+        }
+        if (this.handlers.onSpace) {
+          this.handlers.onSpace();
+        }
+        return;
+      }
+      if (e.key === 'Backspace') {
+        e.preventDefault();
+        this.lastKeyHandled = true;
+        if (this.handlers.onDismissFlowRecap) {
+          this.handlers.onDismissFlowRecap(true);
+        }
+        if (this.handlers.onBackspace) {
+          this.handlers.onBackspace();
+        }
+        return;
+      }
+      if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        e.preventDefault();
+        this.lastKeyHandled = true;
+        if (this.handlers.onDismissFlowRecap) {
+          this.handlers.onDismissFlowRecap(true);
+        }
+        if (this.handlers.onChar) {
+          this.handlers.onChar(e.key);
+        }
+        return;
       }
       return;
     }
@@ -154,6 +222,7 @@ class KeyboardController {
     const isStatsOpen = this.handlers.isStatsOpen ? this.handlers.isStatsOpen() : false;
     const isHatching = this.handlers.isHatching ? this.handlers.isHatching() : false;
     const isTestFinished = this.handlers.isTestFinished ? this.handlers.isTestFinished() : false;
+    const isFlowRecapOpen = this.handlers.isFlowRecapOpen ? this.handlers.isFlowRecapOpen() : false;
 
     if (isTestFinished || isHatching || isStatsOpen) return;
     if (this.lastKeyHandled) {
@@ -163,14 +232,25 @@ class KeyboardController {
 
     if (e.inputType === 'deleteContentBackward') {
       e.preventDefault();
+      if (isFlowRecapOpen && this.handlers.onDismissFlowRecap) {
+        this.handlers.onDismissFlowRecap(true);
+      }
       if (this.handlers.onBackspace) this.handlers.onBackspace();
     } else if (e.inputType === 'insertText' && e.data) {
       e.preventDefault();
       for (let i = 0; i < e.data.length; i++) {
         const ch = e.data[i];
-        if (ch === ' ') {
+        if (ch === ';') {
+          this._handleSemicolonPress();
+        } else if (ch === ' ') {
+          if (isFlowRecapOpen && this.handlers.onDismissFlowRecap) {
+            this.handlers.onDismissFlowRecap(true);
+          }
           if (this.handlers.onSpace) this.handlers.onSpace();
         } else {
+          if (isFlowRecapOpen && this.handlers.onDismissFlowRecap) {
+            this.handlers.onDismissFlowRecap(true);
+          }
           if (this.handlers.onChar) this.handlers.onChar(ch);
         }
       }

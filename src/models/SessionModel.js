@@ -68,6 +68,10 @@ class SessionModel extends _EventEmitter {
     this.lastSecCorrect = 0;
     this.lastSecRaw = 0;
     this.secondDeltas = [];
+
+    // Sustained Flow Run telemetry tracker
+    this.flowRun = null;
+    this.lastCompletedFlowRun = null;
   }
 
   reset(options = {}) {
@@ -110,6 +114,10 @@ class SessionModel extends _EventEmitter {
     this.lastSecCorrect = 0;
     this.lastSecRaw = 0;
     this.secondDeltas = [];
+    this.flowRun = null;
+    if (options.clearFlowRecap) {
+      this.lastCompletedFlowRun = null;
+    }
 
     this.emit('reset', { mode: this.mode, duration: this.duration });
   }
@@ -253,6 +261,7 @@ class SessionModel extends _EventEmitter {
       const errEntry = {
         id: this.errorLog.length + 1,
         second: sec,
+        flowSecond: this.flowRun ? (this.flowRun.elapsedSeconds + 1) : null,
         wordIdx: this.currentWordIdx,
         charIdx: prevCharIdx,
         isExtra: true,
@@ -294,6 +303,7 @@ class SessionModel extends _EventEmitter {
       const errEntry = {
         id: this.errorLog.length + 1,
         second: sec,
+        flowSecond: this.flowRun ? (this.flowRun.elapsedSeconds + 1) : null,
         wordIdx: this.currentWordIdx,
         charIdx: prevCharIdx,
         isExtra: false,
@@ -734,6 +744,232 @@ class SessionModel extends _EventEmitter {
       duration: this.duration,
       wpmHistory: this.wpmHistory
     };
+  }
+
+  /**
+   * Starts tracking a candidate sustained Flow Run (triggered at >= 85% momentum).
+   */
+  startFlowRun(initialMomentum = 85, now = Date.now(), preCreditedChars = 0) {
+    if (this.flowRun) return this.flowRun;
+    const baseCorrect = Math.max(0, this.correctKeystrokes - preCreditedChars);
+    const baseRaw = Math.max(0, this.rawKeystrokes - preCreditedChars);
+    this.flowRun = {
+      startTime: now,
+      elapsedSeconds: 0,
+      startCorrectKeystrokes: baseCorrect,
+      startRawKeystrokes: baseRaw,
+      startIncorrectKeystrokes: this.incorrectKeystrokes,
+      startExtraChars: this.extraCharsCount,
+      startFixedErrors: this.totalFixedErrors,
+      lastSecCorrect: baseCorrect,
+      lastSecRaw: baseRaw,
+      secondDeltas: [],
+      cleanWords: 0,
+      wordsCount: 0,
+      maxMomentum: initialMomentum,
+      peakWpm: 0,
+      wpmHistory: [],
+      errorStartIdx: this.errorLog.length
+    };
+    this.emit('flowRunStarted', this.flowRun);
+    return this.flowRun;
+  }
+
+  /**
+   * Records a completed word during Flow Mode and manages Flow Run entry/continuation.
+   * Entry requires >= 85% momentum; continuation allows dipping down to 50% momentum floor.
+   */
+  recordFlowRunWord(isClean, liveWpm, momentum, unlockedWords = 1, now = Date.now()) {
+    if (!this.flowRun && momentum >= 85) {
+      const lastEntry = this.wordHistory[this.wordHistory.length - 1];
+      const wordChars = lastEntry && Array.isArray(lastEntry.charCorrect)
+        ? lastEntry.charCorrect.filter(Boolean).length + 1
+        : 0;
+      const wordStart = lastEntry && lastEntry.wordStartTime ? lastEntry.wordStartTime : now;
+      this.startFlowRun(momentum, wordStart, wordChars);
+    }
+
+    if (!this.flowRun) return null;
+
+    this.flowRun.wordsCount++;
+    if (isClean) {
+      this.flowRun.cleanWords++;
+    }
+    if (momentum > this.flowRun.maxMomentum) {
+      this.flowRun.maxMomentum = momentum;
+    }
+    if (liveWpm > this.flowRun.peakWpm) {
+      this.flowRun.peakWpm = liveWpm;
+    }
+
+    if (momentum < 50) {
+      return this.endFlowRun(unlockedWords, now);
+    }
+    return null;
+  }
+
+  /**
+   * Per-second telemetry snapshot while inside an active Flow Run.
+   * Produces points identical in schema to Classic Mode's wpmHistory for ChartView reuse.
+   */
+  tickFlowRun(momentum = 85, now = Date.now()) {
+    if (!this.flowRun) return null;
+    this.flowRun.elapsedSeconds++;
+    const elapsed = this.flowRun.elapsedSeconds;
+
+    if (momentum > this.flowRun.maxMomentum) {
+      this.flowRun.maxMomentum = momentum;
+    }
+
+    const runCorrect = Math.max(0, this.correctKeystrokes - this.flowRun.startCorrectKeystrokes);
+    const runRaw = Math.max(0, this.rawKeystrokes - this.flowRun.startRawKeystrokes);
+    const currentWpm = Math.round((runCorrect / 5) / (Math.max(1, elapsed) / 60));
+    const currentRaw = Math.round((runRaw / 5) / (Math.max(1, elapsed) / 60));
+
+    const deltaCorrect = Math.max(0, this.correctKeystrokes - this.flowRun.lastSecCorrect);
+    const deltaRaw = Math.max(0, this.rawKeystrokes - this.flowRun.lastSecRaw);
+    this.flowRun.lastSecCorrect = this.correctKeystrokes;
+    this.flowRun.lastSecRaw = this.rawKeystrokes;
+    this.flowRun.secondDeltas.push({ correct: deltaCorrect, raw: deltaRaw });
+
+    const recentWindow = this.flowRun.secondDeltas.slice(-3);
+    const burstCorrectSum = recentWindow.reduce((a, b) => a + b.correct, 0);
+    const burstWindowSec = Math.max(1, recentWindow.length);
+    const burstWpm = Math.round((burstCorrectSum / 5) / (burstWindowSec / 60));
+
+    if (burstWpm > this.flowRun.peakWpm) this.flowRun.peakWpm = burstWpm;
+    if (currentWpm > this.flowRun.peakWpm) this.flowRun.peakWpm = currentWpm;
+
+    const runErrors = this.errorLog.slice(this.flowRun.errorStartIdx);
+    const secErrors = runErrors.filter(e => e.flowSecond === elapsed);
+    const errorsThisSec = secErrors.length;
+    const fixedThisSec = secErrors.filter(e => e.fixed).length;
+
+    const snap = {
+      second: elapsed,
+      time: elapsed,
+      wpm: currentWpm,
+      rawWpm: currentRaw,
+      raw: currentRaw,
+      burstWpm,
+      momentum: Math.round(momentum),
+      errors: errorsThisSec,
+      fixed: fixedThisSec
+    };
+
+    this.flowRun.wpmHistory.push(snap);
+    return snap;
+  }
+
+  /**
+   * Finalizes the active Flow Run and returns the recap summary if it meets
+   * qualification criteria (duration >= 5s AND cleanWords >= 3).
+   */
+  endFlowRun(unlockedWords = 1, now = Date.now()) {
+    if (!this.flowRun) return null;
+    const run = this.flowRun;
+    this.flowRun = null;
+
+    const wallSec = Math.max(0, Math.round((now - run.startTime) / 1000));
+    const duration = Math.max(run.elapsedSeconds, wallSec);
+
+    if (duration < 5 || run.cleanWords < 3) {
+      return null;
+    }
+
+    const correctChars = Math.max(0, this.correctKeystrokes - run.startCorrectKeystrokes);
+    const incorrectChars = Math.max(0, this.incorrectKeystrokes - run.startIncorrectKeystrokes);
+    const extraChars = Math.max(0, this.extraCharsCount - run.startExtraChars);
+    const fixedErrors = Math.max(0, this.totalFixedErrors - run.startFixedErrors);
+    const rawChars = Math.max(0, this.rawKeystrokes - run.startRawKeystrokes);
+
+    const totalAttempts = correctChars + incorrectChars;
+    const finalWpm = Math.round((correctChars / 5) / (Math.max(1, duration) / 60));
+    const finalRawWpm = Math.round((rawChars / 5) / (Math.max(1, duration) / 60));
+    const finalAcc = totalAttempts > 0 ? Math.round((correctChars / totalAttempts) * 100) : 100;
+
+    // Refresh fixed/unfixed error attribution across snapshots
+    const runErrors = this.errorLog.slice(run.errorStartIdx);
+    if (run.wpmHistory.length > 0 && runErrors.length > 0) {
+      const counts = new Map();
+      for (let i = 0; i < runErrors.length; i++) {
+        const e = runErrors[i];
+        const fSec = e.flowSecond || 1;
+        let entry = counts.get(fSec);
+        if (!entry) {
+          entry = { errors: 0, fixed: 0 };
+          counts.set(fSec, entry);
+        }
+        entry.errors++;
+        if (e.fixed) entry.fixed++;
+      }
+      for (let i = 0; i < run.wpmHistory.length; i++) {
+        const snap = run.wpmHistory[i];
+        const sec = snap.second || (i + 1);
+        const entry = counts.get(sec);
+        snap.errors = entry ? entry.errors : 0;
+        snap.fixed = entry ? entry.fixed : 0;
+      }
+    }
+
+    // Synthesize timeline points if wall time elapsed without per-second ticks
+    if (run.wpmHistory.length === 0) {
+      for (let s = 1; s <= duration; s++) {
+        run.wpmHistory.push({
+          second: s,
+          time: s,
+          wpm: finalWpm,
+          rawWpm: finalRawWpm,
+          raw: finalRawWpm,
+          burstWpm: run.peakWpm || finalWpm,
+          momentum: Math.round(run.maxMomentum),
+          errors: s === duration ? incorrectChars : 0,
+          fixed: s === duration ? fixedErrors : 0
+        });
+      }
+    }
+
+    let consistency = 100;
+    if (run.wpmHistory.length > 2) {
+      const wpms = run.wpmHistory.map(h => h.wpm);
+      const mean = wpms.reduce((a, b) => a + b, 0) / wpms.length;
+      const variance = wpms.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / wpms.length;
+      const stdDev = Math.sqrt(variance);
+      consistency = Math.max(0, Math.min(100, Math.round(100 - (stdDev / (mean || 1)) * 100)));
+    }
+
+    const peakWpm = Math.max(
+      finalWpm,
+      Math.round(run.peakWpm || 0),
+      ...run.wpmHistory.map(h => h.burstWpm || h.wpm || 0)
+    );
+
+    const summary = {
+      id: now,
+      date: new Date(now).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      mode: 'flow',
+      duration,
+      wpm: finalWpm,
+      rawWpm: finalRawWpm,
+      peakWpm,
+      accuracy: finalAcc,
+      consistency,
+      correctChars,
+      incorrectChars,
+      extraChars,
+      missedChars: 0,
+      fixedErrors,
+      wordsCount: run.wordsCount,
+      totalWords: run.wordsCount,
+      cleanWords: run.cleanWords,
+      unlockedWords: Math.max(1, Number(unlockedWords) || 1),
+      maxMomentum: Math.round(run.maxMomentum),
+      wpmHistory: run.wpmHistory
+    };
+
+    this.lastCompletedFlowRun = summary;
+    this.emit('flowRunCompleted', summary);
+    return summary;
   }
 
   /**

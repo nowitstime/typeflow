@@ -119,6 +119,13 @@ class GameController {
     this.lastTestFinishedTime = 0;
     this.currentMode = 'flow';
 
+    // Flow State Performance Recap state
+    this.isFlowRecapVisible = false;
+    this.activeRecapRun = null;
+    this.lastFlowRunEndTime = 0;
+    this.afkRecapTriggered = false;
+    this.lastFlowTickTime = 0;
+
     // Ghost Cursor Pacer state
     this.ghostEnabled = false;
     this.ghostSpeed = 50;
@@ -143,6 +150,9 @@ class GameController {
         onHatchChar: (c) => this.handleHatchChar(c),
         onHatchBackspace: () => this.handleHatchBackspace(),
         onEnterFinished: () => this.resetTest(),
+        onFlowRecapToggle: () => this.toggleFlowRecap(),
+        onDismissFlowRecap: (isTypingWake) => this.dismissFlowRecap(isTypingWake),
+        isFlowRecapOpen: () => this.isFlowRecapVisible,
         isHatching: () => this.eggNestModel.isHatching(),
         isTestFinished: () => this.sessionModel.isFinished,
         isStatsOpen: () => this.isStatsModalOpen(),
@@ -246,7 +256,7 @@ class GameController {
       onOpenArmory: () => this.openStats('armory')
     });
 
-    // 2. Nest View events (slot clicks to enter/exit hatch mode)
+    // 2. Nest View events (slot clicks to enter/exit hatch mode & Flow Recap pill)
     this.nestView.bindEvents({
       onSlotClick: (slotIdx) => {
         const status = this.eggNestModel.getSlotStatus(slotIdx);
@@ -257,7 +267,8 @@ class GameController {
             this.enterHatchMode(slotIdx);
           }
         }
-      }
+      },
+      onFlowRecapClick: () => this.openFlowRecap(false)
     });
 
     // 3. Stage View events (words box & focus overlay clicks)
@@ -272,6 +283,10 @@ class GameController {
     // 4. Modal View events (stats modal, filters, reset RPG/classic)
     this.modalView.bindEvents({
       onNextTest: () => {
+        if (this.isFlowRecapVisible) {
+          this.dismissFlowRecap(false);
+          return;
+        }
         if (Date.now() - this.lastTestFinishedTime < 350) return;
         this.resetTest();
       },
@@ -293,6 +308,12 @@ class GameController {
           }
           this.pendingHatchedWords = [];
           this.pendingRareEpicUnlocks = [];
+          this.activeRecapRun = null;
+          this.lastFlowRunEndTime = 0;
+          this.afkRecapTriggered = false;
+          if (this.nestView && this.nestView.updateFlowRecapPill) {
+            this.nestView.updateFlowRecapPill(null);
+          }
           this.updateLevelHud();
           this.nestView.render(this.eggNestModel);
           this.resetTest();
@@ -323,7 +344,12 @@ class GameController {
     // 6. Window resize handler
     if (typeof window !== 'undefined') {
       this._onWindowResize = () => {
-        if (!this.sessionModel.isFinished) {
+        if (this.isFlowRecapVisible) {
+          const run = this.activeRecapRun || (this.storageService.getLastFlowRun ? this.storageService.getLastFlowRun() : null);
+          if (run && Array.isArray(run.wpmHistory)) {
+            this.chartView.render(run.wpmHistory, this.chartView.hoveredPointIndex);
+          }
+        } else if (!this.sessionModel.isFinished) {
           this.stageView.updateCaret(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
           this.ensureWordBuffer(this.sessionModel.currentWordIdx);
         } else {
@@ -719,6 +745,12 @@ class GameController {
       this.classicTimerInterval = null;
     }
 
+    // Finalize any active qualifying Flow Run before resetting session
+    this._finalizeActiveFlowRun();
+    this.isFlowRecapVisible = false;
+    this.lastFlowRunEndTime = 0;
+    this.afkRecapTriggered = false;
+
     this.stopGhostPacer(true);
     if (this.stageView.setGhostVisible) {
       this.stageView.setGhostVisible(false);
@@ -785,6 +817,12 @@ class GameController {
       this.flowModel.getComboTier(),
       (gameState.eggBasket || []).length >= 3
     );
+    if (this.nestView && this.nestView.updateFlowRecapPill) {
+      const lastRun = (this.currentMode === 'flow' && this.storageService.getLastFlowRun)
+        ? this.storageService.getLastFlowRun()
+        : null;
+      this.nestView.updateFlowRecapPill(lastRun);
+    }
     this.stageView.focusInput();
   }
 
@@ -1025,6 +1063,22 @@ class GameController {
       const prevMomentum = this.flowModel.momentum;
       const evalRes = this.flowModel.evaluateWord(hasUncorrectedErrors, liveWpm, isHadBackspace, basketCount, baseXp);
       const earnedXp = evalRes.earnedXp;
+
+      // Flow Run Performance Recap tracking (>=85% start, >=50% continuation floor)
+      const unlockedRanksCount = (gameState.unlockedRanks || [1]).length;
+      const wasFlowRunActive = Boolean(this.sessionModel.flowRun);
+      const isCleanWord = !hasUncorrectedErrors && !isHadBackspace;
+      const completedFlowRun = this.sessionModel.recordFlowRunWord
+        ? this.sessionModel.recordFlowRunWord(isCleanWord, liveWpm, this.flowModel.momentum, unlockedRanksCount)
+        : null;
+      if (!wasFlowRunActive && this.sessionModel.flowRun) {
+        this.lastFlowTickTime = Date.now();
+        this.lastFlowRunEndTime = 0;
+        this.afkRecapTriggered = false;
+      }
+      if (completedFlowRun) {
+        this.handleFlowRunCompleted(completedFlowRun);
+      }
 
       // Cushion & Feat tracking: absorbed a typo / pace stumble in Apex without dropping below 85%
       if (this.cushionAbsorbedState && this.flowModel.momentum >= 100) {
@@ -1410,7 +1464,81 @@ class GameController {
       this.closeStats();
       return;
     }
+    if (this.isFlowRecapVisible) {
+      this.dismissFlowRecap(false);
+      return;
+    }
     this.resetTest();
+  }
+
+  _finalizeActiveFlowRun() {
+    if (this.sessionModel && this.sessionModel.flowRun && this.sessionModel.endFlowRun) {
+      const gameSave = this.storageService.getGameSave ? this.storageService.getGameSave() : {};
+      const unlockedCount = (gameSave.unlockedRanks || [1]).length;
+      const completedRun = this.sessionModel.endFlowRun(unlockedCount);
+      if (completedRun) {
+        this.handleFlowRunCompleted(completedRun);
+      }
+    }
+  }
+
+  handleFlowRunCompleted(completedRun) {
+    if (!completedRun) return;
+    const saved = (this.storageService && this.storageService.recordFlowRun)
+      ? this.storageService.recordFlowRun(completedRun)
+      : completedRun;
+    this.activeRecapRun = saved;
+    this.lastFlowRunEndTime = Date.now();
+    this.afkRecapTriggered = false;
+    if (this.nestView && this.nestView.updateFlowRecapPill && this.currentMode === 'flow') {
+      this.nestView.updateFlowRecapPill(saved);
+    }
+  }
+
+  openFlowRecap(isAfk = false, customRun = null) {
+    if (this.currentMode !== 'flow' && !customRun) return false;
+    if (!isAfk && !customRun && this.sessionModel && this.sessionModel.flowRun) {
+      this._finalizeActiveFlowRun();
+    }
+    const runToDisplay = customRun
+      || this.activeRecapRun
+      || (this.sessionModel && this.sessionModel.lastCompletedFlowRun)
+      || (this.storageService && this.storageService.getLastFlowRun ? this.storageService.getLastFlowRun() : null);
+    if (!runToDisplay) return false;
+
+    this.activeRecapRun = runToDisplay;
+    this.isFlowRecapVisible = true;
+    this.stopGhostPacer(false);
+    if (this.stageView && this.stageView.setGhostVisible) {
+      this.stageView.setGhostVisible(false);
+    }
+    if (this.modalView && this.modalView.showFlowRecap) {
+      this.modalView.showFlowRecap(runToDisplay, isAfk);
+    }
+    if (this.chartView && Array.isArray(runToDisplay.wpmHistory)) {
+      this.chartView.render(runToDisplay.wpmHistory);
+    }
+    return true;
+  }
+
+  dismissFlowRecap(isTypingWake = false) {
+    if (!this.isFlowRecapVisible) return false;
+    this.isFlowRecapVisible = false;
+    if (this.modalView && this.modalView.hideClassicResults) {
+      this.modalView.hideClassicResults();
+    }
+    if (this.stageView) {
+      this.stageView.focusInput();
+      this.stageView.updateCaret(this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
+    }
+    return true;
+  }
+
+  toggleFlowRecap() {
+    if (this.isFlowRecapVisible) {
+      return this.dismissFlowRecap(false);
+    }
+    return this.openFlowRecap(false);
   }
 
   openStats(tab = 'flow') {
@@ -1420,7 +1548,19 @@ class GameController {
     const bucketStats = this.storageService.getBucketStats(gameState);
 
     this.modalView.openStatsModal(tab);
-    this.modalView.renderFlowStats(gameState, bucketStats, (r) => this.wordsModel.getWord(r), this.storageService);
+    this.modalView.renderFlowStats(
+      gameState,
+      bucketStats,
+      (r) => this.wordsModel.getWord(r),
+      this.storageService,
+      (runItem) => {
+        this.closeStats();
+        if (this.currentMode !== 'flow') {
+          this.switchMode('flow');
+        }
+        this.openFlowRecap(false, runItem);
+      }
+    );
     this.modalView.renderClassicStats(this.storageService.getClassicStats());
     if (this.achievementsModel && this.modalView.renderTrophies) {
       this.modalView.renderTrophies(this.achievementsModel, this.storageService);
@@ -1446,26 +1586,65 @@ class GameController {
   startIdleDecayLoop() {
     if (this.idleDecayInterval) clearInterval(this.idleDecayInterval);
     this.idleDecayInterval = setInterval(() => {
-      if (this.currentMode !== 'flow' || !this.sessionModel.isActive || this.flowModel.momentum <= 0) return;
+      if (this.currentMode !== 'flow' || !this.sessionModel.isActive) return;
       if (this.eggNestModel.isHatching() || this.isStatsModalOpen()) return;
 
-      const decay = this.flowModel.applyIdleDecay(Date.now(), 0.20);
-      if (decay > 0) {
-        this.storageService.updateEggCharge(this.flowModel.eggCharge);
-        const basketCount = (this.storageService.getGameSave().eggBasket || []).length;
-        this.nestView.updateIncubation(
-          this.flowModel.eggCharge,
-          this.flowModel.getComboTier(),
-          basketCount >= 3
-        );
-        this.hudView.updateFlowGauge(
-          this.sessionModel.getInstantaneousWpm(),
-          this.flowModel.targetWpm,
-          this.flowModel.momentum,
-          this.flowModel.getMultiplier(),
-          0.0,
-          (this.storageService.getGameSave().unlockedRanks || [1]).length
-        );
+      const now = Date.now();
+
+      // 1. Sample active Flow Run timeline every 1s
+      if (this.sessionModel.flowRun && now - (this.lastFlowTickTime || 0) >= 1000) {
+        this.lastFlowTickTime = now;
+        if (this.sessionModel.tickFlowRun) {
+          this.sessionModel.tickFlowRun(this.flowModel.momentum);
+        }
+      }
+
+      // 2. Apply idle momentum decay
+      if (this.flowModel.momentum > 0) {
+        const decay = this.flowModel.applyIdleDecay(now, 0.20);
+        if (decay > 0) {
+          this.storageService.updateEggCharge(this.flowModel.eggCharge);
+          const gameSave = this.storageService.getGameSave();
+          const basketCount = (gameSave.eggBasket || []).length;
+          const unlockedCount = (gameSave.unlockedRanks || [1]).length;
+          this.nestView.updateIncubation(
+            this.flowModel.eggCharge,
+            this.flowModel.getComboTier(),
+            basketCount >= 3
+          );
+          this.hudView.updateFlowGauge(
+            this.sessionModel.getInstantaneousWpm(),
+            this.flowModel.targetWpm,
+            this.flowModel.momentum,
+            this.flowModel.getMultiplier(),
+            0.0,
+            unlockedCount
+          );
+
+          // If active Flow Run decayed below the 50% continuation floor, finalize it
+          if (this.sessionModel.flowRun && this.flowModel.momentum < 50) {
+            const completedRun = this.sessionModel.endFlowRun
+              ? this.sessionModel.endFlowRun(unlockedCount)
+              : null;
+            if (completedRun) {
+              this.handleFlowRunCompleted(completedRun);
+            }
+          }
+        }
+      }
+
+      // 3. Check 7-second AFK auto-crossfade after a qualifying Flow Run ends
+      if (
+        !this.sessionModel.flowRun &&
+        !this.isFlowRecapVisible &&
+        !this.afkRecapTriggered &&
+        this.lastFlowRunEndTime > 0
+      ) {
+        const lastActivity = Math.max(this.lastFlowRunEndTime, this.flowModel.lastKeystrokeTime || 0);
+        if (now - lastActivity >= 7000) {
+          this.afkRecapTriggered = true;
+          this.openFlowRecap(true);
+        }
       }
     }, 200);
   }

@@ -17,11 +17,13 @@ class NestView {
     this.nestHint = elements.nestHint || (typeof document !== 'undefined' ? document.getElementById('nest-hint') : null);
     this.incubationTrack = elements.incubationTrack || (typeof document !== 'undefined' ? document.getElementById('nest-incubation-track') : null);
     this.incubationFill = elements.incubationFill || (typeof document !== 'undefined' ? document.getElementById('nest-incubation-fill') : null);
+    this.flowRecapPill = elements.flowRecapPill || (typeof document !== 'undefined' ? document.getElementById('flow-recap-pill') : null);
+    this.flowRecapPillText = elements.flowRecapPillText || (typeof document !== 'undefined' ? document.getElementById('flow-recap-pill-text') : null);
   }
 
   /**
-   * Binds click and interaction events for nest slots.
-   * @param {Object} handlers - Event handlers { onSlotClick }
+   * Binds click and interaction events for nest slots and flow recap pill.
+   * @param {Object} handlers - Event handlers { onSlotClick, onFlowRecapClick }
    */
   bindEvents(handlers = {}) {
     if (this.nestSlots && Array.isArray(this.nestSlots)) {
@@ -33,6 +35,30 @@ class NestView {
           }
         });
       });
+    }
+    if (this.flowRecapPill) {
+      this.flowRecapPill.addEventListener('click', () => {
+        if (typeof handlers.onFlowRecapClick === 'function') {
+          handlers.onFlowRecapClick();
+        }
+      });
+    }
+  }
+
+  /**
+   * Updates the ambient Flow Recap pill near the Egg Nest.
+   */
+  updateFlowRecapPill(runSummary) {
+    if (!this.flowRecapPill) return;
+    if (!runSummary || typeof runSummary !== 'object') {
+      this.flowRecapPill.style.display = 'none';
+      return;
+    }
+    this.flowRecapPill.style.display = 'inline-flex';
+    if (this.flowRecapPillText) {
+      const wpm = runSummary.wpm || 0;
+      const peak = runSummary.peakWpm || wpm;
+      this.flowRecapPillText.textContent = `Flow: ${wpm} WPM • Peak ${peak}`;
     }
   }
 

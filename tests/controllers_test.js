@@ -83,10 +83,24 @@ function createTestHarness() {
         <div id="nest-slot-2"></div>
         <div id="nest-hint"></div>
       </div>
+      <button id="flow-recap-pill" style="display: none;"><span id="flow-recap-pill-text"></span></button>
       <div id="test-section"></div>
-      <div id="results-section"></div>
+      <div id="results-section">
+        <span id="res-wpm"></span>
+        <span id="res-acc"></span>
+        <span id="res-raw"></span>
+        <span id="res-chars"></span>
+        <span id="res-fixed"></span>
+        <span id="res-fixed-detail"></span>
+        <span id="res-consistency"></span>
+        <span id="res-time"></span>
+        <span id="res-time-detail"></span>
+        <button id="next-test-btn"><span id="next-test-btn-label">Next Test</span><span id="next-test-btn-hint">Tab + Enter</span></button>
+      </div>
       <button id="hd-btn"></button>
-      <div id="stats-modal" style="display: none;"></div>
+      <div id="stats-modal" style="display: none;">
+        <table><tbody id="flow-history-tbody"></tbody></table>
+      </div>
     </body>
     </html>
   `, { url: 'https://typeflow.local/' });
@@ -117,7 +131,9 @@ function createTestHarness() {
       document.getElementById('nest-slot-1'),
       document.getElementById('nest-slot-2')
     ],
-    nestHint: document.getElementById('nest-hint')
+    nestHint: document.getElementById('nest-hint'),
+    flowRecapPill: document.getElementById('flow-recap-pill'),
+    flowRecapPillText: document.getElementById('flow-recap-pill-text')
   });
 
   const hudView = new HUDView({
@@ -147,7 +163,20 @@ function createTestHarness() {
   const modalView = new ModalView({
     testSection: document.getElementById('test-section'),
     resultsSection: document.getElementById('results-section'),
-    statsModal: document.getElementById('stats-modal')
+    statsModal: document.getElementById('stats-modal'),
+    resWpm: document.getElementById('res-wpm'),
+    resAcc: document.getElementById('res-acc'),
+    resRaw: document.getElementById('res-raw'),
+    resChars: document.getElementById('res-chars'),
+    resFixed: document.getElementById('res-fixed'),
+    resFixedDetail: document.getElementById('res-fixed-detail'),
+    resConsistency: document.getElementById('res-consistency'),
+    resTime: document.getElementById('res-time'),
+    resTimeDetail: document.getElementById('res-time-detail'),
+    nextTestBtn: document.getElementById('next-test-btn'),
+    nextTestBtnLabel: document.getElementById('next-test-btn-label'),
+    nextTestBtnHint: document.getElementById('next-test-btn-hint'),
+    flowHistoryTbody: document.getElementById('flow-history-tbody')
   });
 
   const controller = new GameController({
@@ -164,7 +193,7 @@ function createTestHarness() {
     modalView
   });
 
-  return { dom, controller, storageService, wordsModel, sessionModel, flowModel, eggNestModel, stageView };
+  return { dom, controller, storageService, wordsModel, sessionModel, flowModel, eggNestModel, stageView, nestView, modalView };
 }
 
 // 1. KeyboardController Tests
@@ -897,6 +926,148 @@ it('replenishes classic mode word stream to maintain runway for long tests', () 
   assert.strictEqual(sessionModel.words.length, 90);
   assert.strictEqual(stageView.wordElements.length, 90);
   assert.strictEqual(typeof sessionModel.words[89], 'string');
+});
+
+// 3. Flow State Performance Recap & Timeline Graph Tests
+console.log('\n--- 3. Flow State Performance Recap & Timeline Graph ---');
+
+it('qualifies a Flow Run only when momentum >= 85% start, >= 5s duration, >= 3 clean words, and stays alive above >= 50% continuation floor', () => {
+  const { sessionModel } = createTestHarness();
+  sessionModel.reset({ mode: 'flow', words: ['the', 'and', 'for', 'are', 'but', 'not'] });
+
+  // 1. Disqualified short run (< 5s or < 3 clean words) returns null
+  sessionModel.recordFlowRunWord(true, 65, 90, 12);
+  sessionModel.tickFlowRun(92);
+  sessionModel.recordFlowRunWord(true, 70, 95, 12);
+  const shortRes = sessionModel.recordFlowRunWord(false, 40, 45, 12); // drops below 50% after only 2 clean words & 1s
+  assert.strictEqual(shortRes, null);
+  assert.strictEqual(sessionModel.flowRun, null);
+
+  // 2. Qualifying run starts at >= 85% momentum, survives a dip to 55% (>= 50% floor), and finalizes at < 50%
+  sessionModel.recordFlowRunWord(true, 62, 88, 25);
+  assert.ok(sessionModel.flowRun, 'Flow run should start at >= 85% momentum');
+  // Simulate 5 seconds of 1s timeline ticks + 3 clean words + 1 stumble to 55%
+  for (let s = 1; s <= 5; s++) {
+    sessionModel.correctKeystrokes += 5;
+    sessionModel.rawKeystrokes += 5;
+    sessionModel.tickFlowRun(s === 3 ? 55 : 95);
+  }
+  sessionModel.recordFlowRunWord(true, 68, 96, 25);
+  // Stumble word that drops momentum to 55% (still >= 50% floor, so run stays alive!)
+  const midDipRes = sessionModel.recordFlowRunWord(false, 45, 55, 25);
+  assert.strictEqual(midDipRes, null, 'Flow run should survive a dip to 55% momentum (>= 50% floor)');
+  assert.ok(sessionModel.flowRun, 'Flow run remains active at 55% momentum');
+
+  // Third clean word brings cleanWords to 3
+  sessionModel.recordFlowRunWord(true, 74, 92, 25);
+  assert.strictEqual(sessionModel.flowRun.cleanWords, 3);
+
+  // Now drop below 50% (e.g. 42%) -> finalizes and returns qualifying Flow Run summary!
+  const completed = sessionModel.recordFlowRunWord(false, 30, 42, 25);
+  assert.ok(completed, 'Qualifying flow run should be returned when momentum drops below 50%');
+  assert.strictEqual(completed.cleanWords, 3);
+  assert.strictEqual(completed.totalWords, 5);
+  assert.strictEqual(completed.unlockedWords, 25);
+  assert.ok(completed.duration >= 5);
+  assert.strictEqual(completed.wpmHistory.length, 5);
+  assert.strictEqual(completed.wpmHistory[2].momentum, 55);
+});
+
+it('persists qualifying Flow Runs in StorageService (up to 15 runs) with unlockedWords and updates NestView pill', () => {
+  const { controller, storageService, nestView, modalView, dom } = createTestHarness();
+  controller.init();
+
+  const sampleRun = {
+    wpm: 68,
+    rawWpm: 72,
+    peakWpm: 84,
+    accuracy: 97,
+    consistency: 91,
+    duration: 18,
+    cleanWords: 16,
+    totalWords: 17,
+    unlockedWords: 42,
+    correctChars: 95,
+    incorrectChars: 3,
+    extraChars: 0,
+    missedChars: 0,
+    fixedErrors: 2,
+    wpmHistory: [
+      { second: 1, wpm: 64, raw: 64, errors: 0, burstWords: [{ word: 'the', wpm: 64 }], momentum: 88 },
+      { second: 2, wpm: 72, raw: 72, errors: 0, burstWords: [{ word: 'and', wpm: 76 }], momentum: 96 }
+    ]
+  };
+
+  controller.handleFlowRunCompleted(sampleRun);
+
+  const savedLast = storageService.getLastFlowRun();
+  assert.ok(savedLast);
+  assert.strictEqual(savedLast.wpm, 68);
+  assert.strictEqual(savedLast.peakWpm, 84);
+  assert.strictEqual(savedLast.unlockedWords, 42);
+  assert.strictEqual(storageService.getFlowHistory().length, 1);
+
+  // Verify contextual pill next to Egg Nest is visible and displays summary
+  assert.strictEqual(nestView.flowRecapPill.style.display, 'inline-flex');
+  assert.ok(nestView.flowRecapPillText.textContent.includes('Flow: 68 WPM'));
+  assert.ok(nestView.flowRecapPillText.textContent.includes('Peak 84'));
+
+  // Verify Lifetime Stats modal renders Recent Flow Runs table and clicking a row opens Flow Recap
+  controller.openStats('flow');
+  const rows = dom.window.document.querySelectorAll('#flow-history-tbody tr.flow-history-row');
+  assert.strictEqual(rows.length, 1);
+  assert.ok(rows[0].textContent.includes('68 WPM'));
+  assert.ok(rows[0].textContent.includes('42 words'));
+
+  rows[0].click();
+  assert.strictEqual(controller.isFlowRecapVisible, true);
+  assert.strictEqual(modalView.resultsSection.classList.contains('visible'), true);
+  assert.strictEqual(modalView.resWpm.textContent, '68');
+  assert.strictEqual(modalView.resTimeDetail.textContent, 'flow run • 42 words unlocked');
+  assert.strictEqual(modalView.nextTestBtnLabel.textContent, 'Resume Flow');
+});
+
+it('handles ;; home-row double-tap toggle, suppresses single ; typos, and wakes on first typing keystroke without losing the character', () => {
+  const { controller, sessionModel, modalView } = createTestHarness();
+  controller.init();
+
+  // Seed a completed Flow Run
+  controller.handleFlowRunCompleted({
+    wpm: 75,
+    rawWpm: 75,
+    peakWpm: 90,
+    accuracy: 100,
+    consistency: 94,
+    duration: 12,
+    cleanWords: 12,
+    totalWords: 12,
+    unlockedWords: 15,
+    correctChars: 60,
+    incorrectChars: 0,
+    extraChars: 0,
+    missedChars: 0,
+    fixedErrors: 0,
+    wpmHistory: [{ second: 1, wpm: 75, raw: 75, errors: 0, burstWords: [], momentum: 100 }]
+  });
+
+  const startCharIdx = sessionModel.currentCharIdx;
+
+  // 1. Single semicolon ';' is suppressed and never registered as a character or error
+  controller.keyboardController.handleKeyDown({ key: ';', preventDefault() {} });
+  assert.strictEqual(sessionModel.currentCharIdx, startCharIdx, 'Single ; should not advance or taint current word');
+  assert.strictEqual(controller.isFlowRecapVisible, false);
+
+  // 2. Second semicolon ';' within 400ms triggers ;; chord and opens Flow Recap
+  controller.keyboardController.handleKeyDown({ key: ';', preventDefault() {} });
+  assert.strictEqual(controller.isFlowRecapVisible, true);
+  assert.strictEqual(modalView.resultsSection.classList.contains('visible'), true);
+
+  // 3. Pressing first letter of current word while Flow Recap is open immediately dismisses recap AND types that letter!
+  const firstLetter = sessionModel.getCurrentWordText()[0];
+  controller.keyboardController.handleKeyDown({ key: firstLetter, preventDefault() {} });
+  assert.strictEqual(controller.isFlowRecapVisible, false, 'Typing a character should immediately dismiss Flow Recap');
+  assert.strictEqual(modalView.resultsSection.classList.contains('visible'), false);
+  assert.strictEqual(sessionModel.currentCharIdx, 1, 'First keystroke that woke from Flow Recap should be typed into the active word');
 });
 
 console.log('\n========================================');

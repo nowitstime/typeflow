@@ -11,15 +11,24 @@ class ModalView {
     this.resultsSection = elements.resultsSection || (typeof document !== 'undefined' ? document.getElementById('results-section') : null);
     this.nextTestBtn = elements.nextTestBtn || (typeof document !== 'undefined' ? document.getElementById('next-test-btn') : null);
     this.testSection = elements.testSection || (typeof document !== 'undefined' ? document.getElementById('test-section') : null);
-    this.resWpmEl = elements.resWpmEl || (typeof document !== 'undefined' ? document.getElementById('res-wpm') : null);
-    this.resAccEl = elements.resAccEl || (typeof document !== 'undefined' ? document.getElementById('res-acc') : null);
-    this.resRawEl = elements.resRawEl || (typeof document !== 'undefined' ? document.getElementById('res-raw') : null);
-    this.resCharsEl = elements.resCharsEl || (typeof document !== 'undefined' ? document.getElementById('res-chars') : null);
-    this.resFixedEl = elements.resFixedEl || (typeof document !== 'undefined' ? document.getElementById('res-fixed') : null);
-    this.resFixedDetailEl = elements.resFixedDetailEl || (typeof document !== 'undefined' ? document.getElementById('res-fixed-detail') : null);
-    this.resConsistencyEl = elements.resConsistencyEl || (typeof document !== 'undefined' ? document.getElementById('res-consistency') : null);
-    this.resTimeEl = elements.resTimeEl || (typeof document !== 'undefined' ? document.getElementById('res-time') : null);
-    this.resTimeDetailEl = elements.resTimeDetailEl || (typeof document !== 'undefined' ? document.getElementById('res-time-detail') : null);
+    this.resWpmEl = elements.resWpmEl || elements.resWpm || (typeof document !== 'undefined' ? document.getElementById('res-wpm') : null);
+    this.resWpm = this.resWpmEl;
+    this.resAccEl = elements.resAccEl || elements.resAcc || (typeof document !== 'undefined' ? document.getElementById('res-acc') : null);
+    this.resAcc = this.resAccEl;
+    this.resRawEl = elements.resRawEl || elements.resRaw || (typeof document !== 'undefined' ? document.getElementById('res-raw') : null);
+    this.resRaw = this.resRawEl;
+    this.resCharsEl = elements.resCharsEl || elements.resChars || (typeof document !== 'undefined' ? document.getElementById('res-chars') : null);
+    this.resChars = this.resCharsEl;
+    this.resFixedEl = elements.resFixedEl || elements.resFixed || (typeof document !== 'undefined' ? document.getElementById('res-fixed') : null);
+    this.resFixed = this.resFixedEl;
+    this.resFixedDetailEl = elements.resFixedDetailEl || elements.resFixedDetail || (typeof document !== 'undefined' ? document.getElementById('res-fixed-detail') : null);
+    this.resFixedDetail = this.resFixedDetailEl;
+    this.resConsistencyEl = elements.resConsistencyEl || elements.resConsistency || (typeof document !== 'undefined' ? document.getElementById('res-consistency') : null);
+    this.resConsistency = this.resConsistencyEl;
+    this.resTimeEl = elements.resTimeEl || elements.resTime || (typeof document !== 'undefined' ? document.getElementById('res-time') : null);
+    this.resTime = this.resTimeEl;
+    this.resTimeDetailEl = elements.resTimeDetailEl || elements.resTimeDetail || (typeof document !== 'undefined' ? document.getElementById('res-time-detail') : null);
+    this.resTimeDetail = this.resTimeDetailEl;
 
     // Lifetime Stats Modal
     this.statsModal = elements.statsModal || (typeof document !== 'undefined' ? document.getElementById('stats-modal') : null);
@@ -83,30 +92,63 @@ class ModalView {
     this.classicTotalKeys = elements.classicTotalKeys || (typeof document !== 'undefined' ? (document.getElementById('stats-total-keys') || document.getElementById('classic-total-keys')) : null);
     this.classicHistoryTable = elements.classicHistoryTable || (typeof document !== 'undefined' ? document.getElementById('classic-history-table') : null);
     this.classicHistoryTbody = elements.classicHistoryTbody || (typeof document !== 'undefined' ? (document.getElementById('stats-history-tbody') || (this.classicHistoryTable ? this.classicHistoryTable.querySelector('tbody') : null)) : null);
+    this.flowHistoryTbody = elements.flowHistoryTbody || (typeof document !== 'undefined' ? document.getElementById('flow-history-tbody') : null);
+    this.nextTestBtnLabel = elements.nextTestBtnLabel || (typeof document !== 'undefined' ? document.getElementById('next-test-btn-label') : null);
+    this.nextTestBtnHint = elements.nextTestBtnHint || (typeof document !== 'undefined' ? document.getElementById('next-test-btn-hint') : null);
+  }
+
+  _getDoc() {
+    return (this.statsModal && this.statsModal.ownerDocument)
+      ? this.statsModal.ownerDocument
+      : (this.resultsSection && this.resultsSection.ownerDocument
+        ? this.resultsSection.ownerDocument
+        : ((typeof document !== 'undefined') ? document : null));
   }
 
   showClassicResults(stats) {
     if (this.testSection) this.testSection.style.display = 'none';
-    if (this.resultsSection) this.resultsSection.classList.add('visible');
+    if (this.resultsSection) {
+      this.resultsSection.classList.remove('flow-recap-mode', 'afk-crossfade');
+      this.resultsSection.classList.add('visible');
+    }
 
     if (this.resWpmEl) this.resWpmEl.textContent = stats.wpm;
-    if (this.resAccEl) this.resAccEl.textContent = `${stats.accuracy}%`;
-    if (this.resRawEl) this.resRawEl.textContent = stats.rawWpm;
+    if (this.resAccEl) this.resAccEl.textContent = `${stats.accuracy ?? stats.acc ?? 100}%`;
+    if (this.resRawEl) this.resRawEl.textContent = stats.rawWpm ?? stats.wpm;
     if (this.resCharsEl) {
-      this.resCharsEl.textContent = `${stats.correctChars}/${stats.incorrectChars}/${stats.extraChars || 0}/${stats.missedChars || 0}`;
+      this.resCharsEl.textContent = `${stats.correctChars || 0}/${stats.incorrectChars || 0}/${stats.extraChars || 0}/${stats.missedChars || 0}`;
     }
     if (this.resFixedEl) this.resFixedEl.textContent = stats.fixedErrors || 0;
     if (this.resFixedDetailEl) {
       const fixed = stats.fixedErrors || 0;
       this.resFixedDetailEl.textContent = fixed === 1 ? '1 error fixed' : `${fixed} errors fixed`;
     }
-    if (this.resConsistencyEl) this.resConsistencyEl.textContent = `${stats.consistency}%`;
+    if (this.resConsistencyEl) this.resConsistencyEl.textContent = `${stats.consistency ?? 100}%`;
     if (this.resTimeEl) this.resTimeEl.textContent = `${stats.duration}s`;
     if (this.resTimeDetailEl) this.resTimeDetailEl.textContent = 'standard mode';
+    if (this.nextTestBtnLabel) this.nextTestBtnLabel.textContent = 'Next Test';
+    if (this.nextTestBtnHint) this.nextTestBtnHint.textContent = 'Tab + Enter';
+  }
+
+  showFlowRecap(stats, isAfk = false) {
+    if (!stats) return;
+    this.showClassicResults(stats);
+    if (this.resultsSection) {
+      this.resultsSection.classList.add('flow-recap-mode');
+      this.resultsSection.classList.toggle('afk-crossfade', Boolean(isAfk));
+    }
+    if (this.resTimeDetailEl) {
+      const unlocked = stats.unlockedWords || 1;
+      this.resTimeDetailEl.textContent = `flow run • ${unlocked} ${unlocked === 1 ? 'word' : 'words'} unlocked`;
+    }
+    if (this.nextTestBtnLabel) this.nextTestBtnLabel.textContent = 'Resume Flow';
+    if (this.nextTestBtnHint) this.nextTestBtnHint.textContent = ';; / Esc';
   }
 
   hideClassicResults() {
-    if (this.resultsSection) this.resultsSection.classList.remove('visible');
+    if (this.resultsSection) {
+      this.resultsSection.classList.remove('visible', 'flow-recap-mode', 'afk-crossfade');
+    }
     if (this.testSection) this.testSection.style.display = 'flex';
   }
 
@@ -261,10 +303,13 @@ class ModalView {
     }
   }
 
-  renderFlowStats(gameState, bucketStats, getWordMetaFn, storageService = null) {
+  renderFlowStats(gameState, bucketStats, getWordMetaFn, storageService = null, onSelectFlowRun = null) {
     if (!gameState) return;
     this.currentGameState = gameState;
     this.getWordMetaFn = getWordMetaFn;
+    if (onSelectFlowRun) {
+      this.onSelectFlowRun = onSelectFlowRun;
+    }
     const storage = storageService || (typeof StorageManager !== 'undefined' ? StorageManager : null);
 
     if (this.statsRpgLevel) this.statsRpgLevel.textContent = `Lv. ${gameState.level}`;
@@ -287,11 +332,45 @@ class ModalView {
     if (this.statsRpgEggsCount) this.statsRpgEggsCount.textContent = Math.max(0, unlocked.length - 1);
     if (this.statsRpgHighStreak) this.statsRpgHighStreak.textContent = `${gameState.highStreak || 0} words`;
 
+    // Render Recent Flow Runs History Table
+    const doc = this._getDoc();
+    if (this.flowHistoryTbody && doc) {
+      this.flowHistoryTbody.innerHTML = '';
+      const flowHistory = Array.isArray(gameState.flowHistory) ? gameState.flowHistory : [];
+      if (flowHistory.length === 0) {
+        this.flowHistoryTbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--sub-color); padding: 12px;">No qualifying flow runs recorded yet (maintain ≥85% Flow for 5s+ & 3+ clean words).</td></tr>';
+      } else {
+        flowHistory.forEach(item => {
+          const tr = doc.createElement('tr');
+          tr.className = 'flow-history-row';
+          tr.style.cursor = 'pointer';
+          tr.title = 'Click to inspect this Flow Run on the timeline graph';
+          const acc = item.accuracy ?? item.acc ?? 100;
+          const peak = item.peakWpm || item.wpm || 0;
+          const unlockedCount = item.unlockedWords || unlocked.length || 1;
+          tr.innerHTML = `
+            <td>${item.date || '--'}</td>
+            <td>${item.duration || 0}s</td>
+            <td style="color: var(--main-color); font-weight: 700;">${item.wpm || 0} WPM</td>
+            <td>${peak} WPM</td>
+            <td>${acc}%</td>
+            <td>${unlockedCount} words</td>
+          `;
+          tr.addEventListener('click', () => {
+            if (this.onSelectFlowRun) {
+              this.onSelectFlowRun(item);
+            }
+          });
+          this.flowHistoryTbody.appendChild(tr);
+        });
+      }
+    }
+
     // Render Motor Cards
-    if (this.motorGrid && bucketStats) {
+    if (this.motorGrid && bucketStats && doc) {
       this.motorGrid.innerHTML = '';
       Object.values(bucketStats).forEach(b => {
-        const card = document.createElement('div');
+        const card = doc.createElement('div');
         card.className = `motor-card ${b.isProficient ? 'proficient' : ''} ${!b.isDiscovered ? 'locked' : ''}`;
         card.style.borderColor = b.isDiscovered ? b.bucketColor : 'var(--border-color)';
 
@@ -376,7 +455,9 @@ class ModalView {
         srsTitle = 'In Flow';
       }
 
-      const chip = document.createElement('div');
+      const doc = this._getDoc();
+      if (!doc) return;
+      const chip = doc.createElement('div');
       chip.className = 'deck-word-chip';
       chip.style.borderColor = meta.bucketColor || 'var(--border-color)';
       chip.title = `${meta.bucketName || 'Pattern'} (${meta.bucketTag || meta.bucketId || ''}) • ${meta.tierName || meta.tier || ''} • ${srsTitle} • Clean hits: ${cleanHits} • Avg: ${wpm} WPM`;
@@ -420,15 +501,16 @@ class ModalView {
       this.classicTotalTime.textContent = `${mins}m ${sec % 60}s`;
     }
 
+    const doc = this._getDoc();
     const tbody = this.classicHistoryTbody || (this.classicHistoryTable ? this.classicHistoryTable.querySelector('tbody') : null);
-    if (tbody) {
+    if (tbody && doc) {
       tbody.innerHTML = '';
       const history = stats.recentHistory || [];
       if (history.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--sub-color); padding: 12px;">No tests recorded yet.</td></tr>';
       } else {
         history.forEach(item => {
-          const tr = document.createElement('tr');
+          const tr = doc.createElement('tr');
           tr.innerHTML = `
             <td>${item.date}</td>
             <td>${item.duration}s</td>
