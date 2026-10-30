@@ -141,6 +141,14 @@ class GameController {
     // Zen Focus Mode state
     this.isZenActive = false;
     this.zenTimer = null;
+    this._boundMouseMoveDoc = null;
+    this._onMouseMove = null;
+    this._zenMouseStartTime = null;
+    this._zenMouseLastTime = null;
+    this._zenMouseLastX = null;
+    this._zenMouseLastY = null;
+    this._zenMouseDistance = 0;
+    this._zenMouseResetTimer = null;
 
     const KBClass = deps.keyboardControllerClass || _KeyboardController;
     if (KBClass) {
@@ -363,11 +371,14 @@ class GameController {
       window.addEventListener('resize', this._onWindowResize);
     }
 
-    // 7. Mouse activity handler to wake Zen Focus mode
-    if (typeof document !== 'undefined') {
-      document.addEventListener('mousemove', () => {
-        this.deactivateZenFocus();
-      });
+    // 7. Mouse activity handler to wake Zen Focus mode with wind-up threshold
+    const doc = this._getDoc();
+    if (doc) {
+      this._boundMouseMoveDoc = doc;
+      this._onMouseMove = (e) => {
+        this.handleMouseMove(e);
+      };
+      doc.addEventListener('mousemove', this._onMouseMove);
     }
 
     // 7. Retroactive sync of achievements from history/save
@@ -1571,6 +1582,7 @@ class GameController {
   }
 
   activateZenFocus() {
+    this._resetZenMouseTracker();
     if (this.isZenActive) return;
     this.isZenActive = true;
     const doc = this._getDoc();
@@ -1581,6 +1593,7 @@ class GameController {
   }
 
   deactivateZenFocus() {
+    this._resetZenMouseTracker();
     if (this.zenTimer) {
       clearTimeout(this.zenTimer);
       this.zenTimer = null;
@@ -1595,11 +1608,83 @@ class GameController {
   }
 
   onTypingActivity() {
+    this._resetZenMouseTracker();
     this.activateZenFocus();
     if (this.zenTimer) clearTimeout(this.zenTimer);
     this.zenTimer = setTimeout(() => {
       this.deactivateZenFocus();
     }, 1000);
+  }
+
+  handleMouseMove(e) {
+    if (!this.isZenActive) {
+      this._resetZenMouseTracker();
+      return;
+    }
+
+    const now = (e && typeof e.timeStamp === 'number' && e.timeStamp > 0) ? e.timeStamp : Date.now();
+    const x = (e && typeof e.clientX === 'number') ? e.clientX : null;
+    const y = (e && typeof e.clientY === 'number') ? e.clientY : null;
+
+    // Reset tracker if previous movement stopped for more than 300ms
+    if (this._zenMouseLastTime && (now - this._zenMouseLastTime > 300)) {
+      this._resetZenMouseTracker();
+    }
+
+    if (!this._zenMouseStartTime) {
+      this._zenMouseStartTime = now;
+      this._zenMouseLastTime = now;
+      this._zenMouseLastX = x;
+      this._zenMouseLastY = y;
+      this._zenMouseDistance = 0;
+      this._scheduleZenMouseReset();
+      return;
+    }
+
+    this._zenMouseLastTime = now;
+
+    // Accumulate movement distance if coordinates are present
+    if (x !== null && y !== null && this._zenMouseLastX !== null && this._zenMouseLastY !== null) {
+      const dx = x - this._zenMouseLastX;
+      const dy = y - this._zenMouseLastY;
+      this._zenMouseDistance += Math.hypot(dx, dy);
+      this._zenMouseLastX = x;
+      this._zenMouseLastY = y;
+    }
+
+    this._scheduleZenMouseReset();
+
+    const elapsed = now - this._zenMouseStartTime;
+    const hasCoordinates = (x !== null && y !== null);
+    const meetsDistance = !hasCoordinates || this._zenMouseDistance >= 30;
+
+    // Wind-up threshold: requires sustained interaction (>= 250ms) AND minimum movement distance if coordinates present,
+    // or fast intentional swipe (>= 120px) over at least 100ms
+    if ((elapsed >= 250 && meetsDistance) || (elapsed >= 100 && this._zenMouseDistance >= 120)) {
+      this._resetZenMouseTracker();
+      this.deactivateZenFocus();
+    }
+  }
+
+  _scheduleZenMouseReset() {
+    if (this._zenMouseResetTimer) {
+      clearTimeout(this._zenMouseResetTimer);
+    }
+    this._zenMouseResetTimer = setTimeout(() => {
+      this._resetZenMouseTracker();
+    }, 300);
+  }
+
+  _resetZenMouseTracker() {
+    if (this._zenMouseResetTimer) {
+      clearTimeout(this._zenMouseResetTimer);
+      this._zenMouseResetTimer = null;
+    }
+    this._zenMouseStartTime = null;
+    this._zenMouseLastTime = null;
+    this._zenMouseLastX = null;
+    this._zenMouseLastY = null;
+    this._zenMouseDistance = 0;
   }
 
   openStats(tab = 'flow') {
@@ -1766,6 +1851,12 @@ class GameController {
   }
 
   destroy() {
+    if (this._onMouseMove && this._boundMouseMoveDoc) {
+      this._boundMouseMoveDoc.removeEventListener('mousemove', this._onMouseMove);
+      this._onMouseMove = null;
+      this._boundMouseMoveDoc = null;
+    }
+    this._resetZenMouseTracker();
     if (this._onWindowResize && typeof window !== 'undefined') {
       window.removeEventListener('resize', this._onWindowResize);
       this._onWindowResize = null;

@@ -132,7 +132,7 @@ class ModalView {
     if (this.resTimeEl) this.resTimeEl.textContent = `${stats.duration}s`;
     if (this.resTimeDetailEl) this.resTimeDetailEl.textContent = 'standard mode';
     if (this.nextTestBtnLabel) this.nextTestBtnLabel.textContent = 'Next Test';
-    if (this.nextTestBtnHint) this.nextTestBtnHint.textContent = 'Tab + Enter';
+    if (this.nextTestBtnHint) this.nextTestBtnHint.textContent = 'tab';
   }
 
   showFlowRecap(stats, isAfk = false) {

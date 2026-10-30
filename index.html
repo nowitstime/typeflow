@@ -373,11 +373,19 @@ header,
   color: var(--sub-color);
   font-weight: 700;
   letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+.ghost-slider-pill .diff-slider {
+  flex: 1;
+  min-width: 0;
+  width: auto;
 }
 .ghost-slider-pill .ghost-val {
   font-size: 12px;
   font-variant-numeric: tabular-nums;
   min-width: 54px;
+  text-align: right;
+  white-space: nowrap;
   font-weight: 600;
   color: var(--text-color);
 }
@@ -385,9 +393,9 @@ header,
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 0px;
-  padding: 3px 8px;
+  padding: 6px 10px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 8px;
   font-size: 12px;
   font-family: var(--font-mono);
@@ -404,9 +412,12 @@ header,
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 0px;
-  padding: 1px;
+  padding: 2px;
+  width: 100%;
 }
 .hd-mode-btn {
+  flex: 1;
+  text-align: center;
   background: none;
   border: none;
   color: var(--sub-color);
@@ -415,7 +426,7 @@ header,
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding: 3px 8px;
+  padding: 4px 8px;
   border-radius: 0px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -432,8 +443,7 @@ header,
   display: flex;
   align-items: center;
   gap: 8px;
-  padding-left: 6px;
-  border-left: 1px solid var(--border-color);
+  width: 100%;
 }
 .hd-word-slider-group .hd-label {
   font-size: 11px;
@@ -441,11 +451,19 @@ header,
   color: var(--sub-color);
   font-weight: 700;
   letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+.hd-word-slider-group .diff-slider {
+  flex: 1;
+  min-width: 0;
+  width: auto;
 }
 .hd-word-slider-group .hd-val {
   font-size: 12px;
   font-variant-numeric: tabular-nums;
-  min-width: 80px;
+  min-width: 54px;
+  text-align: right;
+  white-space: nowrap;
   font-weight: 600;
   color: var(--text-color);
 }
@@ -3220,7 +3238,7 @@ header .header-actions,
               <path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/>
             </svg>
             <span id="next-test-btn-label">Next Test</span>
-            <span class="key-hint" id="next-test-btn-hint" style="background: rgba(0,0,0,0.18); border-color: rgba(0,0,0,0.2); color: #000000;">Tab + Enter</span>
+            <span class="key-hint" id="next-test-btn-hint" style="background: rgba(0,0,0,0.18); border-color: rgba(0,0,0,0.2); color: #000000;">tab</span>
           </button>
         </div>
       </section>
@@ -9868,7 +9886,7 @@ class ModalView {
     if (this.resTimeEl) this.resTimeEl.textContent = `${stats.duration}s`;
     if (this.resTimeDetailEl) this.resTimeDetailEl.textContent = 'standard mode';
     if (this.nextTestBtnLabel) this.nextTestBtnLabel.textContent = 'Next Test';
-    if (this.nextTestBtnHint) this.nextTestBtnHint.textContent = 'Tab + Enter';
+    if (this.nextTestBtnHint) this.nextTestBtnHint.textContent = 'tab';
   }
   showFlowRecap(stats, isAfk = false) {
     if (!stats) return;
@@ -10762,6 +10780,14 @@ class GameController {
     this._onWindowResize = null;
     this.isZenActive = false;
     this.zenTimer = null;
+    this._boundMouseMoveDoc = null;
+    this._onMouseMove = null;
+    this._zenMouseStartTime = null;
+    this._zenMouseLastTime = null;
+    this._zenMouseLastX = null;
+    this._zenMouseLastY = null;
+    this._zenMouseDistance = 0;
+    this._zenMouseResetTimer = null;
     const KBClass = deps.keyboardControllerClass || _KeyboardController;
     if (KBClass) {
       this.keyboardController = new KBClass({
@@ -10955,10 +10981,13 @@ class GameController {
       };
       window.addEventListener('resize', this._onWindowResize);
     }
-    if (typeof document !== 'undefined') {
-      document.addEventListener('mousemove', () => {
-        this.deactivateZenFocus();
-      });
+    const doc = this._getDoc();
+    if (doc) {
+      this._boundMouseMoveDoc = doc;
+      this._onMouseMove = (e) => {
+        this.handleMouseMove(e);
+      };
+      doc.addEventListener('mousemove', this._onMouseMove);
     }
     if (this.achievementsModel && this.storageService.syncRetroactiveAchievements) {
       const newRetroUnlocks = this.storageService.syncRetroactiveAchievements(this.achievementsModel);
@@ -12006,6 +12035,7 @@ class GameController {
     return (typeof document !== 'undefined' && typeof document.getElementById === 'function') ? document : null;
   }
   activateZenFocus() {
+    this._resetZenMouseTracker();
     if (this.isZenActive) return;
     this.isZenActive = true;
     const doc = this._getDoc();
@@ -12015,6 +12045,7 @@ class GameController {
     }
   }
   deactivateZenFocus() {
+    this._resetZenMouseTracker();
     if (this.zenTimer) {
       clearTimeout(this.zenTimer);
       this.zenTimer = null;
@@ -12028,11 +12059,68 @@ class GameController {
     }
   }
   onTypingActivity() {
+    this._resetZenMouseTracker();
     this.activateZenFocus();
     if (this.zenTimer) clearTimeout(this.zenTimer);
     this.zenTimer = setTimeout(() => {
       this.deactivateZenFocus();
     }, 1000);
+  }
+  handleMouseMove(e) {
+    if (!this.isZenActive) {
+      this._resetZenMouseTracker();
+      return;
+    }
+    const now = (e && typeof e.timeStamp === 'number' && e.timeStamp > 0) ? e.timeStamp : Date.now();
+    const x = (e && typeof e.clientX === 'number') ? e.clientX : null;
+    const y = (e && typeof e.clientY === 'number') ? e.clientY : null;
+    if (this._zenMouseLastTime && (now - this._zenMouseLastTime > 300)) {
+      this._resetZenMouseTracker();
+    }
+    if (!this._zenMouseStartTime) {
+      this._zenMouseStartTime = now;
+      this._zenMouseLastTime = now;
+      this._zenMouseLastX = x;
+      this._zenMouseLastY = y;
+      this._zenMouseDistance = 0;
+      this._scheduleZenMouseReset();
+      return;
+    }
+    this._zenMouseLastTime = now;
+    if (x !== null && y !== null && this._zenMouseLastX !== null && this._zenMouseLastY !== null) {
+      const dx = x - this._zenMouseLastX;
+      const dy = y - this._zenMouseLastY;
+      this._zenMouseDistance += Math.hypot(dx, dy);
+      this._zenMouseLastX = x;
+      this._zenMouseLastY = y;
+    }
+    this._scheduleZenMouseReset();
+    const elapsed = now - this._zenMouseStartTime;
+    const hasCoordinates = (x !== null && y !== null);
+    const meetsDistance = !hasCoordinates || this._zenMouseDistance >= 30;
+    if ((elapsed >= 250 && meetsDistance) || (elapsed >= 100 && this._zenMouseDistance >= 120)) {
+      this._resetZenMouseTracker();
+      this.deactivateZenFocus();
+    }
+  }
+  _scheduleZenMouseReset() {
+    if (this._zenMouseResetTimer) {
+      clearTimeout(this._zenMouseResetTimer);
+    }
+    this._zenMouseResetTimer = setTimeout(() => {
+      this._resetZenMouseTracker();
+    }, 300);
+  }
+  _resetZenMouseTracker() {
+    if (this._zenMouseResetTimer) {
+      clearTimeout(this._zenMouseResetTimer);
+      this._zenMouseResetTimer = null;
+    }
+    this._zenMouseStartTime = null;
+    this._zenMouseLastTime = null;
+    this._zenMouseLastX = null;
+    this._zenMouseLastY = null;
+    this._zenMouseDistance = 0;
   }
   openStats(tab = 'flow') {
     this.resetTest();
@@ -12179,6 +12267,12 @@ class GameController {
     }
   }
   destroy() {
+    if (this._onMouseMove && this._boundMouseMoveDoc) {
+      this._boundMouseMoveDoc.removeEventListener('mousemove', this._onMouseMove);
+      this._onMouseMove = null;
+      this._boundMouseMoveDoc = null;
+    }
+    this._resetZenMouseTracker();
     if (this._onWindowResize && typeof window !== 'undefined') {
       window.removeEventListener('resize', this._onWindowResize);
       this._onWindowResize = null;

@@ -1,9 +1,10 @@
 # TypeFlow ⚡ Design Document & Architectural Specification
 
 **Version:** 2.0  
-**Status:** Living Design Document  
+**Status:** Global Grounding Document  
 **Target Environment:** Offline Single-File HTML5 / Android WebKit / Modern Browsers  
 **Aesthetic:** OLED True Black (`#000000`) & Electric Sky Blue (`#38bdf8`)  
+**Deep-Dive Wiki:** See [**`wiki/Home.md`**](./wiki/Home.md) for specific pages on [Core Mechanics](./wiki/Core-Mechanics-and-Flow-Physics.md), [Lexicon & SRS](./wiki/Lexicon-Biometrics-and-SRS.md), [File-by-File Architecture](./wiki/Architecture-and-File-Guide.md), and [Progression & Cosmetics](./wiki/Progression-Achievements-and-Cosmetics.md).
 
 ---
 

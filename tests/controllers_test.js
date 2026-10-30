@@ -95,7 +95,7 @@ function createTestHarness() {
         <span id="res-consistency"></span>
         <span id="res-time"></span>
         <span id="res-time-detail"></span>
-        <button id="next-test-btn"><span id="next-test-btn-label">Next Test</span><span id="next-test-btn-hint">Tab + Enter</span></button>
+        <button id="next-test-btn"><span id="next-test-btn-label">Next Test</span><span id="next-test-btn-hint">tab</span></button>
       </div>
       <button id="hd-btn"></button>
       <button id="mods-btn" aria-expanded="false"></button>
@@ -505,11 +505,15 @@ it('destroys and cleans up intervals and event listeners without leaks', () => {
   controller.startClassicTimer();
   assert.ok(controller.classicTimerInterval);
   assert.ok(controller.idleDecayInterval);
+  assert.ok(controller._onMouseMove);
 
   controller.destroy();
   assert.strictEqual(controller.classicTimerInterval, null);
   assert.strictEqual(controller.idleDecayInterval, null);
   assert.strictEqual(controller.physicsAnimFrame, null);
+  assert.strictEqual(controller._onMouseMove, null);
+  assert.strictEqual(controller._boundMouseMoveDoc, null);
+  assert.strictEqual(controller._zenMouseResetTimer, null);
 });
 
 it('typing words records bigram transitions into BigramLedger and persists on space', () => {
@@ -1103,6 +1107,58 @@ it('activates Zen Focus on active typing, maintains focus on Backspace, and deac
   controller.keyboardController.handleKeyDown({ key: 'Escape', preventDefault() {} });
   assert.strictEqual(controller.isZenActive, false);
   assert.ok(!appEl.classList.contains('zen-active'));
+});
+
+it('Zen Focus requires wind-up mouse movement interaction before waking and ignores accidental touches', () => {
+  const { controller, sessionModel, dom } = createTestHarness();
+  controller.init();
+  const appEl = dom.window.document.getElementById('app') || dom.window.document.body;
+
+  // 1. Enter Zen Focus via typing
+  const word = sessionModel.getCurrentWordText();
+  controller.keyboardController.handleKeyDown({ key: word[0], preventDefault() {} });
+  assert.strictEqual(controller.isZenActive, true);
+  assert.ok(appEl.classList.contains('zen-active'));
+
+  // 2. Accidental trackpad brush: single slight mouse movement event (0ms elapsed, 0px)
+  controller.handleMouseMove({ clientX: 200, clientY: 200, timeStamp: 1000 });
+  assert.strictEqual(controller.isZenActive, true, 'Single accidental trackpad touch should not wake Zen Focus');
+  assert.ok(appEl.classList.contains('zen-active'));
+
+  // 3. Minor jitter/graze 40ms later with negligible movement (2px, 40ms elapsed < 250ms threshold)
+  controller.handleMouseMove({ clientX: 202, clientY: 201, timeStamp: 1040 });
+  assert.strictEqual(controller.isZenActive, true, 'Minor jitter should not wake Zen Focus');
+  assert.ok(appEl.classList.contains('zen-active'));
+
+  // 4. Movement stops, and 1.5 seconds later another accidental touch occurs
+  // Idle gap > 300ms resets the tracker, treating the new event as an initial brush
+  controller.handleMouseMove({ clientX: 203, clientY: 202, timeStamp: 2500 });
+  assert.strictEqual(controller.isZenActive, true, 'Intermittent accidental brush after idle gap must not wake Zen Focus');
+
+  // 5. Deliberate mouse interaction with sustained movement across 260ms (> 250ms wind-up) and 60px distance
+  // Event at 100ms into stroke:
+  controller.handleMouseMove({ clientX: 230, clientY: 220, timeStamp: 2600 });
+  assert.strictEqual(controller.isZenActive, true, 'Still winding up at 100ms');
+
+  // Event at 260ms into stroke (> 250ms wind-up and > 30px distance):
+  controller.handleMouseMove({ clientX: 260, clientY: 240, timeStamp: 2760 });
+  assert.strictEqual(controller.isZenActive, false, 'Sustained deliberate movement exceeding wind-up threshold wakes Zen Focus');
+  assert.ok(!appEl.classList.contains('zen-active'), 'zen-active class removed from app container');
+});
+
+it('document mousemove event routes through handleMouseMove with wind-up protection', () => {
+  const { controller, sessionModel, dom } = createTestHarness();
+  controller.init();
+
+  // Type to activate Zen Focus
+  const word = sessionModel.getCurrentWordText();
+  controller.keyboardController.handleKeyDown({ key: word[0], preventDefault() {} });
+  assert.strictEqual(controller.isZenActive, true);
+
+  // Dispatching a single mousemove event onto document should not wake Zen Focus
+  const moveEvent1 = new dom.window.MouseEvent('mousemove', { clientX: 100, clientY: 100 });
+  dom.window.document.dispatchEvent(moveEvent1);
+  assert.strictEqual(controller.isZenActive, true, 'DOM mousemove without windup does not wake Zen Focus');
 });
 
 it('Escape closes Mods Popover when open before triggering session reset', () => {

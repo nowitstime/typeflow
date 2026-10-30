@@ -143,6 +143,17 @@ New playtesters need seamless onboarding without intrusive tutorial pop-ups.
 - **Sudden Death Telemetry & Records:** Track "Longest Clean Word Run before Death" (e.g., 25, 50, 100 words clean) and award high-tier precision trophies.
 - **Cross-Mode Applicability:** Can be enabled as an optional modifier in Classic Mode (e.g., 30s Sudden Death) or as a high-stakes Flow Mode variant (where a mistake instantly wipes momentum to 0% and requires spinning up the flywheel from a dead stop).
 
+### 6.5 Classic Mode Word Difficulty Modifiers ("Easy 200" / "Standard 1k" / "Hard")
+- **Addressing the "Monkeytype 200" Phenomenon:** Standard 200-word typing tests feel gratifying because they stick to low-friction 3–5 letter words, but they fail to train harder finger transitions. Making word difficulty an explicit, badged modifier in the Mods section gives players both options:
+  - *Easy / Sprint 200:* Restricts spawning to the top 200 highest-frequency, lowest-friction words for high-velocity warmup sprints and 1:1 baseline comparisons with traditional typing sites.
+  - *Standard 1k (Default):* Our balanced tier-weighted distribution (58% Common, 26% Uncommon, 12% Rare, 4% Epic) with typability flow calibration.
+  - *Hard / Technical:* Shifts weights heavily toward Rare and Epic tiers (polysyllabic words and high-cost motor patterns like `REACH_PINKY` and `DOUBLE_BOUNCE`) to stress-test accuracy and endurance under awkward transitions.
+- **Scorecard & PB Badging:** Tags Classic runs with their difficulty tier (`[200]`, `[1K]`, `[HARD]`) alongside a calculated stream difficulty rating so Personal Bests remain contextualized.
+
+### 6.6 Punctuation Modifier & Sentence Mode
+- **Punctuation & Capitalization Modifier:** Toggleable modifier injecting realistic `Shift` capitalizations, periods, commas, hyphens, apostrophes, and quotation marks into the word stream to train pinky precision and rhythm recovery.
+- **Dedicated Sentence & Quote Mode:** Curated prose sentences and quotes graded automatically by our biomechanical difficulty engine (combining word tier friction, average length, and punctuation density into a 1–5★ difficulty rating).
+
 ---
 
 ## 7. Balance, Physics & Audio Tuning
@@ -175,6 +186,22 @@ The v4.0 release shipped the core Cosmetic Armory with 6 Atmospheres, 6 Caret Mo
 - *Flow FX Intensity Slider:* Off, Subtle (25%), Normal (Default), and Max Energy.
 - *Reduced Motion Mode:* Replaces pulsing scale and moving gradients with static opacity crossfades.
 - *Unified Navigation:* Streamlined drawer consolidating gameplay modifiers, cosmetics, audio, and diagnostics.
+
+---
+
+## 9. Long-Term Horizon: Pathways, Programming Mode & UGC Ecosystem
+
+### 9.1 Structured Learning Pathways & Pass/Fail Trials ("License Tests")
+- **Guided Mastery Tracks:** Structured progression trees where players advance through curated typing trials with explicit **Pass / Fail criteria** (e.g., *"Pass: Reach 65 WPM with $\ge 97\%$ Accuracy and 0 unfixed errors across a Tier-3 Sentence Gauntlet"*).
+- **Skill Certification & Milestones:** Completing pathways unlocks specialized titles, cosmetics, and mastery ranks—bridging the gap between sandbox typing and structured deliberate practice.
+
+### 9.2 Programming & Syntax Mode
+- **Code & Symbol Fluency:** Dedicated decks and Flow progressions focused on programming keywords, bracket/operator ergonomics (`{}`, `[]`, `()=>`, `===`, `;`), and idiomatic one-liners across popular languages (JavaScript/TypeScript, Python, Rust, C++, HTML/CSS).
+- **Biomechanical Symbol Scoring:** Extends `BigramLedger` and motor pattern costs to track right-pinky symbol reaches and bracket pairing speed.
+
+### 9.3 User-Generated Content (UGC), Custom Phrases & Shareable Packs
+- **Custom Phrase & Quote Importer:** Allow players to paste or upload custom phrases, study decks, or book excerpts into `StorageService`, with automatic runtime difficulty scoring.
+- **Shareable Pathway & Quote Packs (Marketplace Vision):** Enable exporting and importing compact JSON/string bundles containing custom sentence packs, difficulty ratings, and custom Pass/Fail WPM targets—laying the foundation for a community pack browser or curated quote library down the line.
 
 ---
 

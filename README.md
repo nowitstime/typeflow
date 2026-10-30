@@ -11,7 +11,7 @@
 
 *Begin at Ground Zero with a single word (`"the"`). Spin up the momentum flywheel, incubate word eggs directly on the home row, master 5 physical finger-motion buckets, race a 60fps ghost pacer, train working memory in Hidden Horizon mode, unlock all 1,000 words of the Grand Lexicon, and equip procedural cosmetics in the Cosmetic Armory.*
 
-[**🚀 Launch Live App**](https://nowitstime.github.io/typeflow/) · [**🎨 Armory**](#-cosmetic-armory--customization-engine) · [**🏆 Achievements**](#-achievement-system--trophy-case) · [**🏛️ Architecture**](#%EF%B8%8F-architecture--engineering) · [**⌨️ Shortcuts**](#%EF%B8%8F-keyboard-shortcuts)
+[**🚀 Launch Live App**](https://nowitstime.github.io/typeflow/) · [**📚 Wiki**](./wiki/Home.md) · [**🎨 Armory**](#-cosmetic-armory--customization-engine) · [**🏆 Achievements**](#-achievement-system--trophy-case) · [**🏛️ Architecture**](#%EF%B8%8F-architecture--engineering) · [**⌨️ Shortcuts**](#%EF%B8%8F-keyboard-shortcuts)
 
 </div>
 
@@ -33,6 +33,7 @@
 - [🛠️ Quick Start & Building](#%EF%B8%8F-quick-start--building)
 - [⌨️ Keyboard Shortcuts](#%EF%B8%8F-keyboard-shortcuts)
 - [🗺️ Roadmap](#%EF%B8%8F-roadmap)
+- [📚 Multi-Page Wiki (`wiki/`)](./wiki/Home.md)
 
 ---
 

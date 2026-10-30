@@ -419,7 +419,7 @@ def build():
               <path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/>
             </svg>
             <span id="next-test-btn-label">Next Test</span>
-            <span class="key-hint" id="next-test-btn-hint" style="background: rgba(0,0,0,0.18); border-color: rgba(0,0,0,0.2); color: #000000;">Tab + Enter</span>
+            <span class="key-hint" id="next-test-btn-hint" style="background: rgba(0,0,0,0.18); border-color: rgba(0,0,0,0.2); color: #000000;">tab</span>
           </button>
         </div>
       </section>
