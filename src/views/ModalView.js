@@ -36,10 +36,15 @@ class ModalView {
     this.tabStatsClassic = elements.tabStatsClassic || (typeof document !== 'undefined' ? document.getElementById('tab-stats-classic') : null);
     this.tabStatsTrophies = elements.tabStatsTrophies || (typeof document !== 'undefined' ? document.getElementById('tab-stats-trophies') : null);
     this.tabStatsArmory = elements.tabStatsArmory || (typeof document !== 'undefined' ? document.getElementById('tab-stats-armory') : null);
+    this.tabStatsMotor = elements.tabStatsMotor || (typeof document !== 'undefined' ? document.getElementById('tab-stats-motor') : null);
+    this.tabStatsConfig = elements.tabStatsConfig || (typeof document !== 'undefined' ? document.getElementById('tab-stats-config') : null);
     this.paneStatsFlow = elements.paneStatsFlow || (typeof document !== 'undefined' ? document.getElementById('pane-stats-flow') : null);
     this.paneStatsClassic = elements.paneStatsClassic || (typeof document !== 'undefined' ? document.getElementById('pane-stats-classic') : null);
     this.paneStatsTrophies = elements.paneStatsTrophies || (typeof document !== 'undefined' ? document.getElementById('pane-stats-trophies') : null);
     this.paneStatsArmory = elements.paneStatsArmory || (typeof document !== 'undefined' ? document.getElementById('pane-stats-armory') : null);
+    this.paneStatsMotor = elements.paneStatsMotor || (typeof document !== 'undefined' ? document.getElementById('pane-stats-motor') : null);
+    this.paneStatsConfig = elements.paneStatsConfig || (typeof document !== 'undefined' ? document.getElementById('pane-stats-config') : null);
+    this.drawerActiveTitle = elements.drawerActiveTitle || (typeof document !== 'undefined' ? document.getElementById('drawer-active-title') : null);
 
     // Trophies Elements
     this.trophiesCountEl = elements.trophiesCountEl || (typeof document !== 'undefined' ? document.getElementById('trophies-count') : null);
@@ -155,12 +160,14 @@ class ModalView {
   openStatsModal(defaultTab = 'flow') {
     if (this.statsModal) {
       this.statsModal.style.display = 'flex';
+      this.statsModal.classList.add('open');
     }
     this.switchStatsTab(defaultTab);
   }
 
   closeStatsModal() {
     if (this.statsModal) {
+      this.statsModal.classList.remove('open');
       this.statsModal.style.display = 'none';
     }
   }
@@ -170,17 +177,36 @@ class ModalView {
     const isClassic = tabName === 'classic';
     const isTrophies = tabName === 'trophies';
     const isArmory = tabName === 'armory';
+    const isMotor = tabName === 'motor';
+    const isConfig = tabName === 'config';
 
     if (this.tabStatsFlow) this.tabStatsFlow.classList.toggle('active', isFlow);
     if (this.tabStatsClassic) this.tabStatsClassic.classList.toggle('active', isClassic);
     if (this.tabStatsTrophies) this.tabStatsTrophies.classList.toggle('active', isTrophies);
     if (this.tabStatsArmory) this.tabStatsArmory.classList.toggle('active', isArmory);
+    if (this.tabStatsMotor) this.tabStatsMotor.classList.toggle('active', isMotor);
+    if (this.tabStatsConfig) this.tabStatsConfig.classList.toggle('active', isConfig);
 
     if (this.paneStatsFlow) this.paneStatsFlow.style.display = isFlow ? 'flex' : 'none';
     if (this.paneStatsClassic) this.paneStatsClassic.style.display = isClassic ? 'flex' : 'none';
     if (this.paneStatsTrophies) this.paneStatsTrophies.style.display = isTrophies ? 'flex' : 'none';
     if (this.paneStatsArmory) this.paneStatsArmory.style.display = isArmory ? 'flex' : 'none';
+    if (this.paneStatsMotor) this.paneStatsMotor.style.display = isMotor ? 'flex' : 'none';
+    if (this.paneStatsConfig) this.paneStatsConfig.style.display = isConfig ? 'flex' : 'none';
+
+    if (this.drawerActiveTitle) {
+      const titles = {
+        flow: 'PROFILE // RPG OVERVIEW',
+        armory: 'ARMORY // COSMETIC REPOSITORY',
+        trophies: 'TROPHIES // ACHIEVEMENTS CASE',
+        classic: 'RECORDS // BENCHMARK ARCHIVE',
+        motor: 'MOTOR // NEUROMUSCULAR PATTERNS',
+        config: 'CONFIG // SYSTEM PARAMETERS'
+      };
+      this.drawerActiveTitle.textContent = titles[tabName] || 'PROFILE // OVERVIEW';
+    }
   }
+
   bindEvents(handlers = {}) {
     if (this.tabStatsFlow) {
       this.tabStatsFlow.addEventListener('click', () => this.switchStatsTab('flow'));
@@ -200,6 +226,18 @@ class ModalView {
         if (handlers.onSelectArmoryTab) handlers.onSelectArmoryTab();
       });
     }
+    if (this.tabStatsMotor) {
+      this.tabStatsMotor.addEventListener('click', () => {
+        this.switchStatsTab('motor');
+        if (handlers.onSelectMotorTab) handlers.onSelectMotorTab();
+      });
+    }
+    if (this.tabStatsConfig) {
+      this.tabStatsConfig.addEventListener('click', () => {
+        this.switchStatsTab('config');
+        if (handlers.onSelectConfigTab) handlers.onSelectConfigTab();
+      });
+    }
 
     if (this.nextTestBtn) {
       this.nextTestBtn.addEventListener('click', () => {
@@ -209,6 +247,8 @@ class ModalView {
 
     const closeStatsBtn = (typeof document !== 'undefined') ? document.getElementById('close-stats-btn') : null;
     const closeStatsFooterBtn = (typeof document !== 'undefined') ? document.getElementById('close-stats-footer-btn') : null;
+    const closeStatsTopBtn = (typeof document !== 'undefined') ? document.getElementById('close-stats-top-btn') : null;
+
     if (closeStatsBtn) {
       closeStatsBtn.addEventListener('click', () => {
         if (handlers.onCloseStats) handlers.onCloseStats();
@@ -217,6 +257,19 @@ class ModalView {
     if (closeStatsFooterBtn) {
       closeStatsFooterBtn.addEventListener('click', () => {
         if (handlers.onCloseStats) handlers.onCloseStats();
+      });
+    }
+    if (closeStatsTopBtn) {
+      closeStatsTopBtn.addEventListener('click', () => {
+        if (handlers.onCloseStats) handlers.onCloseStats();
+      });
+    }
+
+    if (this.statsModal) {
+      this.statsModal.addEventListener('click', (e) => {
+        if (e.target === this.statsModal) {
+          if (handlers.onCloseStats) handlers.onCloseStats();
+        }
       });
     }
 

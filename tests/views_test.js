@@ -307,6 +307,7 @@ it('renders 3 slots from EggNestModel with empty, occupied, and revealed states'
       <div id="nest-slot-2"></div>
       <div id="nest-hint"></div>
     </div>
+    <button id="restart-btn"></button>
   `);
   const { document } = dom.window;
   const nestView = new NestView({
@@ -316,7 +317,8 @@ it('renders 3 slots from EggNestModel with empty, occupied, and revealed states'
       document.getElementById('nest-slot-1'),
       document.getElementById('nest-slot-2')
     ],
-    nestHint: document.getElementById('nest-hint')
+    nestHint: document.getElementById('nest-hint'),
+    restartBtn: document.getElementById('restart-btn')
   });
 
   const nestModel = new EggNestModel();
@@ -327,10 +329,24 @@ it('renders 3 slots from EggNestModel with empty, occupied, and revealed states'
   const slot0 = document.getElementById('nest-slot-0');
   const slot1 = document.getElementById('nest-slot-1');
   const hint = document.getElementById('nest-hint');
+  const restartBtn = document.getElementById('restart-btn');
 
   assert.ok(slot0.classList.contains('has-egg'));
   assert.strictEqual(slot1.textContent, '·');
+  // With < 3 eggs, tab: hatch is NOT shown and restartBtn is visible
+  assert.ok(!hint.classList.contains('visible'));
+  assert.ok(!restartBtn.classList.contains('fade-out'));
+
+  // With exactly 3 eggs, tab: hatch shows and restartBtn fades out
+  nestModel.syncBasket([
+    { id: 1, name: 'Rare Egg', rarity: 'rare', tierColor: '#c084fc' },
+    { id: 2, name: 'Common Egg', rarity: 'common', tierColor: '#38bdf8' },
+    { id: 3, name: 'Epic Egg', rarity: 'epic', tierColor: '#fbbf24' }
+  ]);
+  nestView.render(nestModel);
+  assert.ok(hint.classList.contains('visible'));
   assert.strictEqual(hint.textContent, 'tab: hatch');
+  assert.ok(restartBtn.classList.contains('fade-out'));
 });
 
 it('updates crack prompt UI as player types "e", "g", "g"', () => {
@@ -565,6 +581,62 @@ it('HUDView.updateGhostState updates button, slider, and visibility', () => {
   assert.strictEqual(hud.ghostSliderPill.style.display, 'none');
 });
 
+it('HUDView.toggleModsPopover toggles visibility and aria-expanded', () => {
+  const dom = new JSDOM(`
+    <button id="mods-btn" aria-expanded="false"></button>
+    <div id="mods-popover" style="display: none;"></div>
+    <button id="mods-close-btn"></button>
+    <span id="mods-active-dot" style="display: none;"></span>
+  `);
+  const hud = new HUDView({
+    modsBtn: dom.window.document.getElementById('mods-btn'),
+    modsPopover: dom.window.document.getElementById('mods-popover'),
+    modsCloseBtn: dom.window.document.getElementById('mods-close-btn'),
+    modsActiveDot: dom.window.document.getElementById('mods-active-dot')
+  });
+
+  assert.strictEqual(hud.isModsPopoverOpen(), false);
+
+  hud.toggleModsPopover(true);
+  assert.strictEqual(hud.isModsPopoverOpen(), true);
+  assert.strictEqual(hud.modsPopover.style.display, 'flex');
+  assert.strictEqual(hud.modsBtn.getAttribute('aria-expanded'), 'true');
+
+  hud.toggleModsPopover(false);
+  assert.strictEqual(hud.isModsPopoverOpen(), false);
+  assert.strictEqual(hud.modsPopover.style.display, 'none');
+  assert.strictEqual(hud.modsBtn.getAttribute('aria-expanded'), 'false');
+});
+
+it('HUDView.updateModsActiveIndicator displays LED indicator when any mod is active', () => {
+  const dom = new JSDOM(`
+    <span id="mods-active-dot" style="display: none;"></span>
+  `);
+  const hud = new HUDView({
+    modsActiveDot: dom.window.document.getElementById('mods-active-dot')
+  });
+
+  // All off
+  hud.updateModsActiveIndicator(false, false, false);
+  assert.strictEqual(hud.modsActiveDot.style.display, 'none');
+
+  // HD on
+  hud.updateModsActiveIndicator(true, false, false);
+  assert.strictEqual(hud.modsActiveDot.style.display, 'inline-block');
+
+  // Ghost on
+  hud.updateModsActiveIndicator(false, true, false);
+  assert.strictEqual(hud.modsActiveDot.style.display, 'inline-block');
+
+  // Sound on
+  hud.updateModsActiveIndicator(false, false, true);
+  assert.strictEqual(hud.modsActiveDot.style.display, 'inline-block');
+
+  // Back to all off
+  hud.updateModsActiveIndicator(false, false, false);
+  assert.strictEqual(hud.modsActiveDot.style.display, 'none');
+});
+
 // 4. ModalView Tests
 console.log('\n--- 4. ModalView ---');
 
@@ -603,6 +675,68 @@ it('displays classic results summary and switches stats tabs', () => {
   modal.openStatsModal('flow');
   assert.strictEqual(modal.statsModal.style.display, 'flex');
   assert.ok(modal.tabStatsFlow.classList.contains('active'));
+});
+
+it('ModalView manages command drawer, tabs, and breadcrumb navigation', () => {
+  const dom = new JSDOM(`
+    <div id="stats-modal" style="display: none;"></div>
+    <div id="tab-stats-flow"></div>
+    <div id="tab-stats-classic"></div>
+    <div id="tab-stats-trophies"></div>
+    <div id="tab-stats-armory"></div>
+    <div id="tab-stats-motor"></div>
+    <div id="tab-stats-config"></div>
+    <div id="pane-stats-flow"></div>
+    <div id="pane-stats-classic"></div>
+    <div id="pane-stats-trophies"></div>
+    <div id="pane-stats-armory"></div>
+    <div id="pane-stats-motor"></div>
+    <div id="pane-stats-config"></div>
+    <div id="drawer-active-title"></div>
+  `);
+  const modal = new ModalView({
+    statsModal: dom.window.document.getElementById('stats-modal'),
+    tabStatsFlow: dom.window.document.getElementById('tab-stats-flow'),
+    tabStatsClassic: dom.window.document.getElementById('tab-stats-classic'),
+    tabStatsTrophies: dom.window.document.getElementById('tab-stats-trophies'),
+    tabStatsArmory: dom.window.document.getElementById('tab-stats-armory'),
+    tabStatsMotor: dom.window.document.getElementById('tab-stats-motor'),
+    tabStatsConfig: dom.window.document.getElementById('tab-stats-config'),
+    paneStatsFlow: dom.window.document.getElementById('pane-stats-flow'),
+    paneStatsClassic: dom.window.document.getElementById('pane-stats-classic'),
+    paneStatsTrophies: dom.window.document.getElementById('pane-stats-trophies'),
+    paneStatsArmory: dom.window.document.getElementById('pane-stats-armory'),
+    paneStatsMotor: dom.window.document.getElementById('pane-stats-motor'),
+    paneStatsConfig: dom.window.document.getElementById('pane-stats-config'),
+    drawerActiveTitle: dom.window.document.getElementById('drawer-active-title')
+  });
+
+  // Open modal
+  modal.openStatsModal('flow');
+  assert.strictEqual(modal.statsModal.style.display, 'flex');
+  assert.ok(modal.statsModal.classList.contains('open'));
+  assert.ok(modal.tabStatsFlow.classList.contains('active'));
+  assert.strictEqual(modal.paneStatsFlow.style.display, 'flex');
+  assert.strictEqual(modal.drawerActiveTitle.textContent, 'PROFILE // RPG OVERVIEW');
+
+  // Switch to Motor
+  modal.switchStatsTab('motor');
+  assert.ok(modal.tabStatsMotor.classList.contains('active'));
+  assert.ok(!modal.tabStatsFlow.classList.contains('active'));
+  assert.strictEqual(modal.paneStatsMotor.style.display, 'flex');
+  assert.strictEqual(modal.paneStatsFlow.style.display, 'none');
+  assert.strictEqual(modal.drawerActiveTitle.textContent, 'MOTOR // NEUROMUSCULAR PATTERNS');
+
+  // Switch to Config
+  modal.switchStatsTab('config');
+  assert.ok(modal.tabStatsConfig.classList.contains('active'));
+  assert.strictEqual(modal.paneStatsConfig.style.display, 'flex');
+  assert.strictEqual(modal.drawerActiveTitle.textContent, 'CONFIG // SYSTEM PARAMETERS');
+
+  // Close modal
+  modal.closeStatsModal();
+  assert.strictEqual(modal.statsModal.style.display, 'none');
+  assert.ok(!modal.statsModal.classList.contains('open'));
 });
 
 // 5. ChartView Tests

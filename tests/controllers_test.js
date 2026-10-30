@@ -98,6 +98,10 @@ function createTestHarness() {
         <button id="next-test-btn"><span id="next-test-btn-label">Next Test</span><span id="next-test-btn-hint">Tab + Enter</span></button>
       </div>
       <button id="hd-btn"></button>
+      <button id="mods-btn" aria-expanded="false"></button>
+      <div id="mods-popover" style="display: none;"></div>
+      <button id="mods-close-btn"></button>
+      <button id="restart-btn"><span id="restart-btn-label">tab</span></button>
       <div id="stats-modal" style="display: none;">
         <table><tbody id="flow-history-tbody"></tbody></table>
       </div>
@@ -132,6 +136,7 @@ function createTestHarness() {
       document.getElementById('nest-slot-2')
     ],
     nestHint: document.getElementById('nest-hint'),
+    restartBtn: document.getElementById('restart-btn'),
     flowRecapPill: document.getElementById('flow-recap-pill'),
     flowRecapPillText: document.getElementById('flow-recap-pill-text')
   });
@@ -140,6 +145,8 @@ function createTestHarness() {
     tabClassic: document.getElementById('tab-classic'),
     tabFlow: document.getElementById('tab-flow'),
     timerEl: document.getElementById('timer'),
+    restartBtn: document.getElementById('restart-btn'),
+    restartBtnLabel: document.getElementById('restart-btn-label'),
     flowGauge: document.getElementById('flow-gauge'),
     flowSpeedTag: document.getElementById('flow-speed-tag'),
     speedIndicatorText: document.getElementById('speed-indicator-text'),
@@ -156,7 +163,10 @@ function createTestHarness() {
     hudXpRatio: document.getElementById('hud-xp-ratio'),
     hudLevelBarFill: document.getElementById('hud-level-bar-fill'),
     flowVignetteOverlay: document.getElementById('flow-vignette-overlay'),
-    hdBtn: document.getElementById('hd-btn')
+    hdBtn: document.getElementById('hd-btn'),
+    modsBtn: document.getElementById('mods-btn'),
+    modsPopover: document.getElementById('mods-popover'),
+    modsCloseBtn: document.getElementById('mods-close-btn')
   });
 
   const chartView = new ChartView();
@@ -193,7 +203,7 @@ function createTestHarness() {
     modalView
   });
 
-  return { dom, controller, storageService, wordsModel, sessionModel, flowModel, eggNestModel, stageView, nestView, modalView };
+  return { dom, controller, storageService, wordsModel, sessionModel, flowModel, eggNestModel, stageView, nestView, hudView, modalView, restartBtn: document.getElementById('restart-btn'), nestHint: document.getElementById('nest-hint') };
 }
 
 // 1. KeyboardController Tests
@@ -1068,6 +1078,83 @@ it('handles ;; home-row double-tap toggle, suppresses single ; typos, and wakes 
   assert.strictEqual(controller.isFlowRecapVisible, false, 'Typing a character should immediately dismiss Flow Recap');
   assert.strictEqual(modalView.resultsSection.classList.contains('visible'), false);
   assert.strictEqual(sessionModel.currentCharIdx, 1, 'First keystroke that woke from Flow Recap should be typed into the active word');
+});
+
+it('activates Zen Focus on active typing, maintains focus on Backspace, and deactivates on Escape', () => {
+  const { controller, sessionModel, dom } = createTestHarness();
+  controller.init();
+  const appEl = dom.window.document.getElementById('app') || dom.window.document.body;
+
+  assert.strictEqual(controller.isZenActive, false);
+  assert.ok(!appEl.classList.contains('zen-active'));
+
+  // 1. Typing a character triggers Zen Focus
+  const word = sessionModel.getCurrentWordText();
+  controller.keyboardController.handleKeyDown({ key: word[0], preventDefault() {} });
+  assert.strictEqual(controller.isZenActive, true);
+  assert.ok(appEl.classList.contains('zen-active'));
+
+  // 2. Pressing Backspace maintains Zen Focus (no jarring unhide/re-hide flash)
+  controller.keyboardController.handleKeyDown({ key: 'Backspace', preventDefault() {} });
+  assert.strictEqual(controller.isZenActive, true);
+  assert.ok(appEl.classList.contains('zen-active'));
+
+  // 3. Pressing Escape deactivates Zen Focus
+  controller.keyboardController.handleKeyDown({ key: 'Escape', preventDefault() {} });
+  assert.strictEqual(controller.isZenActive, false);
+  assert.ok(!appEl.classList.contains('zen-active'));
+});
+
+it('Escape closes Mods Popover when open before triggering session reset', () => {
+  const { controller } = createTestHarness();
+  controller.init();
+
+  // Open mods popover
+  controller.hudView.toggleModsPopover(true);
+  assert.strictEqual(controller.hudView.isModsPopoverOpen(), true);
+
+  // Press Escape
+  controller.keyboardController.handleKeyDown({ key: 'Escape', preventDefault() {} });
+  assert.strictEqual(controller.hudView.isModsPopoverOpen(), false, 'Escape should close mods popover first');
+});
+
+it('Tab only enters hatch mode when player has 3 eggs, otherwise resets session and toggles restartBtn fade-out', () => {
+  const { controller, storageService, eggNestModel, restartBtn, nestHint } = createTestHarness();
+  controller.init();
+
+  // 1. With 1 egg in Flow mode: Tab resets session, does NOT enter hatch mode
+  storageService.addEgg({ id: 1, name: 'Egg 1', wordRank: 10, rarity: 'common', tierColor: '#38bdf8' });
+  eggNestModel.syncBasket(storageService.getGameSave().eggBasket);
+  controller.nestView.render(eggNestModel);
+
+  assert.strictEqual(eggNestModel.basket.length, 1);
+  assert.ok(!nestHint.classList.contains('visible'));
+  assert.ok(!restartBtn.classList.contains('fade-out'));
+
+  // Pressing Tab resets test, stays out of hatch mode
+  controller.handleTab();
+  assert.strictEqual(eggNestModel.isHatching(), false);
+
+  // 2. Add 2 more eggs (total 3 eggs)
+  storageService.addEgg({ id: 2, name: 'Egg 2', wordRank: 20, rarity: 'common', tierColor: '#38bdf8' });
+  storageService.addEgg({ id: 3, name: 'Egg 3', wordRank: 30, rarity: 'rare', tierColor: '#c084fc' });
+  eggNestModel.syncBasket(storageService.getGameSave().eggBasket);
+  controller.nestView.render(eggNestModel);
+
+  assert.strictEqual(eggNestModel.basket.length, 3);
+  assert.ok(nestHint.classList.contains('visible'));
+  assert.strictEqual(nestHint.textContent, 'tab: hatch');
+  assert.ok(restartBtn.classList.contains('fade-out'), 'restart button should fade out when 3 eggs are ready to hatch');
+
+  // Pressing Tab now enters hatch mode!
+  controller.handleTab();
+  assert.strictEqual(eggNestModel.isHatching(), true);
+  assert.strictEqual(nestHint.textContent, "type 'egg' (tab: back)");
+  assert.ok(restartBtn.classList.contains('fade-out'));
+
+  // Pressing Tab while hatching exits hatch mode
+  controller.handleTab();
+  assert.strictEqual(eggNestModel.isHatching(), false);
 });
 
 console.log('\n========================================');

@@ -114,100 +114,132 @@ def build():
     <header>
       <div class="header-left">
         <div class="logo-area" id="brand-logo" title="Reset Test">
-          <div class="logo-icon">⚡</div>
           <div class="logo-title">type<span>flow</span></div>
         </div>
 
-        <!-- Mode Selector Tabs -->
-        <div class="mode-tabs" id="mode-tabs">
-          <button class="mode-tab" data-mode="classic" id="tab-classic">⏱️ Classic</button>
-          <button class="mode-tab active" data-mode="flow" id="tab-flow">🎮 Flow RPG</button>
+        <!-- Mode Toggle & Session Parameter Capsule Anchored Left -->
+        <div class="session-capsule" id="session-capsule">
+          <div class="mode-tabs" id="mode-tabs">
+            <button class="mode-tab" data-mode="classic" id="tab-classic">Classic</button>
+            <button class="mode-tab active" data-mode="flow" id="tab-flow">Flow RPG</button>
+          </div>
+
+          <!-- Classic Duration Pill (Visible in Classic Mode) -->
+          <div class="config-pill" id="classic-duration-pill" style="display: none;" title="Test Duration">
+            <span class="config-item active" data-time="30">30s</span>
+            <span class="config-item" data-time="15">15s</span>
+            <span class="config-item" data-time="60">60s</span>
+          </div>
+
+          <!-- Flow Difficulty Slider & Custom Input (Visible in Flow Mode) -->
+          <div class="flow-diff-pill" id="flow-target-pill" title="Pace Difficulty Target (WPM)">
+            <span class="diff-label">Pace:</span>
+            <input type="range" id="diff-slider" class="diff-slider" min="15" max="120" step="1" value="40" aria-label="Difficulty slider">
+            <div class="diff-input-wrap">
+              <input type="number" id="diff-input" class="diff-input" min="10" max="300" step="1" value="40" aria-label="Target WPM input">
+              <span class="diff-unit">wpm</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="header-controls">
-        <!-- Classic Duration Pill (Visible in Classic Mode) -->
-        <div class="config-pill" id="classic-duration-pill" style="display: none;" title="Test Duration">
-          <span class="config-item active" data-time="30">30s</span>
-          <span class="config-item" data-time="15">15s</span>
-          <span class="config-item" data-time="60">60s</span>
-        </div>
+      <!-- Right Instrument Cluster -->
+      <div class="header-right">
+        <!-- Mods Folder Button & Popover Container -->
+        <div class="mods-container">
+          <button class="mods-btn" id="mods-btn" title="Toggle Modifiers (Hidden Horizon, Ghost Pacer, Sound)" aria-expanded="false">
+            <span class="mods-btn-icon">⚙</span>
+            <span class="mods-btn-label">MODS</span>
+            <span class="mods-active-dot" id="mods-active-dot" style="display: none;"></span>
+          </button>
 
-        <!-- Flow Difficulty Slider & Custom Input (Visible in Flow Mode) -->
-        <div class="flow-diff-pill" id="flow-target-pill" title="Pace Difficulty Target (WPM)">
-          <span class="diff-label">Pace:</span>
-          <input type="range" id="diff-slider" class="diff-slider" min="15" max="120" step="1" value="40" aria-label="Difficulty slider">
-          <div class="diff-input-wrap">
-            <input type="number" id="diff-input" class="diff-input" min="10" max="300" step="1" value="40" aria-label="Target WPM input">
-            <span class="diff-unit">wpm</span>
+          <!-- Teenage Engineering Style Mods Popover -->
+          <div class="mods-popover" id="mods-popover" style="display: none;">
+            <div class="mods-popover-header">
+              <span class="mods-popover-title">// MODIFIERS & SOUND</span>
+              <button type="button" class="mods-close-btn" id="mods-close-btn" aria-label="Close mods menu">&times;</button>
+            </div>
+            
+            <!-- Mod 1: Hidden Horizon (HD) -->
+            <div class="mod-card" id="mod-card-hd">
+              <div class="mod-card-top">
+                <div class="mod-info">
+                  <span class="mod-tag">MOD 01</span>
+                  <span class="mod-name">Hidden Horizon</span>
+                </div>
+                <button type="button" class="icon-btn" id="hd-btn" title="Toggle Hidden (HD) Look-Ahead Mode">
+                  <span>HD</span>
+                </button>
+              </div>
+              <div class="hd-config-pill" id="hd-config-pill" style="display: none;">
+                <div class="hd-mode-toggle" id="hd-mode-toggle">
+                  <button type="button" class="hd-mode-btn active" id="hd-mode-word" data-mode="word" title="Word Vanish">Word</button>
+                  <button type="button" class="hd-mode-btn" id="hd-mode-char" data-mode="char" title="Combo Horizon">Combo</button>
+                </div>
+                <div class="hd-word-slider-group" id="hd-word-slider-group" style="display: flex;">
+                  <span class="hd-label">Hide:</span>
+                  <input type="range" id="hd-words-slider" class="diff-slider" min="1" max="6" step="1" value="1" aria-label="Hidden words count slider">
+                  <span class="hd-val" id="hd-words-val">1 word</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mod 2: Ghost Cursor Pacer -->
+            <div class="mod-card" id="mod-card-ghost">
+              <div class="mod-card-top">
+                <div class="mod-info">
+                  <span class="mod-tag">MOD 02</span>
+                  <span class="mod-name">Ghost Pacer</span>
+                </div>
+                <button type="button" class="icon-btn" id="ghost-btn" title="Toggle Ghost Cursor Pacer" aria-pressed="false">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C7.58 2 4 5.58 4 10v9.5c0 .48.53.77.92.5l2.08-1.4 2.5 1.7c.32.22.75.22 1.07 0l2.43-1.65 2.43 1.65c.32.22.75.22 1.07 0l2.5-1.7 2.08 1.4c.39.27.92-.02.92-.5V10c0-4.42-3.58-8-8-8zm-3 8c-.83 0-1.5-.67-1.5-1.5S8.17 7 9 7s1.5.67 1.5 1.5S9.83 10 9 10zm6 0c-.83 0-1.5-.67-1.5-1.5S14.17 7 15 7s1.5.67 1.5 1.5S15.83 10 15 10z"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="ghost-slider-pill" id="ghost-slider-pill" style="display: none;">
+                <span class="ghost-label">Pace:</span>
+                <input type="range" id="ghost-slider" class="diff-slider" min="15" max="150" step="5" value="50" aria-label="Ghost Cursor speed slider">
+                <span class="ghost-val" id="ghost-val">50 WPM</span>
+              </div>
+            </div>
+
+            <!-- Mod 3: Mechanical Key Audio FX -->
+            <div class="mod-card" id="mod-card-sound">
+              <div class="mod-card-top">
+                <div class="mod-info">
+                  <span class="mod-tag">AUDIO 01</span>
+                  <span class="mod-name">Key Sound FX</span>
+                </div>
+                <button type="button" class="icon-btn" id="sound-btn" title="Toggle Mechanical Keyboard Sounds">
+                  <svg id="sound-icon-on" style="display: none;" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                  </svg>
+                  <svg id="sound-icon-off" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- Level HUD Card in Header -->
         <div class="level-hud-card" id="level-hud-card" title="Player Level & XP Progress • Click to Open Cosmetic Armory">
           <div class="level-hud-info">
-            <span class="hud-level-badge" id="hud-level-badge">Lv. 1</span>
-            <span class="hud-level-title" id="hud-level-title">Novice Typist</span>
-            <span class="hud-xp-ratio" id="hud-xp-ratio">0/100 XP</span>
+            <span class="hud-level-badge" id="hud-level-badge">LVL 1</span>
+            <span class="hud-level-title" id="hud-level-title" style="display: none;">Novice Typist</span>
+            <span class="hud-xp-ratio" id="hud-xp-ratio" style="display: none;">0/100 XP</span>
           </div>
           <div class="hud-level-bar-bg">
             <div class="hud-level-bar-fill" id="hud-level-bar-fill"></div>
           </div>
         </div>
-      </div>
 
-      <!-- Action Tools (Wraps on the right when expanded) -->
-      <div class="header-actions">
-        <!-- Stats Modal Toggle Button -->
-        <button class="icon-btn" id="stats-btn" title="View Lifetime Stats & Personal Bests">
+        <!-- Stats / Menu Button -->
+        <button class="icon-btn menu-btn" id="stats-btn" title="View Lifetime Stats & Personal Bests">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
             <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
-          </svg>
-        </button>
-
-        <!-- Hidden Mode Tool Group -->
-        <div class="header-tool-group">
-          <button class="icon-btn" id="hd-btn" title="Toggle Hidden (HD) Look-Ahead Mode">
-            <span>HD</span>
-          </button>
-
-          <!-- Hidden Mode Config Pill (Revealed when HD is active) -->
-          <div class="hd-config-pill" id="hd-config-pill" style="display: none;" title="Hidden Words Count">
-            <div class="hd-mode-toggle" id="hd-mode-toggle">
-              <button type="button" class="hd-mode-btn active" id="hd-mode-word" data-mode="word" title="Word Vanish">Word</button>
-              <button type="button" class="hd-mode-btn" id="hd-mode-char" data-mode="char" title="Combo Horizon">Combo</button>
-            </div>
-            <div class="hd-word-slider-group" id="hd-word-slider-group" style="display: flex;" title="Hidden Words Count">
-              <span class="hd-label">Hide:</span>
-              <input type="range" id="hd-words-slider" class="diff-slider" min="1" max="6" step="1" value="1" aria-label="Hidden words count slider">
-              <span class="hd-val" id="hd-words-val">1 word</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Ghost Cursor Tool Group -->
-        <div class="header-tool-group">
-          <button class="icon-btn" id="ghost-btn" title="Toggle Ghost Cursor Pacer" aria-pressed="false">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C7.58 2 4 5.58 4 10v9.5c0 .48.53.77.92.5l2.08-1.4 2.5 1.7c.32.22.75.22 1.07 0l2.43-1.65 2.43 1.65c.32.22.75.22 1.07 0l2.5-1.7 2.08 1.4c.39.27.92-.02.92-.5V10c0-4.42-3.58-8-8-8zm-3 8c-.83 0-1.5-.67-1.5-1.5S8.17 7 9 7s1.5.67 1.5 1.5S9.83 10 9 10zm6 0c-.83 0-1.5-.67-1.5-1.5S14.17 7 15 7s1.5.67 1.5 1.5S15.83 10 15 10z"/>
-            </svg>
-          </button>
-
-          <!-- Ghost Cursor Speed Slider Pill (Revealed when Ghost is active) -->
-          <div class="ghost-slider-pill" id="ghost-slider-pill" style="display: none;" title="Ghost Cursor Pace (WPM)">
-            <span class="ghost-label">Ghost:</span>
-            <input type="range" id="ghost-slider" class="diff-slider" min="15" max="150" step="5" value="50" aria-label="Ghost Cursor speed slider">
-            <span class="ghost-val" id="ghost-val">50 WPM</span>
-          </div>
-        </div>
-
-        <!-- Sound Button -->
-        <button class="icon-btn" id="sound-btn" title="Toggle Mechanical Keyboard Sounds">
-          <svg id="sound-icon-on" style="display: none;" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-          </svg>
-          <svg id="sound-icon-off" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
           </svg>
         </button>
       </div>
@@ -268,7 +300,7 @@ def build():
                     <span class="p-e">e</span><span class="p-g1">g</span><span class="p-g2">g</span>
                   </div>
                 </div>
-                <span class="nest-hint" id="nest-hint">tab: hatch</span>
+                <span class="nest-hint" id="nest-hint"></span>
                 <div class="nest-incubation-track" id="nest-incubation-track" title="Incubation Progress">
                   <div class="nest-incubation-fill" id="nest-incubation-fill"></div>
                 </div>
@@ -303,12 +335,11 @@ def build():
         <input type="text" id="typing-input" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
 
         <div class="test-bottom-bar">
-          <button class="restart-btn" id="restart-btn" title="Restart Session (Tab + Enter)">
+          <button class="restart-btn" id="restart-btn" title="Restart Session (Tab)">
             <svg width="18" height="18" viewBox="0 0 24 24">
               <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
             </svg>
-            <span id="restart-btn-label">restart flow</span>
-            <span class="key-hint">tab + enter</span>
+            <span id="restart-btn-label">tab</span>
           </button>
         </div>
       </section>
@@ -395,271 +426,367 @@ def build():
 
 
 
-      <!-- Lifetime Stats Modal -->
-      <section class="modal-backdrop" id="stats-modal" style="display: none;">
-        <div class="modal-card stats-card">
-          <div class="modal-header">
-            <div class="modal-title-wrap">
-              <h2>📊 Lifetime Stats & Mastery</h2>
-              <div class="stats-modal-tabs">
-                <button class="stats-tab active" id="tab-stats-flow" data-tab="flow">🎮 Flow RPG & Mastery</button>
-                <button class="stats-tab" id="tab-stats-classic" data-tab="classic">⏱️ Classic Records</button>
-                <button class="stats-tab" id="tab-stats-trophies" data-tab="trophies">🏆 Trophies</button>
-                <button class="stats-tab" id="tab-stats-armory" data-tab="armory">🎨 Armory</button>
+      <!-- Lifetime Stats Modal / Slide-Out Command Drawer -->
+      <section class="modal-backdrop command-drawer-backdrop" id="stats-modal" style="display: none;">
+        <div class="modal-card stats-card command-drawer" id="command-drawer">
+          <!-- Left Vertical Navigation Rail -->
+          <nav class="drawer-nav-rail" aria-label="Command Drawer Navigation">
+            <div class="drawer-rail-header">
+              <div class="drawer-rail-brand">
+                <span class="drawer-rail-dot">■</span>
+                <span class="drawer-rail-tag">// UNIT 01</span>
               </div>
+              <div class="drawer-rail-title">COMMAND</div>
             </div>
-            <button class="icon-btn close-modal-btn" id="close-stats-btn" title="Close Stats">✕</button>
-          </div>
 
-          <!-- Flow RPG & Keybr Mastery Pane -->
-          <div class="stats-pane" id="pane-stats-flow">
-            <!-- RPG Overview Cards -->
-            <div class="rpg-overview-grid">
-              <div class="rpg-hero-card">
-                <div class="rpg-hero-top">
-                  <span class="rpg-level-chip" id="stats-rpg-level">Lv. 1</span>
-                  <span class="rpg-title-text" id="stats-rpg-title">Novice Typist</span>
+            <div class="drawer-nav-menu">
+              <button type="button" class="stats-tab drawer-nav-btn active" id="tab-stats-flow" data-tab="flow">
+                <span class="nav-idx">[01]</span>
+                <span class="nav-label">PROFILE</span>
+              </button>
+              <button type="button" class="stats-tab drawer-nav-btn" id="tab-stats-armory" data-tab="armory">
+                <span class="nav-idx">[02]</span>
+                <span class="nav-label">ARMORY</span>
+              </button>
+              <button type="button" class="stats-tab drawer-nav-btn" id="tab-stats-trophies" data-tab="trophies">
+                <span class="nav-idx">[03]</span>
+                <span class="nav-label">TROPHIES</span>
+              </button>
+              <button type="button" class="stats-tab drawer-nav-btn" id="tab-stats-classic" data-tab="classic">
+                <span class="nav-idx">[04]</span>
+                <span class="nav-label">RECORDS</span>
+              </button>
+              <button type="button" class="stats-tab drawer-nav-btn" id="tab-stats-motor" data-tab="motor">
+                <span class="nav-idx">[05]</span>
+                <span class="nav-label">MOTOR</span>
+              </button>
+              <button type="button" class="stats-tab drawer-nav-btn" id="tab-stats-config" data-tab="config">
+                <span class="nav-idx">[06]</span>
+                <span class="nav-label">CONFIG</span>
+              </button>
+            </div>
+
+            <div class="drawer-rail-footer">
+              <button type="button" class="drawer-close-rail-btn" id="close-stats-btn" title="Dismiss Command Console (Esc)">
+                <span class="close-symbol">✕</span>
+                <span class="close-label">DISMISS [ESC]</span>
+              </button>
+            </div>
+          </nav>
+
+          <!-- Right Content Workspace -->
+          <div class="drawer-workspace">
+            <div class="drawer-workspace-header">
+              <div class="drawer-breadcrumb">
+                <span class="breadcrumb-prefix">OPERATIONAL UNIT //</span>
+                <span class="breadcrumb-title" id="drawer-active-title">PROFILE // RPG OVERVIEW</span>
+              </div>
+              <button type="button" class="icon-btn close-modal-btn drawer-mobile-close" id="close-stats-top-btn" title="Close Command Drawer">✕</button>
+            </div>
+
+            <div class="drawer-workspace-body">
+              <!-- [01] PROFILE: Flow RPG & Telemetry Pane -->
+              <div class="stats-pane" id="pane-stats-flow">
+                <!-- RPG Overview Cards -->
+                <div class="rpg-overview-grid">
+                  <div class="rpg-hero-card">
+                    <div class="rpg-hero-top">
+                      <span class="rpg-level-chip" id="stats-rpg-level">Lv. 1</span>
+                      <span class="rpg-title-text" id="stats-rpg-title">Novice Typist</span>
+                    </div>
+                    <div class="rpg-xp-info">
+                      <span class="rpg-xp-label">XP Progress</span>
+                      <span class="rpg-xp-numbers" id="stats-rpg-xp">0 / 100 XP</span>
+                    </div>
+                    <div class="rpg-bar-track">
+                      <div class="rpg-bar-fill" id="stats-rpg-xp-bar"></div>
+                    </div>
+                  </div>
+
+                  <div class="rpg-metrics-column">
+                    <div class="rpg-sub-stat">
+                      <span class="rpg-sub-label">Unlocked Vocabulary</span>
+                      <span class="rpg-sub-val" id="stats-rpg-words-count">1 / 1,000</span>
+                    </div>
+                    <div class="rpg-sub-stat">
+                      <span class="rpg-sub-label">Eggs Hatched</span>
+                      <span class="rpg-sub-val" id="stats-rpg-eggs-count">0</span>
+                    </div>
+                    <div class="rpg-sub-stat">
+                      <span class="rpg-sub-label">Best Flow Streak</span>
+                      <span class="rpg-sub-val" id="stats-rpg-high-streak">0 words</span>
+                    </div>
+                  </div>
                 </div>
-                <div class="rpg-xp-info">
-                  <span class="rpg-xp-label">XP Progress</span>
-                  <span class="rpg-xp-numbers" id="stats-rpg-xp">0 / 100 XP</span>
-                </div>
-                <div class="rpg-bar-track">
-                  <div class="rpg-bar-fill" id="stats-rpg-xp-bar"></div>
-                </div>
-              </div>
 
-              <div class="rpg-metrics-column">
-                <div class="rpg-sub-stat">
-                  <span class="rpg-sub-label">Unlocked Vocabulary</span>
-                  <span class="rpg-sub-val" id="stats-rpg-words-count">1 / 1,000</span>
-                </div>
-                <div class="rpg-sub-stat">
-                  <span class="rpg-sub-label">Eggs Hatched</span>
-                  <span class="rpg-sub-val" id="stats-rpg-eggs-count">0</span>
-                </div>
-                <div class="rpg-sub-stat">
-                  <span class="rpg-sub-label">Best Flow Streak</span>
-                  <span class="rpg-sub-val" id="stats-rpg-high-streak">0 words</span>
+                <!-- Recent Flow Runs History Table -->
+                <div class="history-table-wrap" style="margin-bottom: 18px;">
+                  <div class="history-table-title">⚡ Recent Flow Runs <span style="font-weight: 400; font-size: 11px; color: var(--sub-color); margin-left: 6px;">(Click a row to inspect timeline graph • Tap <kbd class="key-hint">;;</kbd> anytime in Flow Mode)</span></div>
+                  <table class="history-table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Duration</th>
+                        <th>Avg WPM</th>
+                        <th>Peak Pace</th>
+                        <th>Acc</th>
+                        <th>Deck Size</th>
+                      </tr>
+                    </thead>
+                    <tbody id="flow-history-tbody">
+                      <!-- Dynamically populated -->
+                    </tbody>
+                  </table>
                 </div>
               </div>
-            </div>
 
-            <!-- Recent Flow Runs History Table -->
-            <div class="history-table-wrap" style="margin-bottom: 18px;">
-              <div class="history-table-title">⚡ Recent Flow Runs <span style="font-weight: 400; font-size: 11px; color: var(--sub-color); margin-left: 6px;">(Click a row to inspect timeline graph • Tap <kbd class="key-hint">;;</kbd> anytime in Flow Mode)</span></div>
-              <table class="history-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Duration</th>
-                    <th>Avg WPM</th>
-                    <th>Peak Pace</th>
-                    <th>Acc</th>
-                    <th>Deck Size</th>
-                  </tr>
-                </thead>
-                <tbody id="flow-history-tbody">
-                  <!-- Dynamically populated -->
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Keybr Motor Mastery Matrix -->
-            <div class="motor-mastery-section">
-              <div class="section-heading-wrap">
-                <div class="section-title">🧠 Neuromuscular Motor Patterns</div>
-                <div class="section-subtitle">Physical finger mechanics & proficiency tracking across your deck</div>
-              </div>
-              <div class="motor-grid" id="motor-grid">
-                <!-- Dynamically populated 5 motor cards -->
-              </div>
-            </div>
-
-            <!-- Active Deck Explorer Section -->
-            <div class="deck-explorer-section">
-              <div class="deck-explorer-header">
-                <div>
-                  <span class="section-title">Active Deck Words (<span id="deck-unlocked-count">1</span>)</span>
-                  <div class="section-subtitle">Spaced repetition memory and burst speeds</div>
+              <!-- [02] ARMORY: Cosmetic Repository Pane -->
+              <div class="stats-pane" id="pane-stats-armory" style="display: none;">
+                <div class="trophy-summary-bar">
+                  <div class="trophy-summary-left">
+                    <span class="trophy-summary-title">Cosmetic Armory</span>
+                    <span class="trophy-summary-count" id="armory-count">6 / 34 unlocked (18%)</span>
+                  </div>
+                  <div class="trophy-summary-track">
+                    <div class="trophy-summary-fill" id="armory-progress-bar" style="width: 18%;"></div>
+                  </div>
                 </div>
-                <div class="deck-filters" id="deck-filters">
-                  <button class="deck-filter-btn active" data-filter="all">All</button>
-                  <button class="deck-filter-btn" data-filter="HOME_CORE">Home Core</button>
-                  <button class="deck-filter-btn" data-filter="ALTERNATING">Alternator</button>
-                  <button class="deck-filter-btn" data-filter="SUFFIX_CURL">Suffixes</button>
-                  <button class="deck-filter-btn" data-filter="REACH_PINKY">Reaches</button>
-                  <button class="deck-filter-btn" data-filter="DOUBLE_BOUNCE">Bounces</button>
+
+                <div class="trophy-filters armory-filters" id="armory-filters">
+                  <button class="trophy-filter-btn armory-filter-btn active" data-filter="all">All</button>
+                  <button class="trophy-filter-btn armory-filter-btn" data-filter="theme">🎨 Themes</button>
+                  <button class="trophy-filter-btn armory-filter-btn" data-filter="flowFx">🌌 Flow FX</button>
+                  <button class="trophy-filter-btn armory-filter-btn" data-filter="caret">│ Caret Shapes</button>
+                  <button class="trophy-filter-btn armory-filter-btn" data-filter="caretFx">✨ Caret FX</button>
+                  <button class="trophy-filter-btn armory-filter-btn" data-filter="ghostStyle">👻 Ghost Pacer</button>
+                  <button class="trophy-filter-btn armory-filter-btn" data-filter="sound">🔊 Sounds</button>
+                </div>
+
+                <div class="armory-scroll-container">
+                  <div class="armory-section" data-armory-section="theme">
+                    <div class="armory-section-title">🎨 OLED Stage Themes</div>
+                    <div class="armory-grid" id="armory-themes-grid"></div>
+                  </div>
+
+                  <div class="armory-section" data-armory-section="flowFx">
+                    <div class="armory-section-title">🌌 Flow State Atmospheres (Flow FX)</div>
+                    <div class="armory-grid" id="armory-flowfx-grid"></div>
+                  </div>
+
+                  <div class="armory-section" data-armory-section="caret">
+                    <div class="armory-section-title">│ Caret Geometries</div>
+                    <div class="armory-grid" id="armory-carets-grid"></div>
+                  </div>
+
+                  <div class="armory-section" data-armory-section="caretFx">
+                    <div class="armory-section-title">✨ Flow Caret Modifiers (Independent)</div>
+                    <div class="armory-grid" id="armory-caretfx-grid"></div>
+                  </div>
+
+                  <div class="armory-section" data-armory-section="ghostStyle">
+                    <div class="armory-section-title">👻 Ghost Cursor Pacer Styles</div>
+                    <div class="armory-grid" id="armory-ghost-grid"></div>
+                  </div>
+
+                  <div class="armory-section" data-armory-section="sound">
+                    <div class="armory-section-title">🔊 Mechanical Switch Sound Packs</div>
+                    <div class="armory-grid" id="armory-sounds-grid"></div>
+                  </div>
                 </div>
               </div>
-              <div class="deck-words-scroll" id="deck-words-scroll">
-                <!-- Dynamically populated word chips -->
+
+              <!-- [03] TROPHIES: Trophy Case Pane -->
+              <div class="stats-pane" id="pane-stats-trophies" style="display: none;">
+                <div class="trophy-summary-bar">
+                  <div class="trophy-summary-left">
+                    <span class="trophy-summary-title">Trophy Case</span>
+                    <span class="trophy-summary-count" id="trophies-count">0 / 35 unlocked (0%)</span>
+                  </div>
+                  <div class="trophy-summary-track">
+                    <div class="trophy-summary-fill" id="trophies-progress-bar" style="width: 0%;"></div>
+                  </div>
+                </div>
+
+                <div class="trophy-filters" id="trophy-filters">
+                  <button class="trophy-filter-btn active" data-filter="all">All</button>
+                  <button class="trophy-filter-btn" data-filter="speed">Speed</button>
+                  <button class="trophy-filter-btn" data-filter="flow">Flow</button>
+                  <button class="trophy-filter-btn" data-filter="precision">Precision</button>
+                  <button class="trophy-filter-btn" data-filter="hidden">Hidden</button>
+                  <button class="trophy-filter-btn" data-filter="ghost">Ghost</button>
+                  <button class="trophy-filter-btn" data-filter="rpg">RPG & Deck</button>
+                  <button class="trophy-filter-btn" data-filter="feats">Feats</button>
+                </div>
+
+                <div class="trophies-grid" id="trophies-grid">
+                  <!-- Dynamically populated trophy cards -->
+                </div>
+              </div>
+
+              <!-- [04] RECORDS: Classic Records Pane -->
+              <div class="stats-pane" id="pane-stats-classic" style="display: none;">
+                <div class="stats-pbs-grid">
+                  <div class="pb-card">
+                    <span class="pb-label">15s Record</span>
+                    <span class="pb-val" id="pb-15s">0 WPM</span>
+                    <span class="pb-date" id="pb-15s-date">--</span>
+                  </div>
+                  <div class="pb-card highlight">
+                    <span class="pb-label">30s Record</span>
+                    <span class="pb-val" id="pb-30s">0 WPM</span>
+                    <span class="pb-date" id="pb-30s-date">--</span>
+                  </div>
+                  <div class="pb-card">
+                    <span class="pb-label">60s Record</span>
+                    <span class="pb-val" id="pb-60s">0 WPM</span>
+                    <span class="pb-date" id="pb-60s-date">--</span>
+                  </div>
+                </div>
+
+                <div class="secondary-stats" style="margin-top: 16px;">
+                  <div class="sub-stat">
+                    <span class="stat-label">total tests</span>
+                    <span class="stat-value" id="stats-total-tests">0</span>
+                  </div>
+                  <div class="sub-stat">
+                    <span class="stat-label">total words</span>
+                    <span class="stat-value" id="stats-total-words">0</span>
+                  </div>
+                  <div class="sub-stat">
+                    <span class="stat-label">keystrokes</span>
+                    <span class="stat-value" id="stats-total-keys">0</span>
+                  </div>
+                  <div class="sub-stat">
+                    <span class="stat-label">time typing</span>
+                    <span class="stat-value" id="stats-total-time">0m</span>
+                  </div>
+                </div>
+
+                <div class="history-table-wrap">
+                  <div class="history-table-title">Recent Tests</div>
+                  <table class="history-table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Mode</th>
+                        <th>WPM</th>
+                        <th>Raw</th>
+                        <th>Acc</th>
+                      </tr>
+                    </thead>
+                    <tbody id="stats-history-tbody">
+                      <!-- Dynamically populated -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- [05] MOTOR: Neuromuscular Mastery & Deck Explorer Pane -->
+              <div class="stats-pane" id="pane-stats-motor" style="display: none;">
+                <div class="motor-mastery-section">
+                  <div class="section-heading-wrap">
+                    <div class="section-title">🧠 Neuromuscular Motor Patterns</div>
+                    <div class="section-subtitle">Physical finger mechanics & proficiency tracking across your deck</div>
+                  </div>
+                  <div class="motor-grid" id="motor-grid">
+                    <!-- Dynamically populated 5 motor cards -->
+                  </div>
+                </div>
+
+                <div class="deck-explorer-section">
+                  <div class="deck-explorer-header">
+                    <div>
+                      <span class="section-title">Active Deck Words (<span id="deck-unlocked-count">1</span>)</span>
+                      <div class="section-subtitle">Spaced repetition memory and burst speeds</div>
+                    </div>
+                    <div class="deck-filters" id="deck-filters">
+                      <button class="deck-filter-btn active" data-filter="all">All</button>
+                      <button class="deck-filter-btn" data-filter="HOME_CORE">Home Core</button>
+                      <button class="deck-filter-btn" data-filter="ALTERNATING">Alternator</button>
+                      <button class="deck-filter-btn" data-filter="SUFFIX_CURL">Suffixes</button>
+                      <button class="deck-filter-btn" data-filter="REACH_PINKY">Reaches</button>
+                      <button class="deck-filter-btn" data-filter="DOUBLE_BOUNCE">Bounces</button>
+                    </div>
+                  </div>
+                  <div class="deck-words-scroll" id="deck-words-scroll">
+                    <!-- Dynamically populated word chips -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- [06] CONFIG: System Parameters & Ground Zero Pane -->
+              <div class="stats-pane" id="pane-stats-config" style="display: none;">
+                <div class="config-section">
+                  <div class="config-section-title">// DATA MANAGEMENT</div>
+                  <div class="config-card">
+                    <div class="config-info">
+                      <span class="config-label">Flow RPG Progress (Ground Zero)</span>
+                      <span class="config-desc">Reset player level back to Level 1, 0 XP, and 1 starting word ("the").</span>
+                    </div>
+                    <button class="btn-danger-outline" id="reset-rpg-stats-btn" title="Reset Flow RPG progress back to Level 1, 0 XP, and 1 Word">Reset RPG ↺</button>
+                  </div>
+                  <div class="config-card">
+                    <div class="config-info">
+                      <span class="config-label">Classic Records & Personal Bests</span>
+                      <span class="config-desc">Clear 15s, 30s, 60s benchmark history and personal bests.</span>
+                    </div>
+                    <button class="btn-secondary" id="reset-classic-stats-btn" style="font-size: 12px; padding: 7px 14px;" title="Reset Classic Mode Personal Bests & Records">Clear Records</button>
+                  </div>
+                </div>
+
+                <div class="config-section">
+                  <div class="config-section-title">// KEYBOARD SHORTCUTS</div>
+                  <div class="config-card" style="display: block; padding: 8px 16px;">
+                    <table class="shortcuts-table">
+                      <tbody>
+                        <tr>
+                          <td class="shortcut-action">Restart Active Session</td>
+                          <td class="shortcut-keys"><span class="shortcut-badge">Tab</span> + <span class="shortcut-badge">Enter</span></td>
+                        </tr>
+                        <tr>
+                          <td class="shortcut-action">Hatch Egg in Nest (Focus Mode)</td>
+                          <td class="shortcut-keys"><span class="shortcut-badge">Tab</span></td>
+                        </tr>
+                        <tr>
+                          <td class="shortcut-action">Dismiss Drawer / Pause Flow</td>
+                          <td class="shortcut-keys"><span class="shortcut-badge">Esc</span></td>
+                        </tr>
+                        <tr>
+                          <td class="shortcut-action">Inspect Last Flow Run (Home Row)</td>
+                          <td class="shortcut-keys"><kbd class="key-hint">;;</kbd></td>
+                        </tr>
+                        <tr>
+                          <td class="shortcut-action">Zen Focus Wake Up</td>
+                          <td class="shortcut-keys"><span class="shortcut-badge">Esc</span> or pause</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="config-section">
+                  <div class="config-section-title">// SYSTEM TELEMETRY</div>
+                  <div class="config-card" style="font-family: var(--font-mono); font-size: 11px; color: var(--sub-color); justify-content: space-between;">
+                    <div>ENGINE: TypeFlow v4.0 (Flow RPG Core)</div>
+                    <div>CHASSIS: Teenage Engineering Tactical</div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Classic Records Pane -->
-          <div class="stats-pane" id="pane-stats-classic" style="display: none;">
-            <div class="stats-pbs-grid">
-              <div class="pb-card">
-                <span class="pb-label">15s Record</span>
-                <span class="pb-val" id="pb-15s">0 WPM</span>
-                <span class="pb-date" id="pb-15s-date">--</span>
+            <!-- Workspace Footer -->
+            <div class="drawer-workspace-footer">
+              <div class="footer-telemetry">
+                <span class="telemetry-item">STATUS: NOMINAL</span>
+                <span class="telemetry-separator">::</span>
+                <span class="telemetry-item">BUILD 4.0</span>
               </div>
-              <div class="pb-card highlight">
-                <span class="pb-label">30s Record</span>
-                <span class="pb-val" id="pb-30s">0 WPM</span>
-                <span class="pb-date" id="pb-30s-date">--</span>
-              </div>
-              <div class="pb-card">
-                <span class="pb-label">60s Record</span>
-                <span class="pb-val" id="pb-60s">0 WPM</span>
-                <span class="pb-date" id="pb-60s-date">--</span>
-              </div>
+              <button type="button" class="btn-secondary" id="close-stats-footer-btn">CLOSE [ESC]</button>
             </div>
-
-            <div class="secondary-stats" style="margin-top: 16px;">
-              <div class="sub-stat">
-                <span class="stat-label">total tests</span>
-                <span class="stat-value" id="stats-total-tests">0</span>
-              </div>
-              <div class="sub-stat">
-                <span class="stat-label">total words</span>
-                <span class="stat-value" id="stats-total-words">0</span>
-              </div>
-              <div class="sub-stat">
-                <span class="stat-label">keystrokes</span>
-                <span class="stat-value" id="stats-total-keys">0</span>
-              </div>
-              <div class="sub-stat">
-                <span class="stat-label">time typing</span>
-                <span class="stat-value" id="stats-total-time">0m</span>
-              </div>
-            </div>
-
-            <div class="history-table-wrap">
-              <div class="history-table-title">Recent Tests</div>
-              <table class="history-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Mode</th>
-                    <th>WPM</th>
-                    <th>Raw</th>
-                    <th>Acc</th>
-                  </tr>
-                </thead>
-                <tbody id="stats-history-tbody">
-                  <!-- Dynamically populated -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Trophies & Achievements Pane -->
-          <div class="stats-pane" id="pane-stats-trophies" style="display: none;">
-            <div class="trophy-summary-bar">
-              <div class="trophy-summary-left">
-                <span class="trophy-summary-title">Trophy Case</span>
-                <span class="trophy-summary-count" id="trophies-count">0 / 35 unlocked (0%)</span>
-              </div>
-              <div class="trophy-summary-track">
-                <div class="trophy-summary-fill" id="trophies-progress-bar" style="width: 0%;"></div>
-              </div>
-            </div>
-
-            <div class="trophy-filters" id="trophy-filters">
-              <button class="trophy-filter-btn active" data-filter="all">All</button>
-              <button class="trophy-filter-btn" data-filter="speed">Speed</button>
-              <button class="trophy-filter-btn" data-filter="flow">Flow</button>
-              <button class="trophy-filter-btn" data-filter="precision">Precision</button>
-              <button class="trophy-filter-btn" data-filter="hidden">Hidden</button>
-              <button class="trophy-filter-btn" data-filter="ghost">Ghost</button>
-              <button class="trophy-filter-btn" data-filter="rpg">RPG & Deck</button>
-              <button class="trophy-filter-btn" data-filter="feats">Feats</button>
-            </div>
-
-            <div class="trophies-grid" id="trophies-grid">
-              <!-- Dynamically populated trophy cards -->
-            </div>
-          </div>
-
-          <!-- Cosmetic Armory Pane -->
-          <div class="stats-pane" id="pane-stats-armory" style="display: none;">
-            <div class="trophy-summary-bar">
-              <div class="trophy-summary-left">
-                <span class="trophy-summary-title">Cosmetic Armory</span>
-                <span class="trophy-summary-count" id="armory-count">6 / 34 unlocked (18%)</span>
-              </div>
-              <div class="trophy-summary-track">
-                <div class="trophy-summary-fill" id="armory-progress-bar" style="width: 18%;"></div>
-              </div>
-            </div>
-
-            <div class="trophy-filters armory-filters" id="armory-filters">
-              <button class="trophy-filter-btn armory-filter-btn active" data-filter="all">All</button>
-              <button class="trophy-filter-btn armory-filter-btn" data-filter="theme">🎨 Themes</button>
-              <button class="trophy-filter-btn armory-filter-btn" data-filter="flowFx">🌌 Flow FX</button>
-              <button class="trophy-filter-btn armory-filter-btn" data-filter="caret">│ Caret Shapes</button>
-              <button class="trophy-filter-btn armory-filter-btn" data-filter="caretFx">✨ Caret FX</button>
-              <button class="trophy-filter-btn armory-filter-btn" data-filter="ghostStyle">👻 Ghost Pacer</button>
-              <button class="trophy-filter-btn armory-filter-btn" data-filter="sound">🔊 Sounds</button>
-            </div>
-
-            <div class="armory-scroll-container">
-              <div class="armory-section" data-armory-section="theme">
-                <div class="armory-section-title">🎨 OLED Stage Themes</div>
-                <div class="armory-grid" id="armory-themes-grid"></div>
-              </div>
-
-              <div class="armory-section" data-armory-section="flowFx">
-                <div class="armory-section-title">🌌 Flow State Atmospheres (Flow FX)</div>
-                <div class="armory-grid" id="armory-flowfx-grid"></div>
-              </div>
-
-              <div class="armory-section" data-armory-section="caret">
-                <div class="armory-section-title">│ Caret Geometries</div>
-                <div class="armory-grid" id="armory-carets-grid"></div>
-              </div>
-
-              <div class="armory-section" data-armory-section="caretFx">
-                <div class="armory-section-title">✨ Flow Caret Modifiers (Independent)</div>
-                <div class="armory-grid" id="armory-caretfx-grid"></div>
-              </div>
-
-              <div class="armory-section" data-armory-section="ghostStyle">
-                <div class="armory-section-title">👻 Ghost Cursor Pacer Styles</div>
-                <div class="armory-grid" id="armory-ghost-grid"></div>
-              </div>
-
-              <div class="armory-section" data-armory-section="sound">
-                <div class="armory-section-title">🔊 Mechanical Switch Sound Packs</div>
-                <div class="armory-grid" id="armory-sounds-grid"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="modal-footer space-between" style="margin-top: 18px;">
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <button class="btn-danger-outline" id="reset-rpg-stats-btn" title="Reset Flow RPG progress back to Level 1, 0 XP, and 1 Word">Reset RPG (Ground Zero) ↺</button>
-              <button class="btn-secondary" id="reset-classic-stats-btn" style="font-size: 12px; padding: 7px 14px;" title="Reset Classic Mode Personal Bests & Records">Clear Records</button>
-            </div>
-            <button class="btn-secondary" id="close-stats-footer-btn">Close</button>
           </div>
         </div>
       </section>
     </main>
-
-    <!-- Footer -->
-    <footer>
-      <div class="footer-left">
-        <span><span class="shortcut-badge">tab</span> + <span class="shortcut-badge">enter</span> - restart</span>
-        <span><span class="shortcut-badge">esc</span> - pause / hatchery</span>
-      </div>
-      <div class="footer-right">
-        <span>TypeFlow v4.0 • Flow RPG Edition</span>
-      </div>
-    </footer>
   </div>
 
   <script>

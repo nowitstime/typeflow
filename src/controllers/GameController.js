@@ -138,6 +138,10 @@ class GameController {
     this.ghostNeedsSync = true;
     this._onWindowResize = null;
 
+    // Zen Focus Mode state
+    this.isZenActive = false;
+    this.zenTimer = null;
+
     const KBClass = deps.keyboardControllerClass || _KeyboardController;
     if (KBClass) {
       this.keyboardController = new KBClass({
@@ -263,7 +267,7 @@ class GameController {
         if (status.state === 'occupied') {
           if (this.eggNestModel.hatchingSlotIndex === slotIdx) {
             this.exitHatchMode();
-          } else {
+          } else if (this.eggNestModel.basket.length >= 3) {
             this.enterHatchMode(slotIdx);
           }
         }
@@ -357,6 +361,13 @@ class GameController {
         }
       };
       window.addEventListener('resize', this._onWindowResize);
+    }
+
+    // 7. Mouse activity handler to wake Zen Focus mode
+    if (typeof document !== 'undefined') {
+      document.addEventListener('mousemove', () => {
+        this.deactivateZenFocus();
+      });
     }
 
     // 7. Retroactive sync of achievements from history/save
@@ -740,6 +751,7 @@ class GameController {
   }
 
   resetTest() {
+    this.deactivateZenFocus();
     if (this.classicTimerInterval) {
       clearInterval(this.classicTimerInterval);
       this.classicTimerInterval = null;
@@ -847,6 +859,7 @@ class GameController {
   }
 
   endClassicTest() {
+    this.deactivateZenFocus();
     this.lastTestFinishedTime = Date.now();
     const stats = this.sessionModel.calculateFinalStats();
 
@@ -914,6 +927,7 @@ class GameController {
   handleChar(char) {
     if (this.sessionModel.isFinished) return;
     this.audioService.init();
+    this.onTypingActivity();
 
     if (!this.sessionModel.isActive && this.currentMode === 'classic') {
       this.startClassicTimer();
@@ -981,6 +995,7 @@ class GameController {
 
   handleBackspace() {
     if (this.sessionModel.isFinished) return;
+    this.onTypingActivity();
     this.lastKeystrokeTime = null;
 
     if (this.sessionModel.currentCharIdx === 0) {
@@ -1029,6 +1044,7 @@ class GameController {
   handleSpace() {
     if (this.sessionModel.isFinished) return;
     if (this.sessionModel.currentCharIdx === 0) return; // Prevent empty skipping
+    this.onTypingActivity();
 
     this.lastKeystrokeTime = null;
     this.flowModel.recordKeystroke();
@@ -1448,7 +1464,7 @@ class GameController {
       this.exitHatchMode();
       return;
     }
-    if (this.currentMode === 'flow' && this.eggNestModel.basket.length > 0) {
+    if (this.currentMode === 'flow' && this.eggNestModel.basket.length >= 3) {
       this.enterHatchMode();
       return;
     }
@@ -1456,6 +1472,11 @@ class GameController {
   }
 
   handleEscape() {
+    this.deactivateZenFocus();
+    if (this.hudView && this.hudView.isModsPopoverOpen && this.hudView.isModsPopoverOpen()) {
+      this.hudView.toggleModsPopover(false);
+      return;
+    }
     if (this.eggNestModel.isHatching()) {
       this.exitHatchMode();
       return;
@@ -1539,6 +1560,46 @@ class GameController {
       return this.dismissFlowRecap(false);
     }
     return this.openFlowRecap(false);
+  }
+
+  _getDoc() {
+    const inputDoc = (this.stageView && this.stageView.typingInput && this.stageView.typingInput.ownerDocument);
+    if (inputDoc && typeof inputDoc.getElementById === 'function') {
+      return inputDoc;
+    }
+    return (typeof document !== 'undefined' && typeof document.getElementById === 'function') ? document : null;
+  }
+
+  activateZenFocus() {
+    if (this.isZenActive) return;
+    this.isZenActive = true;
+    const doc = this._getDoc();
+    if (doc) {
+      const appEl = (typeof doc.getElementById === 'function') ? (doc.getElementById('app') || doc.body) : doc.body;
+      if (appEl && appEl.classList) appEl.classList.add('zen-active');
+    }
+  }
+
+  deactivateZenFocus() {
+    if (this.zenTimer) {
+      clearTimeout(this.zenTimer);
+      this.zenTimer = null;
+    }
+    if (!this.isZenActive) return;
+    this.isZenActive = false;
+    const doc = this._getDoc();
+    if (doc) {
+      const appEl = (typeof doc.getElementById === 'function') ? (doc.getElementById('app') || doc.body) : doc.body;
+      if (appEl && appEl.classList) appEl.classList.remove('zen-active');
+    }
+  }
+
+  onTypingActivity() {
+    this.activateZenFocus();
+    if (this.zenTimer) clearTimeout(this.zenTimer);
+    this.zenTimer = setTimeout(() => {
+      this.deactivateZenFocus();
+    }, 1000);
   }
 
   openStats(tab = 'flow') {

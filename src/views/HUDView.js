@@ -41,8 +41,15 @@ class HUDView {
     this.ghostSlider = elements.ghostSlider || (typeof document !== 'undefined' ? document.getElementById('ghost-slider') : null);
     this.ghostVal = elements.ghostVal || (typeof document !== 'undefined' ? document.getElementById('ghost-val') : null);
 
+    // Mods Folder / Popover Controls
+    this.modsBtn = elements.modsBtn || (typeof document !== 'undefined' ? document.getElementById('mods-btn') : null);
+    this.modsPopover = elements.modsPopover || (typeof document !== 'undefined' ? document.getElementById('mods-popover') : null);
+    this.modsCloseBtn = elements.modsCloseBtn || (typeof document !== 'undefined' ? document.getElementById('mods-close-btn') : null);
+    this.modsActiveDot = elements.modsActiveDot || (typeof document !== 'undefined' ? document.getElementById('mods-active-dot') : null);
+
     // Typing Stage HUD
     this.timerEl = elements.timerEl || (typeof document !== 'undefined' ? document.getElementById('timer') : null);
+    this.restartBtn = elements.restartBtn || (typeof document !== 'undefined' ? document.getElementById('restart-btn') : null);
     this.restartBtnLabel = elements.restartBtnLabel || (typeof document !== 'undefined' ? document.getElementById('restart-btn-label') : null);
     this.liveStats = elements.liveStats || (typeof document !== 'undefined' ? document.getElementById('live-stats') : null);
     this.liveWpmEl = elements.liveWpmEl || (typeof document !== 'undefined' ? document.getElementById('live-wpm') : null);
@@ -187,6 +194,34 @@ class HUDView {
         if (handlers.onOpenArmory) handlers.onOpenArmory();
       });
     }
+
+    const modsBtn = this.modsBtn || ((typeof document !== 'undefined') ? document.getElementById('mods-btn') : null);
+    if (modsBtn) {
+      modsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleModsPopover();
+      });
+    }
+
+    const modsCloseBtn = this.modsCloseBtn || ((typeof document !== 'undefined') ? document.getElementById('mods-close-btn') : null);
+    if (modsCloseBtn) {
+      modsCloseBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleModsPopover(false);
+      });
+    }
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('click', (e) => {
+        const popover = this.modsPopover || document.getElementById('mods-popover');
+        const btn = this.modsBtn || document.getElementById('mods-btn');
+        if (popover && popover.style.display !== 'none') {
+          if (!popover.contains(e.target) && (!btn || !btn.contains(e.target))) {
+            this.toggleModsPopover(false);
+          }
+        }
+      });
+    }
   }
 
   setFocusOpacity(opacity) {
@@ -216,11 +251,21 @@ class HUDView {
     if (this.levelHudCard) this.levelHudCard.style.display = isClassic ? 'none' : 'flex';
 
     if (this.restartBtnLabel) {
-      this.restartBtnLabel.textContent = isClassic ? 'restart test' : 'restart flow';
+      this.restartBtnLabel.textContent = 'tab';
+    }
+
+    if (this.restartBtn && isClassic) {
+      this.restartBtn.classList.remove('fade-out');
     }
 
     if (this.liveStats) {
       this.liveStats.classList.remove('visible');
+    }
+  }
+
+  setRestartPromptVisible(visible) {
+    if (this.restartBtn) {
+      this.restartBtn.classList.toggle('fade-out', !visible);
     }
   }
 
@@ -317,7 +362,7 @@ class HUDView {
    */
   updateLevelCard(level, currentXp, reqXp, title) {
     if (!this.levelHudCard) return;
-    if (this.hudLevelBadge) this.hudLevelBadge.textContent = `Lv. ${level}`;
+    if (this.hudLevelBadge) this.hudLevelBadge.textContent = `LVL ${level}`;
     if (this.hudLevelTitle) this.hudLevelTitle.textContent = title;
     if (this.hudXpRatio) this.hudXpRatio.textContent = `${currentXp}/${reqXp} XP`;
     if (this.hudLevelBarFill) {
@@ -348,6 +393,7 @@ class HUDView {
   updateSoundState(enabled) {
     if (this.soundIconOn) this.soundIconOn.style.display = enabled ? 'block' : 'none';
     if (this.soundIconOff) this.soundIconOff.style.display = enabled ? 'none' : 'block';
+    this._refreshModsIndicator();
   }
 
   /**
@@ -422,6 +468,7 @@ class HUDView {
     if (valEl) {
       valEl.textContent = `${distance} ${distance === 1 ? 'word' : 'words'}`;
     }
+    this._refreshModsIndicator();
   }
 
   updateGhostState(enabled, speed) {
@@ -445,6 +492,49 @@ class HUDView {
     if (valEl) {
       valEl.textContent = `${speed || 50} WPM`;
     }
+    this._refreshModsIndicator();
+  }
+
+  toggleModsPopover(forceState) {
+    const popover = this.modsPopover || ((typeof document !== 'undefined') ? document.getElementById('mods-popover') : null);
+    const btn = this.modsBtn || ((typeof document !== 'undefined') ? document.getElementById('mods-btn') : null);
+    if (!popover) return;
+    const isCurrentlyVisible = popover.style.display !== 'none';
+    const show = forceState !== undefined ? Boolean(forceState) : !isCurrentlyVisible;
+    popover.style.display = show ? 'flex' : 'none';
+    if (btn) {
+      btn.setAttribute('aria-expanded', show ? 'true' : 'false');
+      btn.classList.toggle('active', show);
+    }
+  }
+
+  isModsPopoverOpen() {
+    const popover = this.modsPopover || ((typeof document !== 'undefined') ? document.getElementById('mods-popover') : null);
+    return Boolean(popover && popover.style.display !== 'none');
+  }
+
+  updateModsActiveIndicator(isHdActive, isGhostActive, isSoundActive) {
+    const dot = this.modsActiveDot || ((typeof document !== 'undefined') ? document.getElementById('mods-active-dot') : null);
+    const btn = this.modsBtn || ((typeof document !== 'undefined') ? document.getElementById('mods-btn') : null);
+    const hasActiveMods = Boolean(isHdActive || isGhostActive || isSoundActive);
+    if (dot) {
+      dot.style.display = hasActiveMods ? 'inline-block' : 'none';
+    }
+    if (btn) {
+      btn.classList.toggle('has-active-mods', hasActiveMods);
+    }
+  }
+
+  _refreshModsIndicator() {
+    const hdBtn = this.hdBtn || ((typeof document !== 'undefined') ? document.getElementById('hd-btn') : null);
+    const ghostBtn = this.ghostBtn || ((typeof document !== 'undefined') ? document.getElementById('ghost-btn') : null);
+    const soundOn = this.soundIconOn || ((typeof document !== 'undefined') ? document.getElementById('sound-icon-on') : null);
+
+    const isHd = Boolean(hdBtn && hdBtn.classList.contains('active'));
+    const isGhost = Boolean(ghostBtn && ghostBtn.classList.contains('active'));
+    const isSound = Boolean(soundOn && soundOn.style.display !== 'none');
+
+    this.updateModsActiveIndicator(isHd, isGhost, isSound);
   }
 
   /**

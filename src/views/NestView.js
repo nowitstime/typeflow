@@ -15,6 +15,7 @@ class NestView {
       document.getElementById('nest-slot-2')
     ] : []);
     this.nestHint = elements.nestHint || (typeof document !== 'undefined' ? document.getElementById('nest-hint') : null);
+    this.restartBtn = elements.restartBtn || (typeof document !== 'undefined' ? document.getElementById('restart-btn') : null);
     this.incubationTrack = elements.incubationTrack || (typeof document !== 'undefined' ? document.getElementById('nest-incubation-track') : null);
     this.incubationFill = elements.incubationFill || (typeof document !== 'undefined' ? document.getElementById('nest-incubation-fill') : null);
     this.flowRecapPill = elements.flowRecapPill || (typeof document !== 'undefined' ? document.getElementById('flow-recap-pill') : null);
@@ -151,16 +152,22 @@ class NestView {
   }
 
   updateHint(isHatching, eggCount) {
-    if (!this.nestHint) return;
+    if (this.nestHint) {
+      if (isHatching) {
+        this.nestHint.classList.add('visible');
+        this.nestHint.textContent = "type 'egg' (tab: back)";
+      } else if (eggCount >= 3) {
+        this.nestHint.classList.add('visible');
+        this.nestHint.textContent = 'tab: hatch';
+      } else {
+        this.nestHint.classList.remove('visible');
+        this.nestHint.textContent = '';
+      }
+    }
 
-    if (isHatching) {
-      this.nestHint.classList.add('visible');
-      this.nestHint.textContent = "type 'egg' (tab: back)";
-    } else if (eggCount > 0) {
-      this.nestHint.classList.add('visible');
-      this.nestHint.textContent = 'tab: hatch';
-    } else {
-      this.nestHint.classList.remove('visible');
+    if (this.restartBtn) {
+      const shouldFadeOutRestart = isHatching || eggCount >= 3;
+      this.restartBtn.classList.toggle('fade-out', shouldFadeOutRestart);
     }
   }
 

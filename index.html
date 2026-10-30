@@ -59,8 +59,9 @@ header {
   justify-content: space-between;
   align-items: center;
   padding-bottom: 12px;
-  flex-wrap: wrap;
-  gap: 10px 14px;
+  gap: 16px;
+  position: relative;
+  transition: opacity 0.35s ease;
 }
 .header-left {
   display: flex;
@@ -71,96 +72,198 @@ header {
 .logo-area {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   cursor: pointer;
-}
-.logo-icon {
-  width: 32px;
-  height: 32px;
-  background: var(--main-color);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #000000;
-  font-weight: 700;
-  font-size: 18px;
-  font-family: var(--font-sans);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--main-color) 40%, transparent);
+  user-select: none;
 }
 .logo-title {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--text-color);
   letter-spacing: -0.5px;
+  font-family: var(--font-mono);
+  text-transform: lowercase;
 }
 .logo-title span {
   color: var(--main-color);
 }
+.session-capsule {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+}
 .mode-tabs {
   display: flex;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 3px;
-  gap: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: none;
+  border-radius: 0px;
+  padding: 2px;
+  gap: 2px;
 }
 .mode-tab {
-  background: none;
+  background: transparent;
   border: none;
   color: var(--sub-color);
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 600;
-  padding: 6px 12px;
-  border-radius: 7px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: 0px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 .mode-tab:hover {
   color: var(--text-color);
 }
 .mode-tab.active {
-  background: var(--sub-alt-color);
+  background: var(--bg-primary);
   color: var(--main-color);
-  border: 1px solid color-mix(in srgb, var(--main-color) 35%, transparent);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--main-color) 20%, transparent);
+  border: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
-.header-controls {
+.header-right {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-left: auto;
+  position: relative;
 }
-.header-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 8px 10px;
-  margin-left: auto;
+.mods-container {
+  position: relative;
 }
-.header-tool-group {
+.mods-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: none;
+  color: var(--sub-color);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 5px 10px;
+  border-radius: 0px;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+.mods-btn:hover,
+.mods-btn.active {
+  color: var(--text-color);
+  background: rgba(255, 255, 255, 0.08);
+}
+.mods-btn.has-active-mods {
+  color: var(--main-color);
+  border-color: color-mix(in srgb, var(--main-color) 40%, transparent);
+}
+.mods-active-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--main-color);
+  box-shadow: 0 0 6px var(--main-color);
+  border-radius: 0px;
+  display: inline-block;
+}
+.mods-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 320px;
+  background: #080c10;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.95), 0 0 16px color-mix(in srgb, var(--main-color) 12%, transparent);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 60;
+  animation: popoverFadeIn 0.15s ease-out;
+}
+@keyframes popoverFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.mods-popover-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 8px;
+}
+.mods-popover-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--sub-color);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+.mods-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--sub-color);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  font-family: var(--font-mono);
+}
+.mods-close-btn:hover {
+  color: var(--text-color);
+}
+.mod-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 10px 12px;
+}
+.mod-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.mod-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mod-tag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--sub-color);
+  letter-spacing: 0.5px;
+}
+.mod-name {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+.zen-active header,
+.zen-active .test-bottom-bar {
+  opacity: 0;
+  pointer-events: none;
+}
+header,
+.test-bottom-bar {
+  transition: opacity 0.35s ease;
 }
 .flow-diff-pill {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: none;
+  border-radius: 0px;
+  padding: 4px 10px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 13px;
+  gap: 8px;
+  font-size: 11px;
+  font-family: var(--font-mono);
   color: var(--sub-color);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-.flow-diff-pill:focus-within {
-  border-color: color-mix(in srgb, var(--main-color) 45%, transparent);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--main-color) 20%, transparent);
 }
 .diff-label {
   font-size: 11px;
@@ -173,10 +276,10 @@ header {
   -webkit-appearance: none;
   appearance: none;
   width: 90px;
-  height: 5px;
+  height: 6px;
   background: var(--sub-alt-color);
   border: 1px solid var(--border-color);
-  border-radius: 3px;
+  border-radius: 0px;
   outline: none;
   cursor: pointer;
   transition: border-color 0.2s ease;
@@ -187,25 +290,25 @@ header {
 .diff-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
+  width: 8px;
+  height: 16px;
+  border-radius: 0px;
   background: var(--main-color);
-  border: 2px solid #000000;
+  border: 1px solid #000000;
   box-shadow: 0 0 8px color-mix(in srgb, var(--main-color) 70%, transparent);
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .diff-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.18);
+  transform: scaleY(1.15);
   box-shadow: 0 0 12px color-mix(in srgb, var(--main-color) 95%, transparent);
 }
 .diff-slider::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
+  width: 8px;
+  height: 16px;
+  border-radius: 0px;
   background: var(--main-color);
-  border: 2px solid #000000;
+  border: 1px solid #000000;
   box-shadow: 0 0 8px color-mix(in srgb, var(--main-color) 70%, transparent);
   cursor: pointer;
 }
@@ -215,7 +318,7 @@ header {
   gap: 3px;
   background: #000000;
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: 0px;
   padding: 2px 6px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -250,12 +353,13 @@ header {
 .ghost-slider-pill {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 4px 12px;
+  border-radius: 0px;
+  padding: 4px 10px;
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 13px;
+  font-size: 12px;
+  font-family: var(--font-mono);
   color: var(--sub-color);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -280,12 +384,13 @@ header {
 .hd-config-pill {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 10px;
+  border-radius: 0px;
   padding: 3px 8px;
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 12px;
+  font-family: var(--font-mono);
   color: var(--sub-color);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -296,19 +401,22 @@ header {
 .hd-mode-toggle {
   display: flex;
   gap: 2px;
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: 7px;
-  padding: 2px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0px;
+  padding: 1px;
 }
 .hd-mode-btn {
   background: none;
   border: none;
   color: var(--sub-color);
-  font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   padding: 3px 8px;
-  border-radius: 5px;
+  border-radius: 0px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -343,85 +451,85 @@ header {
 }
 .level-hud-card {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  background: #090e15;
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 5px 12px;
-  min-width: 170px;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  padding: 4px 6px;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+.level-hud-card:hover {
+  opacity: 0.85;
 }
 .level-hud-info {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 11px;
 }
 .hud-level-badge {
-  background: color-mix(in srgb, var(--main-color) 18%, transparent);
-  border: 1px solid color-mix(in srgb, var(--main-color) 40%, transparent);
   color: var(--main-color);
   font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 4px;
   font-size: 11px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.5px;
+  background: transparent;
+  border: none;
+  padding: 0;
 }
-.hud-level-title {
-  color: var(--text-color);
-  font-weight: 600;
-  white-space: nowrap;
-}
+.hud-level-title,
 .hud-xp-ratio {
-  color: var(--sub-color);
-  font-size: 10px;
+  display: none !important;
 }
 .hud-level-bar-bg {
-  width: 100%;
-  height: 5px;
-  background: var(--sub-alt-color);
-  border-radius: 3px;
+  width: 50px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 0px;
   overflow: hidden;
 }
 .hud-level-bar-fill {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, var(--main-color), #34d399);
-  border-radius: 3px;
-  box-shadow: 0 0 8px color-mix(in srgb, var(--main-color) 60%, transparent);
+  background: var(--main-color);
+  border-radius: 0px;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--main-color) 60%, transparent);
   transition: width 0.3s ease-out;
 }
 .config-pill {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: none;
+  border-radius: 0px;
+  padding: 4px 10px;
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 14px;
+  font-size: 11px;
+  font-family: var(--font-mono);
   color: var(--sub-color);
 }
 .config-item {
   cursor: pointer;
   transition: color 0.2s ease;
-  font-weight: 500;
+  font-weight: 600;
+  border-radius: 0px;
 }
 .config-item:hover,
 .config-item.active {
   color: var(--main-color);
 }
 .icon-btn {
-  background: none;
-  border: 1px solid transparent;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   color: var(--sub-color);
   cursor: pointer;
-  font-size: 18px;
+  font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
-  border-radius: 8px;
+  padding: 6px 8px;
+  border-radius: 0px;
   transition: all 0.2s ease;
 }
 .icon-btn:hover {
@@ -489,52 +597,23 @@ main {
   gap: 12px;
 }
 .flow-speed-tag {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
-.flow-speed-tag.in-flow {
-  border-color: #2dd4bf;
-  box-shadow: 0 0 12px rgba(45, 212, 191, 0.25);
-  color: #2dd4bf;
-}
-.flow-speed-tag.slow {
-  border-color: #f59e0b;
-  color: #f59e0b;
+  display: none !important;
 }
 .speed-status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--sub-color);
-  transition: background 0.2s ease;
-}
-.flow-speed-tag.in-flow .speed-status-dot {
-  background: #2dd4bf;
-  box-shadow: 0 0 8px #2dd4bf;
-}
-.flow-speed-tag.slow .speed-status-dot {
-  background: #f59e0b;
+  display: none !important;
 }
 .flow-multiplier-badge {
   display: flex;
   align-items: center;
-  gap: 5px;
-  background: color-mix(in srgb, var(--main-color) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--main-color) 35%, transparent);
+  gap: 8px;
+  background: transparent;
+  border: none;
   color: var(--main-color);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  font-family: var(--font-mono);
+  padding: 4px 0;
+  position: relative;
 }
 .words-box.pace-paused {
   border-color: rgba(245, 158, 11, 0.25);
@@ -696,7 +775,7 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 0px;
   cursor: pointer;
   z-index: 20;
   opacity: 0;
@@ -716,7 +795,7 @@ main {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   padding: 12px 22px;
-  border-radius: 20px;
+  border-radius: 0px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 .focus-notice svg {
@@ -748,14 +827,20 @@ main {
   color: var(--sub-color);
   cursor: pointer;
   padding: 10px 18px;
-  border-radius: 8px;
+  border-radius: 0px;
   font-family: var(--font-mono);
   font-size: 15px;
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.2s ease;
+  transition: all 0.2s ease, opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   outline: none;
+}
+.restart-btn.fade-out {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(4px);
+  cursor: default !important;
 }
 .restart-btn svg {
   width: 18px;
@@ -781,7 +866,7 @@ main {
   border: 1px solid var(--border-color);
   color: var(--sub-color);
   padding: 3px 6px;
-  border-radius: 4px;
+  border-radius: 0px;
 }
 .flow-right-cluster {
   display: flex;
@@ -789,35 +874,14 @@ main {
   gap: 10px;
 }
 .flow-recap-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  color: var(--sub-color);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 600;
-  padding: 5px 10px;
-  border-radius: 18px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.flow-recap-pill:hover {
-  color: var(--text-color);
-  border-color: color-mix(in srgb, var(--main-color) 55%, transparent);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--main-color) 18%, transparent);
-}
-.flow-recap-pill .recap-pill-icon {
-  font-size: 12px;
-  line-height: 1;
+  display: none !important;
 }
 .flow-recap-pill .key-hint {
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 700;
   padding: 1px 5px;
-  border-radius: 4px;
+  border-radius: 0px;
   background: var(--sub-alt-color);
   border: 1px solid var(--border-color);
   color: var(--main-color);
@@ -879,7 +943,7 @@ main {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   padding: 24px;
-  border-radius: 16px;
+  border-radius: 0px;
 }
 .sub-stat {
   display: flex;
@@ -906,7 +970,7 @@ main {
   height: 200px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 14px;
+  border-radius: 0px;
   padding: 16px 20px;
   position: relative;
   display: flex;
@@ -941,7 +1005,7 @@ main {
 .legend-color {
   width: 10px;
   height: 3px;
-  border-radius: 2px;
+  border-radius: 0px;
 }
 .legend-color.avg { background: var(--main-color); }
 .legend-color.pace { background: #2dd4bf; }
@@ -949,7 +1013,7 @@ main {
 .legend-dot {
   width: 6px;
   height: 6px;
-  border-radius: 50%;
+  border-radius: 0px;
 }
 .legend-dot.err-fixed { background: #34d399; }
 .legend-dot.err-unfixed { background: var(--error-color); }
@@ -969,7 +1033,7 @@ main {
   border: 1px solid var(--main-color);
   color: var(--text-color);
   padding: 8px 12px;
-  border-radius: 8px;
+  border-radius: 0px;
   font-size: 12px;
   pointer-events: none;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 10px color-mix(in srgb, var(--main-color) 20%, transparent);
@@ -998,7 +1062,7 @@ main {
 .dot-indicator {
   width: 6px;
   height: 6px;
-  border-radius: 50%;
+  border-radius: 0px;
   display: inline-block;
 }
 .dot-wpm { background: var(--main-color); }
@@ -1029,7 +1093,7 @@ main {
   font-size: 16px;
   font-weight: 700;
   padding: 12px 28px;
-  border-radius: 10px;
+  border-radius: 0px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1047,26 +1111,12 @@ main {
   width: 18px;
   height: 18px;
 }
-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 13px;
-  color: var(--sub-color);
-  padding-top: 16px;
-  border-top: 1px solid var(--border-color);
-}
-.footer-left, .footer-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
 .shortcut-badge {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   color: var(--sub-color);
   padding: 3px 7px;
-  border-radius: 4px;
+  border-radius: 0px;
   font-size: 12px;
 }
 .modal-backdrop {
@@ -1082,6 +1132,13 @@ footer {
   padding: 20px;
   animation: modalFadeIn 0.2s ease-out;
 }
+.modal-backdrop.command-drawer-backdrop {
+  justify-content: flex-end;
+  align-items: stretch;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.72);
+  overflow: hidden;
+}
 @keyframes modalFadeIn {
   from { opacity: 0; transform: scale(0.97); }
   to { opacity: 1; transform: scale(1); }
@@ -1089,7 +1146,7 @@ footer {
 .modal-card {
   background: #080c10;
   border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border-radius: 0px;
   width: 100%;
   max-width: 660px;
   max-height: 85vh;
@@ -1099,6 +1156,317 @@ footer {
   gap: 20px;
   padding: 26px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.95), 0 0 24px color-mix(in srgb, var(--main-color) 12%, transparent);
+}
+.modal-card.stats-card.command-drawer {
+  width: min(880px, 95vw);
+  max-width: 880px;
+  height: 100vh;
+  max-height: 100vh;
+  margin: 0;
+  border-radius: 0px;
+  border-top: none;
+  border-bottom: none;
+  border-right: none;
+  border-left: 1px solid var(--border-color);
+  background: #080c10;
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.95), 0 0 30px color-mix(in srgb, var(--main-color) 8%, transparent);
+  display: flex;
+  flex-direction: row;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  animation: commandDrawerSlideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes commandDrawerSlideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.drawer-nav-rail {
+  width: 210px;
+  min-width: 210px;
+  background: #04070a;
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px 0 16px 0;
+  user-select: none;
+  z-index: 2;
+}
+.drawer-rail-header {
+  padding: 0 18px 18px 18px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.drawer-rail-brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.drawer-rail-dot {
+  font-size: 8px;
+  color: var(--main-color);
+  animation: pulseDot 2s infinite ease-in-out;
+}
+.drawer-rail-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--sub-color);
+}
+.drawer-rail-title {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-color);
+}
+.drawer-nav-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 0;
+  flex: 1;
+}
+.drawer-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 18px;
+  background: transparent;
+  border: none;
+  border-left: 3px solid transparent;
+  border-radius: 0px;
+  color: var(--sub-color);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-align: left;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s ease;
+}
+.drawer-nav-btn:hover {
+  color: var(--text-color);
+  background: rgba(255, 255, 255, 0.03);
+  border-left-color: var(--sub-color);
+}
+.drawer-nav-btn.active {
+  color: var(--main-color);
+  background: color-mix(in srgb, var(--main-color) 8%, transparent);
+  border-left-color: var(--main-color);
+  font-weight: 700;
+}
+.drawer-nav-btn .nav-idx {
+  font-size: 11px;
+  opacity: 0.65;
+  font-family: var(--font-mono);
+}
+.drawer-nav-btn.active .nav-idx {
+  opacity: 1;
+  color: var(--main-color);
+}
+.drawer-nav-btn .nav-label {
+  flex: 1;
+}
+.drawer-close-rail-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 14px;
+  padding: 10px 14px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 0px;
+  color: var(--sub-color);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.drawer-close-rail-btn:hover {
+  color: var(--text-color);
+  border-color: var(--sub-color);
+  background: rgba(255, 255, 255, 0.04);
+}
+.drawer-workspace {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #080c10;
+}
+.drawer-workspace-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-color);
+  background: rgba(8, 12, 16, 0.85);
+  backdrop-filter: blur(4px);
+  z-index: 1;
+}
+.drawer-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.breadcrumb-prefix {
+  color: var(--sub-color);
+  letter-spacing: 0.08em;
+}
+.breadcrumb-title {
+  color: var(--main-color);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.drawer-mobile-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--sub-color);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+}
+.drawer-mobile-close:hover {
+  color: var(--text-color);
+}
+.drawer-workspace-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.drawer-workspace-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  border-top: 1px solid var(--border-color);
+  background: #04070a;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--sub-color);
+}
+.footer-telemetry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.telemetry-separator {
+  color: var(--border-color);
+}
+.config-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.config-section-title {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--main-color);
+  text-transform: uppercase;
+}
+.config-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 0px;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.config-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.config-label {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+.config-desc {
+  font-size: 12px;
+  color: var(--sub-color);
+  line-height: 1.4;
+}
+.shortcuts-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+.shortcuts-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+.shortcuts-table tr:last-child td {
+  border-bottom: none;
+}
+.shortcut-action {
+  color: var(--text-color);
+}
+.shortcut-keys {
+  text-align: right;
+}
+@media (max-width: 680px) {
+  .modal-card.stats-card.command-drawer {
+    flex-direction: column;
+    width: 100vw;
+    max-width: 100vw;
+  }
+  .drawer-nav-rail {
+    width: 100%;
+    min-width: 100%;
+    flex-direction: row;
+    align-items: center;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    padding: 6px 10px;
+    overflow-x: auto;
+  }
+  .drawer-rail-header, .drawer-rail-footer {
+    display: none;
+  }
+  .drawer-nav-menu {
+    flex-direction: row;
+    gap: 4px;
+    padding: 0;
+  }
+  .drawer-nav-btn {
+    border-left: none;
+    border-bottom: 2px solid transparent;
+    padding: 8px 12px;
+    white-space: nowrap;
+  }
+  .drawer-nav-btn.active {
+    border-left: none;
+    border-bottom: 2px solid var(--main-color);
+  }
+  .drawer-workspace-body {
+    padding: 16px;
+  }
 }
 .modal-header {
   display: flex;
@@ -1131,7 +1499,7 @@ footer {
   font-family: var(--font-mono);
   font-size: 13px;
   padding: 8px 16px;
-  border-radius: 8px;
+  border-radius: 0px;
   cursor: pointer;
   transition: all 0.2s ease;
   display: inline-flex;
@@ -1151,7 +1519,7 @@ footer {
   font-family: var(--font-mono);
   font-size: 14px;
   padding: 10px 20px;
-  border-radius: 8px;
+  border-radius: 0px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -1167,7 +1535,7 @@ footer {
 .pb-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: 0px;
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -1236,7 +1604,7 @@ footer {
   background: transparent;
   border: 1px solid var(--border-color);
   color: var(--sub-color);
-  border-radius: 8px;
+  border-radius: 0px;
   padding: 6px 14px;
   font-size: 13px;
   font-family: var(--font-mono);
@@ -1267,7 +1635,7 @@ footer {
 .rpg-hero-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: 0px;
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -1285,7 +1653,7 @@ footer {
   color: var(--main-color);
   background: color-mix(in srgb, var(--main-color) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--main-color) 30%, transparent);
-  border-radius: 8px;
+  border-radius: 0px;
   padding: 4px 10px;
   font-family: var(--font-mono);
 }
@@ -1303,16 +1671,18 @@ footer {
 }
 .rpg-bar-track {
   width: 100%;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 4px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 0px;
   overflow: hidden;
 }
 .rpg-bar-fill {
   height: 100%;
   width: 0%;
   background: linear-gradient(90deg, var(--main-color), #818cf8);
-  border-radius: 4px;
+  border-radius: 0px;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--main-color) 60%, transparent);
   transition: width 0.3s ease;
 }
 .rpg-metrics-column {
@@ -1323,7 +1693,7 @@ footer {
 .rpg-sub-stat {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 10px;
+  border-radius: 0px;
   padding: 9px 14px;
   display: flex;
   justify-content: space-between;
@@ -1370,7 +1740,7 @@ footer {
 .motor-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: 0px;
   padding: 14px;
   display: flex;
   flex-direction: column;
@@ -1401,7 +1771,7 @@ footer {
   font-size: 10px;
   font-weight: 700;
   padding: 3px 8px;
-  border-radius: 12px;
+  border-radius: 0px;
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
@@ -1429,7 +1799,7 @@ footer {
   display: flex;
   justify-content: space-around;
   background: rgba(0, 0, 0, 0.25);
-  border-radius: 8px;
+  border-radius: 0px;
   padding: 8px 10px;
   font-size: 11px;
 }
@@ -1472,7 +1842,7 @@ footer {
   color: var(--sub-color);
   font-size: 11px;
   padding: 3px 8px;
-  border-radius: 6px;
+  border-radius: 0px;
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: var(--font-mono);
@@ -1495,7 +1865,7 @@ footer {
   padding: 10px;
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid var(--border-color);
-  border-radius: 10px;
+  border-radius: 0px;
 }
 .deck-word-chip {
   display: inline-flex;
@@ -1503,7 +1873,7 @@ footer {
   gap: 6px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: 0px;
   padding: 4px 10px;
   font-family: var(--font-mono);
   font-size: 12px;
@@ -1662,7 +2032,6 @@ footer {
 header .header-left,
 header .header-controls,
 header .header-actions,
-footer,
 #brand-logo {
   opacity: var(--focus-opacity, 1);
   transition: opacity 0.15s ease-out;
@@ -1799,20 +2168,24 @@ footer,
   overflow: hidden;
 }
 .momentum-bar-bg {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2.5px;
+  position: relative;
+  width: 72px;
+  height: 4px;
   background: rgba(255, 255, 255, 0.08);
-  border-radius: 0 0 8px 8px;
+  border: none;
+  border-radius: 0px;
   overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 8px;
 }
 .momentum-bar-fill {
   height: 100%;
   width: 0%;
   background: var(--main-color);
-  transition: background 0.3s ease;
+  border-radius: 0px;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--main-color) 60%, transparent);
+  transition: width 0.15s ease, background 0.3s ease;
 }
 .momentum-bar-fill.rainbow {
   background: linear-gradient(90deg, #ff0055, #ffcc00, #00ff88, #00ccff);
@@ -1854,23 +2227,22 @@ footer,
   align-items: center;
   gap: 8px;
   position: relative;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--border-color);
-  padding: 4px 10px;
-  border-radius: 12px;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+  background: transparent;
+  border: none;
+  padding: 4px 0;
+  border-radius: 0px;
+  transition: opacity 0.2s ease;
 }
 .egg-nest.charging {
-  border-color: color-mix(in srgb, var(--main-color) 45%, transparent);
-  box-shadow: 0 0 calc(var(--nest-glow, 0.2) * 16px) color-mix(in srgb, var(--main-color) calc(var(--nest-glow, 0.2) * 50%), transparent);
+  border-color: transparent;
+  box-shadow: none;
 }
 .egg-nest.high-combo {
-  border-color: color-mix(in srgb, var(--main-color) 75%, transparent);
-  box-shadow: 0 0 16px color-mix(in srgb, var(--main-color) 60%, transparent), 0 0 28px rgba(45, 212, 191, 0.3);
-  animation: nestComboPulse 1.2s ease-in-out infinite alternate;
+  border-color: transparent;
+  box-shadow: none;
 }
 .egg-nest.nest-full {
-  border-color: var(--border-color);
+  border-color: transparent;
   box-shadow: none;
 }
 .egg-nest.nest-full .nest-incubation-track {
@@ -1880,23 +2252,22 @@ footer,
   animation: nestEggMaterialize 0.6s cubic-bezier(0.1, 0.9, 0.2, 1);
 }
 @keyframes nestComboPulse {
-  0% { box-shadow: 0 0 10px color-mix(in srgb, var(--main-color) 40%, transparent); }
-  100% { box-shadow: 0 0 20px color-mix(in srgb, var(--main-color) 80%, transparent), 0 0 30px rgba(52, 211, 153, 0.4); }
+  0% { filter: drop-shadow(0 0 6px var(--main-color)); }
+  100% { filter: drop-shadow(0 0 12px #34d399); }
 }
 @keyframes nestEggMaterialize {
   0% { transform: scale(1); filter: brightness(1); }
-  35% { transform: scale(1.05); filter: brightness(1.7) drop-shadow(0 0 16px var(--main-color)); border-color: var(--main-color); }
+  35% { transform: scale(1.05); filter: brightness(1.7) drop-shadow(0 0 16px var(--main-color)); }
   100% { transform: scale(1); filter: brightness(1); }
 }
 .nest-incubation-track {
   position: absolute;
-  bottom: 0;
+  bottom: -4px;
   left: 0;
   right: 0;
-  height: 2.5px;
-  background: rgba(255, 255, 255, 0.05);
-  border-bottom-left-radius: 12px;
-  border-bottom-right-radius: 12px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 0px;
   overflow: hidden;
   pointer-events: none;
 }
@@ -1904,14 +2275,15 @@ footer,
   height: 100%;
   width: 0%;
   background: linear-gradient(90deg, var(--main-color) 0%, #2dd4bf 70%, #34d399 100%);
+  border-radius: 0px;
   box-shadow: 0 0 8px color-mix(in srgb, var(--main-color) 70%, transparent);
   transition: width 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .nest-slot {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: var(--bg-secondary);
+  width: 32px;
+  height: 32px;
+  border-radius: 0px;
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
@@ -1954,7 +2326,7 @@ footer,
   font-size: 10px;
   font-weight: 800;
   padding: 1px 6px;
-  border-radius: 4px;
+  border-radius: 0px;
   letter-spacing: 2px;
   text-transform: uppercase;
   box-shadow: 0 0 8px color-mix(in srgb, var(--main-color) 65%, transparent);
@@ -2045,7 +2417,7 @@ footer,
   gap: 12px;
   background: rgba(14, 18, 26, 0.96);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
+  border-radius: 0px;
   padding: 10px 18px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 20px rgba(255, 215, 0, 0.2);
   pointer-events: none;
@@ -2112,10 +2484,10 @@ footer,
   position: absolute;
   top: 6px;
   right: 6px;
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   background: #f59e0b;
-  border-radius: 50%;
+  border-radius: 0px;
   box-shadow: 0 0 6px rgba(245, 158, 11, 0.9);
   animation: badgePulse 2s infinite ease-in-out;
 }
@@ -2126,7 +2498,7 @@ footer,
 .trophy-summary-bar {
   background: var(--card-bg, #11141c);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
-  border-radius: 10px;
+  border-radius: 0px;
   padding: 12px 16px;
   margin-bottom: 14px;
   display: flex;
@@ -2153,13 +2525,15 @@ footer,
   width: 100%;
   height: 6px;
   background: rgba(255, 255, 255, 0.08);
-  border-radius: 3px;
+  border: none;
+  border-radius: 0px;
   overflow: hidden;
 }
 .trophy-summary-fill {
   height: 100%;
   background: linear-gradient(90deg, var(--main-color), #818cf8, #f59e0b);
-  border-radius: 3px;
+  border-radius: 0px;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--main-color) 60%, transparent);
   transition: width 0.4s ease-out;
 }
 .trophy-filters {
@@ -2171,7 +2545,7 @@ footer,
 .trophy-filter-btn {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
+  border-radius: 0px;
   padding: 4px 10px;
   font-size: 11px;
   font-family: 'JetBrains Mono', monospace;
@@ -2200,7 +2574,7 @@ footer,
 .trophy-card {
   background: var(--card-bg, #11141c);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
-  border-radius: 10px;
+  border-radius: 0px;
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -2250,7 +2624,7 @@ footer,
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
+  border-radius: 0px;
 }
 .trophy-title-wrap {
   display: flex;
@@ -2307,13 +2681,13 @@ footer,
   width: 100%;
   height: 4px;
   background: rgba(255, 255, 255, 0.06);
-  border-radius: 2px;
+  border-radius: 0px;
   overflow: hidden;
 }
 .trophy-mini-fill {
   height: 100%;
   background: var(--main-color);
-  border-radius: 2px;
+  border-radius: 0px;
   transition: width 0.3s ease;
 }
 .level-hud-card {
@@ -2392,7 +2766,7 @@ footer,
 .armory-card {
   background: var(--bg-secondary, #0a0a0c);
   border: 1px solid var(--border-color, #1a1a20);
-  border-radius: 10px;
+  border-radius: 0px;
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -2427,7 +2801,7 @@ footer,
   font-size: 18px;
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: 0px;
   background: rgba(255, 255, 255, 0.05);
   display: flex;
   align-items: center;
@@ -2469,7 +2843,7 @@ footer,
   font-size: 10px;
   font-weight: 600;
   padding: 4px 8px;
-  border-radius: 6px;
+  border-radius: 0px;
   text-align: center;
 }
 .armory-badge.equipped {
@@ -2500,7 +2874,7 @@ footer,
   font-size: 11px;
   font-weight: 600;
   padding: 5px 10px;
-  border-radius: 99px;
+  border-radius: 0px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -2588,79 +2962,111 @@ footer,
     <header>
       <div class="header-left">
         <div class="logo-area" id="brand-logo" title="Reset Test">
-          <div class="logo-icon">⚡</div>
           <div class="logo-title">type<span>flow</span></div>
         </div>
-        <div class="mode-tabs" id="mode-tabs">
-          <button class="mode-tab" data-mode="classic" id="tab-classic">⏱️ Classic</button>
-          <button class="mode-tab active" data-mode="flow" id="tab-flow">🎮 Flow RPG</button>
+        <div class="session-capsule" id="session-capsule">
+          <div class="mode-tabs" id="mode-tabs">
+            <button class="mode-tab" data-mode="classic" id="tab-classic">Classic</button>
+            <button class="mode-tab active" data-mode="flow" id="tab-flow">Flow RPG</button>
+          </div>
+          <div class="config-pill" id="classic-duration-pill" style="display: none;" title="Test Duration">
+            <span class="config-item active" data-time="30">30s</span>
+            <span class="config-item" data-time="15">15s</span>
+            <span class="config-item" data-time="60">60s</span>
+          </div>
+          <div class="flow-diff-pill" id="flow-target-pill" title="Pace Difficulty Target (WPM)">
+            <span class="diff-label">Pace:</span>
+            <input type="range" id="diff-slider" class="diff-slider" min="15" max="120" step="1" value="40" aria-label="Difficulty slider">
+            <div class="diff-input-wrap">
+              <input type="number" id="diff-input" class="diff-input" min="10" max="300" step="1" value="40" aria-label="Target WPM input">
+              <span class="diff-unit">wpm</span>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="header-controls">
-        <div class="config-pill" id="classic-duration-pill" style="display: none;" title="Test Duration">
-          <span class="config-item active" data-time="30">30s</span>
-          <span class="config-item" data-time="15">15s</span>
-          <span class="config-item" data-time="60">60s</span>
-        </div>
-        <div class="flow-diff-pill" id="flow-target-pill" title="Pace Difficulty Target (WPM)">
-          <span class="diff-label">Pace:</span>
-          <input type="range" id="diff-slider" class="diff-slider" min="15" max="120" step="1" value="40" aria-label="Difficulty slider">
-          <div class="diff-input-wrap">
-            <input type="number" id="diff-input" class="diff-input" min="10" max="300" step="1" value="40" aria-label="Target WPM input">
-            <span class="diff-unit">wpm</span>
+      <div class="header-right">
+        <div class="mods-container">
+          <button class="mods-btn" id="mods-btn" title="Toggle Modifiers (Hidden Horizon, Ghost Pacer, Sound)" aria-expanded="false">
+            <span class="mods-btn-icon">⚙</span>
+            <span class="mods-btn-label">MODS</span>
+            <span class="mods-active-dot" id="mods-active-dot" style="display: none;"></span>
+          </button>
+          <div class="mods-popover" id="mods-popover" style="display: none;">
+            <div class="mods-popover-header">
+              <span class="mods-popover-title">// MODIFIERS & SOUND</span>
+              <button type="button" class="mods-close-btn" id="mods-close-btn" aria-label="Close mods menu">&times;</button>
+            </div>
+            <div class="mod-card" id="mod-card-hd">
+              <div class="mod-card-top">
+                <div class="mod-info">
+                  <span class="mod-tag">MOD 01</span>
+                  <span class="mod-name">Hidden Horizon</span>
+                </div>
+                <button type="button" class="icon-btn" id="hd-btn" title="Toggle Hidden (HD) Look-Ahead Mode">
+                  <span>HD</span>
+                </button>
+              </div>
+              <div class="hd-config-pill" id="hd-config-pill" style="display: none;">
+                <div class="hd-mode-toggle" id="hd-mode-toggle">
+                  <button type="button" class="hd-mode-btn active" id="hd-mode-word" data-mode="word" title="Word Vanish">Word</button>
+                  <button type="button" class="hd-mode-btn" id="hd-mode-char" data-mode="char" title="Combo Horizon">Combo</button>
+                </div>
+                <div class="hd-word-slider-group" id="hd-word-slider-group" style="display: flex;">
+                  <span class="hd-label">Hide:</span>
+                  <input type="range" id="hd-words-slider" class="diff-slider" min="1" max="6" step="1" value="1" aria-label="Hidden words count slider">
+                  <span class="hd-val" id="hd-words-val">1 word</span>
+                </div>
+              </div>
+            </div>
+            <div class="mod-card" id="mod-card-ghost">
+              <div class="mod-card-top">
+                <div class="mod-info">
+                  <span class="mod-tag">MOD 02</span>
+                  <span class="mod-name">Ghost Pacer</span>
+                </div>
+                <button type="button" class="icon-btn" id="ghost-btn" title="Toggle Ghost Cursor Pacer" aria-pressed="false">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C7.58 2 4 5.58 4 10v9.5c0 .48.53.77.92.5l2.08-1.4 2.5 1.7c.32.22.75.22 1.07 0l2.43-1.65 2.43 1.65c.32.22.75.22 1.07 0l2.5-1.7 2.08 1.4c.39.27.92-.02.92-.5V10c0-4.42-3.58-8-8-8zm-3 8c-.83 0-1.5-.67-1.5-1.5S8.17 7 9 7s1.5.67 1.5 1.5S9.83 10 9 10zm6 0c-.83 0-1.5-.67-1.5-1.5S14.17 7 15 7s1.5.67 1.5 1.5S15.83 10 15 10z"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="ghost-slider-pill" id="ghost-slider-pill" style="display: none;">
+                <span class="ghost-label">Pace:</span>
+                <input type="range" id="ghost-slider" class="diff-slider" min="15" max="150" step="5" value="50" aria-label="Ghost Cursor speed slider">
+                <span class="ghost-val" id="ghost-val">50 WPM</span>
+              </div>
+            </div>
+            <div class="mod-card" id="mod-card-sound">
+              <div class="mod-card-top">
+                <div class="mod-info">
+                  <span class="mod-tag">AUDIO 01</span>
+                  <span class="mod-name">Key Sound FX</span>
+                </div>
+                <button type="button" class="icon-btn" id="sound-btn" title="Toggle Mechanical Keyboard Sounds">
+                  <svg id="sound-icon-on" style="display: none;" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                  </svg>
+                  <svg id="sound-icon-off" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
         <div class="level-hud-card" id="level-hud-card" title="Player Level & XP Progress • Click to Open Cosmetic Armory">
           <div class="level-hud-info">
-            <span class="hud-level-badge" id="hud-level-badge">Lv. 1</span>
-            <span class="hud-level-title" id="hud-level-title">Novice Typist</span>
-            <span class="hud-xp-ratio" id="hud-xp-ratio">0/100 XP</span>
+            <span class="hud-level-badge" id="hud-level-badge">LVL 1</span>
+            <span class="hud-level-title" id="hud-level-title" style="display: none;">Novice Typist</span>
+            <span class="hud-xp-ratio" id="hud-xp-ratio" style="display: none;">0/100 XP</span>
           </div>
           <div class="hud-level-bar-bg">
             <div class="hud-level-bar-fill" id="hud-level-bar-fill"></div>
           </div>
         </div>
-      </div>
-      <div class="header-actions">
-        <button class="icon-btn" id="stats-btn" title="View Lifetime Stats & Personal Bests">
+        <button class="icon-btn menu-btn" id="stats-btn" title="View Lifetime Stats & Personal Bests">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
             <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
-          </svg>
-        </button>
-        <div class="header-tool-group">
-          <button class="icon-btn" id="hd-btn" title="Toggle Hidden (HD) Look-Ahead Mode">
-            <span>HD</span>
-          </button>
-          <div class="hd-config-pill" id="hd-config-pill" style="display: none;" title="Hidden Words Count">
-            <div class="hd-mode-toggle" id="hd-mode-toggle">
-              <button type="button" class="hd-mode-btn active" id="hd-mode-word" data-mode="word" title="Word Vanish">Word</button>
-              <button type="button" class="hd-mode-btn" id="hd-mode-char" data-mode="char" title="Combo Horizon">Combo</button>
-            </div>
-            <div class="hd-word-slider-group" id="hd-word-slider-group" style="display: flex;" title="Hidden Words Count">
-              <span class="hd-label">Hide:</span>
-              <input type="range" id="hd-words-slider" class="diff-slider" min="1" max="6" step="1" value="1" aria-label="Hidden words count slider">
-              <span class="hd-val" id="hd-words-val">1 word</span>
-            </div>
-          </div>
-        </div>
-        <div class="header-tool-group">
-          <button class="icon-btn" id="ghost-btn" title="Toggle Ghost Cursor Pacer" aria-pressed="false">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C7.58 2 4 5.58 4 10v9.5c0 .48.53.77.92.5l2.08-1.4 2.5 1.7c.32.22.75.22 1.07 0l2.43-1.65 2.43 1.65c.32.22.75.22 1.07 0l2.5-1.7 2.08 1.4c.39.27.92-.02.92-.5V10c0-4.42-3.58-8-8-8zm-3 8c-.83 0-1.5-.67-1.5-1.5S8.17 7 9 7s1.5.67 1.5 1.5S9.83 10 9 10zm6 0c-.83 0-1.5-.67-1.5-1.5S14.17 7 15 7s1.5.67 1.5 1.5S15.83 10 15 10z"/>
-            </svg>
-          </button>
-          <div class="ghost-slider-pill" id="ghost-slider-pill" style="display: none;" title="Ghost Cursor Pace (WPM)">
-            <span class="ghost-label">Ghost:</span>
-            <input type="range" id="ghost-slider" class="diff-slider" min="15" max="150" step="5" value="50" aria-label="Ghost Cursor speed slider">
-            <span class="ghost-val" id="ghost-val">50 WPM</span>
-          </div>
-        </div>
-        <button class="icon-btn" id="sound-btn" title="Toggle Mechanical Keyboard Sounds">
-          <svg id="sound-icon-on" style="display: none;" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-          </svg>
-          <svg id="sound-icon-off" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
           </svg>
         </button>
       </div>
@@ -2709,7 +3115,7 @@ footer,
                     <span class="p-e">e</span><span class="p-g1">g</span><span class="p-g2">g</span>
                   </div>
                 </div>
-                <span class="nest-hint" id="nest-hint">tab: hatch</span>
+                <span class="nest-hint" id="nest-hint"></span>
                 <div class="nest-incubation-track" id="nest-incubation-track" title="Incubation Progress">
                   <div class="nest-incubation-fill" id="nest-incubation-fill"></div>
                 </div>
@@ -2737,12 +3143,11 @@ footer,
         </div>
         <input type="text" id="typing-input" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
         <div class="test-bottom-bar">
-          <button class="restart-btn" id="restart-btn" title="Restart Session (Tab + Enter)">
+          <button class="restart-btn" id="restart-btn" title="Restart Session (Tab)">
             <svg width="18" height="18" viewBox="0 0 24 24">
               <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
             </svg>
-            <span id="restart-btn-label">restart flow</span>
-            <span class="key-hint">tab + enter</span>
+            <span id="restart-btn-label">tab</span>
           </button>
         </div>
       </section>
@@ -2819,235 +3224,324 @@ footer,
           </button>
         </div>
       </section>
-      <section class="modal-backdrop" id="stats-modal" style="display: none;">
-        <div class="modal-card stats-card">
-          <div class="modal-header">
-            <div class="modal-title-wrap">
-              <h2>📊 Lifetime Stats & Mastery</h2>
-              <div class="stats-modal-tabs">
-                <button class="stats-tab active" id="tab-stats-flow" data-tab="flow">🎮 Flow RPG & Mastery</button>
-                <button class="stats-tab" id="tab-stats-classic" data-tab="classic">⏱️ Classic Records</button>
-                <button class="stats-tab" id="tab-stats-trophies" data-tab="trophies">🏆 Trophies</button>
-                <button class="stats-tab" id="tab-stats-armory" data-tab="armory">🎨 Armory</button>
+      <section class="modal-backdrop command-drawer-backdrop" id="stats-modal" style="display: none;">
+        <div class="modal-card stats-card command-drawer" id="command-drawer">
+          <nav class="drawer-nav-rail" aria-label="Command Drawer Navigation">
+            <div class="drawer-rail-header">
+              <div class="drawer-rail-brand">
+                <span class="drawer-rail-dot">■</span>
+                <span class="drawer-rail-tag">// UNIT 01</span>
               </div>
+              <div class="drawer-rail-title">COMMAND</div>
             </div>
-            <button class="icon-btn close-modal-btn" id="close-stats-btn" title="Close Stats">✕</button>
-          </div>
-          <div class="stats-pane" id="pane-stats-flow">
-            <div class="rpg-overview-grid">
-              <div class="rpg-hero-card">
-                <div class="rpg-hero-top">
-                  <span class="rpg-level-chip" id="stats-rpg-level">Lv. 1</span>
-                  <span class="rpg-title-text" id="stats-rpg-title">Novice Typist</span>
+            <div class="drawer-nav-menu">
+              <button type="button" class="stats-tab drawer-nav-btn active" id="tab-stats-flow" data-tab="flow">
+                <span class="nav-idx">[01]</span>
+                <span class="nav-label">PROFILE</span>
+              </button>
+              <button type="button" class="stats-tab drawer-nav-btn" id="tab-stats-armory" data-tab="armory">
+                <span class="nav-idx">[02]</span>
+                <span class="nav-label">ARMORY</span>
+              </button>
+              <button type="button" class="stats-tab drawer-nav-btn" id="tab-stats-trophies" data-tab="trophies">
+                <span class="nav-idx">[03]</span>
+                <span class="nav-label">TROPHIES</span>
+              </button>
+              <button type="button" class="stats-tab drawer-nav-btn" id="tab-stats-classic" data-tab="classic">
+                <span class="nav-idx">[04]</span>
+                <span class="nav-label">RECORDS</span>
+              </button>
+              <button type="button" class="stats-tab drawer-nav-btn" id="tab-stats-motor" data-tab="motor">
+                <span class="nav-idx">[05]</span>
+                <span class="nav-label">MOTOR</span>
+              </button>
+              <button type="button" class="stats-tab drawer-nav-btn" id="tab-stats-config" data-tab="config">
+                <span class="nav-idx">[06]</span>
+                <span class="nav-label">CONFIG</span>
+              </button>
+            </div>
+            <div class="drawer-rail-footer">
+              <button type="button" class="drawer-close-rail-btn" id="close-stats-btn" title="Dismiss Command Console (Esc)">
+                <span class="close-symbol">✕</span>
+                <span class="close-label">DISMISS [ESC]</span>
+              </button>
+            </div>
+          </nav>
+          <div class="drawer-workspace">
+            <div class="drawer-workspace-header">
+              <div class="drawer-breadcrumb">
+                <span class="breadcrumb-prefix">OPERATIONAL UNIT //</span>
+                <span class="breadcrumb-title" id="drawer-active-title">PROFILE // RPG OVERVIEW</span>
+              </div>
+              <button type="button" class="icon-btn close-modal-btn drawer-mobile-close" id="close-stats-top-btn" title="Close Command Drawer">✕</button>
+            </div>
+            <div class="drawer-workspace-body">
+              <div class="stats-pane" id="pane-stats-flow">
+                <div class="rpg-overview-grid">
+                  <div class="rpg-hero-card">
+                    <div class="rpg-hero-top">
+                      <span class="rpg-level-chip" id="stats-rpg-level">Lv. 1</span>
+                      <span class="rpg-title-text" id="stats-rpg-title">Novice Typist</span>
+                    </div>
+                    <div class="rpg-xp-info">
+                      <span class="rpg-xp-label">XP Progress</span>
+                      <span class="rpg-xp-numbers" id="stats-rpg-xp">0 / 100 XP</span>
+                    </div>
+                    <div class="rpg-bar-track">
+                      <div class="rpg-bar-fill" id="stats-rpg-xp-bar"></div>
+                    </div>
+                  </div>
+                  <div class="rpg-metrics-column">
+                    <div class="rpg-sub-stat">
+                      <span class="rpg-sub-label">Unlocked Vocabulary</span>
+                      <span class="rpg-sub-val" id="stats-rpg-words-count">1 / 1,000</span>
+                    </div>
+                    <div class="rpg-sub-stat">
+                      <span class="rpg-sub-label">Eggs Hatched</span>
+                      <span class="rpg-sub-val" id="stats-rpg-eggs-count">0</span>
+                    </div>
+                    <div class="rpg-sub-stat">
+                      <span class="rpg-sub-label">Best Flow Streak</span>
+                      <span class="rpg-sub-val" id="stats-rpg-high-streak">0 words</span>
+                    </div>
+                  </div>
                 </div>
-                <div class="rpg-xp-info">
-                  <span class="rpg-xp-label">XP Progress</span>
-                  <span class="rpg-xp-numbers" id="stats-rpg-xp">0 / 100 XP</span>
-                </div>
-                <div class="rpg-bar-track">
-                  <div class="rpg-bar-fill" id="stats-rpg-xp-bar"></div>
-                </div>
-              </div>
-              <div class="rpg-metrics-column">
-                <div class="rpg-sub-stat">
-                  <span class="rpg-sub-label">Unlocked Vocabulary</span>
-                  <span class="rpg-sub-val" id="stats-rpg-words-count">1 / 1,000</span>
-                </div>
-                <div class="rpg-sub-stat">
-                  <span class="rpg-sub-label">Eggs Hatched</span>
-                  <span class="rpg-sub-val" id="stats-rpg-eggs-count">0</span>
-                </div>
-                <div class="rpg-sub-stat">
-                  <span class="rpg-sub-label">Best Flow Streak</span>
-                  <span class="rpg-sub-val" id="stats-rpg-high-streak">0 words</span>
+                <div class="history-table-wrap" style="margin-bottom: 18px;">
+                  <div class="history-table-title">⚡ Recent Flow Runs <span style="font-weight: 400; font-size: 11px; color: var(--sub-color); margin-left: 6px;">(Click a row to inspect timeline graph • Tap <kbd class="key-hint">;;</kbd> anytime in Flow Mode)</span></div>
+                  <table class="history-table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Duration</th>
+                        <th>Avg WPM</th>
+                        <th>Peak Pace</th>
+                        <th>Acc</th>
+                        <th>Deck Size</th>
+                      </tr>
+                    </thead>
+                    <tbody id="flow-history-tbody">
+                    </tbody>
+                  </table>
                 </div>
               </div>
-            </div>
-            <div class="history-table-wrap" style="margin-bottom: 18px;">
-              <div class="history-table-title">⚡ Recent Flow Runs <span style="font-weight: 400; font-size: 11px; color: var(--sub-color); margin-left: 6px;">(Click a row to inspect timeline graph • Tap <kbd class="key-hint">;;</kbd> anytime in Flow Mode)</span></div>
-              <table class="history-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Duration</th>
-                    <th>Avg WPM</th>
-                    <th>Peak Pace</th>
-                    <th>Acc</th>
-                    <th>Deck Size</th>
-                  </tr>
-                </thead>
-                <tbody id="flow-history-tbody">
-                </tbody>
-              </table>
-            </div>
-            <div class="motor-mastery-section">
-              <div class="section-heading-wrap">
-                <div class="section-title">🧠 Neuromuscular Motor Patterns</div>
-                <div class="section-subtitle">Physical finger mechanics & proficiency tracking across your deck</div>
-              </div>
-              <div class="motor-grid" id="motor-grid">
-              </div>
-            </div>
-            <div class="deck-explorer-section">
-              <div class="deck-explorer-header">
-                <div>
-                  <span class="section-title">Active Deck Words (<span id="deck-unlocked-count">1</span>)</span>
-                  <div class="section-subtitle">Spaced repetition memory and burst speeds</div>
+              <div class="stats-pane" id="pane-stats-armory" style="display: none;">
+                <div class="trophy-summary-bar">
+                  <div class="trophy-summary-left">
+                    <span class="trophy-summary-title">Cosmetic Armory</span>
+                    <span class="trophy-summary-count" id="armory-count">6 / 34 unlocked (18%)</span>
+                  </div>
+                  <div class="trophy-summary-track">
+                    <div class="trophy-summary-fill" id="armory-progress-bar" style="width: 18%;"></div>
+                  </div>
                 </div>
-                <div class="deck-filters" id="deck-filters">
-                  <button class="deck-filter-btn active" data-filter="all">All</button>
-                  <button class="deck-filter-btn" data-filter="HOME_CORE">Home Core</button>
-                  <button class="deck-filter-btn" data-filter="ALTERNATING">Alternator</button>
-                  <button class="deck-filter-btn" data-filter="SUFFIX_CURL">Suffixes</button>
-                  <button class="deck-filter-btn" data-filter="REACH_PINKY">Reaches</button>
-                  <button class="deck-filter-btn" data-filter="DOUBLE_BOUNCE">Bounces</button>
+                <div class="trophy-filters armory-filters" id="armory-filters">
+                  <button class="trophy-filter-btn armory-filter-btn active" data-filter="all">All</button>
+                  <button class="trophy-filter-btn armory-filter-btn" data-filter="theme">🎨 Themes</button>
+                  <button class="trophy-filter-btn armory-filter-btn" data-filter="flowFx">🌌 Flow FX</button>
+                  <button class="trophy-filter-btn armory-filter-btn" data-filter="caret">│ Caret Shapes</button>
+                  <button class="trophy-filter-btn armory-filter-btn" data-filter="caretFx">✨ Caret FX</button>
+                  <button class="trophy-filter-btn armory-filter-btn" data-filter="ghostStyle">👻 Ghost Pacer</button>
+                  <button class="trophy-filter-btn armory-filter-btn" data-filter="sound">🔊 Sounds</button>
+                </div>
+                <div class="armory-scroll-container">
+                  <div class="armory-section" data-armory-section="theme">
+                    <div class="armory-section-title">🎨 OLED Stage Themes</div>
+                    <div class="armory-grid" id="armory-themes-grid"></div>
+                  </div>
+                  <div class="armory-section" data-armory-section="flowFx">
+                    <div class="armory-section-title">🌌 Flow State Atmospheres (Flow FX)</div>
+                    <div class="armory-grid" id="armory-flowfx-grid"></div>
+                  </div>
+                  <div class="armory-section" data-armory-section="caret">
+                    <div class="armory-section-title">│ Caret Geometries</div>
+                    <div class="armory-grid" id="armory-carets-grid"></div>
+                  </div>
+                  <div class="armory-section" data-armory-section="caretFx">
+                    <div class="armory-section-title">✨ Flow Caret Modifiers (Independent)</div>
+                    <div class="armory-grid" id="armory-caretfx-grid"></div>
+                  </div>
+                  <div class="armory-section" data-armory-section="ghostStyle">
+                    <div class="armory-section-title">👻 Ghost Cursor Pacer Styles</div>
+                    <div class="armory-grid" id="armory-ghost-grid"></div>
+                  </div>
+                  <div class="armory-section" data-armory-section="sound">
+                    <div class="armory-section-title">🔊 Mechanical Switch Sound Packs</div>
+                    <div class="armory-grid" id="armory-sounds-grid"></div>
+                  </div>
                 </div>
               </div>
-              <div class="deck-words-scroll" id="deck-words-scroll">
+              <div class="stats-pane" id="pane-stats-trophies" style="display: none;">
+                <div class="trophy-summary-bar">
+                  <div class="trophy-summary-left">
+                    <span class="trophy-summary-title">Trophy Case</span>
+                    <span class="trophy-summary-count" id="trophies-count">0 / 35 unlocked (0%)</span>
+                  </div>
+                  <div class="trophy-summary-track">
+                    <div class="trophy-summary-fill" id="trophies-progress-bar" style="width: 0%;"></div>
+                  </div>
+                </div>
+                <div class="trophy-filters" id="trophy-filters">
+                  <button class="trophy-filter-btn active" data-filter="all">All</button>
+                  <button class="trophy-filter-btn" data-filter="speed">Speed</button>
+                  <button class="trophy-filter-btn" data-filter="flow">Flow</button>
+                  <button class="trophy-filter-btn" data-filter="precision">Precision</button>
+                  <button class="trophy-filter-btn" data-filter="hidden">Hidden</button>
+                  <button class="trophy-filter-btn" data-filter="ghost">Ghost</button>
+                  <button class="trophy-filter-btn" data-filter="rpg">RPG & Deck</button>
+                  <button class="trophy-filter-btn" data-filter="feats">Feats</button>
+                </div>
+                <div class="trophies-grid" id="trophies-grid">
+                </div>
+              </div>
+              <div class="stats-pane" id="pane-stats-classic" style="display: none;">
+                <div class="stats-pbs-grid">
+                  <div class="pb-card">
+                    <span class="pb-label">15s Record</span>
+                    <span class="pb-val" id="pb-15s">0 WPM</span>
+                    <span class="pb-date" id="pb-15s-date">--</span>
+                  </div>
+                  <div class="pb-card highlight">
+                    <span class="pb-label">30s Record</span>
+                    <span class="pb-val" id="pb-30s">0 WPM</span>
+                    <span class="pb-date" id="pb-30s-date">--</span>
+                  </div>
+                  <div class="pb-card">
+                    <span class="pb-label">60s Record</span>
+                    <span class="pb-val" id="pb-60s">0 WPM</span>
+                    <span class="pb-date" id="pb-60s-date">--</span>
+                  </div>
+                </div>
+                <div class="secondary-stats" style="margin-top: 16px;">
+                  <div class="sub-stat">
+                    <span class="stat-label">total tests</span>
+                    <span class="stat-value" id="stats-total-tests">0</span>
+                  </div>
+                  <div class="sub-stat">
+                    <span class="stat-label">total words</span>
+                    <span class="stat-value" id="stats-total-words">0</span>
+                  </div>
+                  <div class="sub-stat">
+                    <span class="stat-label">keystrokes</span>
+                    <span class="stat-value" id="stats-total-keys">0</span>
+                  </div>
+                  <div class="sub-stat">
+                    <span class="stat-label">time typing</span>
+                    <span class="stat-value" id="stats-total-time">0m</span>
+                  </div>
+                </div>
+                <div class="history-table-wrap">
+                  <div class="history-table-title">Recent Tests</div>
+                  <table class="history-table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Mode</th>
+                        <th>WPM</th>
+                        <th>Raw</th>
+                        <th>Acc</th>
+                      </tr>
+                    </thead>
+                    <tbody id="stats-history-tbody">
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="stats-pane" id="pane-stats-motor" style="display: none;">
+                <div class="motor-mastery-section">
+                  <div class="section-heading-wrap">
+                    <div class="section-title">🧠 Neuromuscular Motor Patterns</div>
+                    <div class="section-subtitle">Physical finger mechanics & proficiency tracking across your deck</div>
+                  </div>
+                  <div class="motor-grid" id="motor-grid">
+                  </div>
+                </div>
+                <div class="deck-explorer-section">
+                  <div class="deck-explorer-header">
+                    <div>
+                      <span class="section-title">Active Deck Words (<span id="deck-unlocked-count">1</span>)</span>
+                      <div class="section-subtitle">Spaced repetition memory and burst speeds</div>
+                    </div>
+                    <div class="deck-filters" id="deck-filters">
+                      <button class="deck-filter-btn active" data-filter="all">All</button>
+                      <button class="deck-filter-btn" data-filter="HOME_CORE">Home Core</button>
+                      <button class="deck-filter-btn" data-filter="ALTERNATING">Alternator</button>
+                      <button class="deck-filter-btn" data-filter="SUFFIX_CURL">Suffixes</button>
+                      <button class="deck-filter-btn" data-filter="REACH_PINKY">Reaches</button>
+                      <button class="deck-filter-btn" data-filter="DOUBLE_BOUNCE">Bounces</button>
+                    </div>
+                  </div>
+                  <div class="deck-words-scroll" id="deck-words-scroll">
+                  </div>
+                </div>
+              </div>
+              <div class="stats-pane" id="pane-stats-config" style="display: none;">
+                <div class="config-section">
+                  <div class="config-section-title">// DATA MANAGEMENT</div>
+                  <div class="config-card">
+                    <div class="config-info">
+                      <span class="config-label">Flow RPG Progress (Ground Zero)</span>
+                      <span class="config-desc">Reset player level back to Level 1, 0 XP, and 1 starting word ("the").</span>
+                    </div>
+                    <button class="btn-danger-outline" id="reset-rpg-stats-btn" title="Reset Flow RPG progress back to Level 1, 0 XP, and 1 Word">Reset RPG ↺</button>
+                  </div>
+                  <div class="config-card">
+                    <div class="config-info">
+                      <span class="config-label">Classic Records & Personal Bests</span>
+                      <span class="config-desc">Clear 15s, 30s, 60s benchmark history and personal bests.</span>
+                    </div>
+                    <button class="btn-secondary" id="reset-classic-stats-btn" style="font-size: 12px; padding: 7px 14px;" title="Reset Classic Mode Personal Bests & Records">Clear Records</button>
+                  </div>
+                </div>
+                <div class="config-section">
+                  <div class="config-section-title">// KEYBOARD SHORTCUTS</div>
+                  <div class="config-card" style="display: block; padding: 8px 16px;">
+                    <table class="shortcuts-table">
+                      <tbody>
+                        <tr>
+                          <td class="shortcut-action">Restart Active Session</td>
+                          <td class="shortcut-keys"><span class="shortcut-badge">Tab</span> + <span class="shortcut-badge">Enter</span></td>
+                        </tr>
+                        <tr>
+                          <td class="shortcut-action">Hatch Egg in Nest (Focus Mode)</td>
+                          <td class="shortcut-keys"><span class="shortcut-badge">Tab</span></td>
+                        </tr>
+                        <tr>
+                          <td class="shortcut-action">Dismiss Drawer / Pause Flow</td>
+                          <td class="shortcut-keys"><span class="shortcut-badge">Esc</span></td>
+                        </tr>
+                        <tr>
+                          <td class="shortcut-action">Inspect Last Flow Run (Home Row)</td>
+                          <td class="shortcut-keys"><kbd class="key-hint">;;</kbd></td>
+                        </tr>
+                        <tr>
+                          <td class="shortcut-action">Zen Focus Wake Up</td>
+                          <td class="shortcut-keys"><span class="shortcut-badge">Esc</span> or pause</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div class="config-section">
+                  <div class="config-section-title">// SYSTEM TELEMETRY</div>
+                  <div class="config-card" style="font-family: var(--font-mono); font-size: 11px; color: var(--sub-color); justify-content: space-between;">
+                    <div>ENGINE: TypeFlow v4.0 (Flow RPG Core)</div>
+                    <div>CHASSIS: Teenage Engineering Tactical</div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="stats-pane" id="pane-stats-classic" style="display: none;">
-            <div class="stats-pbs-grid">
-              <div class="pb-card">
-                <span class="pb-label">15s Record</span>
-                <span class="pb-val" id="pb-15s">0 WPM</span>
-                <span class="pb-date" id="pb-15s-date">--</span>
+            <div class="drawer-workspace-footer">
+              <div class="footer-telemetry">
+                <span class="telemetry-item">STATUS: NOMINAL</span>
+                <span class="telemetry-separator">::</span>
+                <span class="telemetry-item">BUILD 4.0</span>
               </div>
-              <div class="pb-card highlight">
-                <span class="pb-label">30s Record</span>
-                <span class="pb-val" id="pb-30s">0 WPM</span>
-                <span class="pb-date" id="pb-30s-date">--</span>
-              </div>
-              <div class="pb-card">
-                <span class="pb-label">60s Record</span>
-                <span class="pb-val" id="pb-60s">0 WPM</span>
-                <span class="pb-date" id="pb-60s-date">--</span>
-              </div>
+              <button type="button" class="btn-secondary" id="close-stats-footer-btn">CLOSE [ESC]</button>
             </div>
-            <div class="secondary-stats" style="margin-top: 16px;">
-              <div class="sub-stat">
-                <span class="stat-label">total tests</span>
-                <span class="stat-value" id="stats-total-tests">0</span>
-              </div>
-              <div class="sub-stat">
-                <span class="stat-label">total words</span>
-                <span class="stat-value" id="stats-total-words">0</span>
-              </div>
-              <div class="sub-stat">
-                <span class="stat-label">keystrokes</span>
-                <span class="stat-value" id="stats-total-keys">0</span>
-              </div>
-              <div class="sub-stat">
-                <span class="stat-label">time typing</span>
-                <span class="stat-value" id="stats-total-time">0m</span>
-              </div>
-            </div>
-            <div class="history-table-wrap">
-              <div class="history-table-title">Recent Tests</div>
-              <table class="history-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Mode</th>
-                    <th>WPM</th>
-                    <th>Raw</th>
-                    <th>Acc</th>
-                  </tr>
-                </thead>
-                <tbody id="stats-history-tbody">
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div class="stats-pane" id="pane-stats-trophies" style="display: none;">
-            <div class="trophy-summary-bar">
-              <div class="trophy-summary-left">
-                <span class="trophy-summary-title">Trophy Case</span>
-                <span class="trophy-summary-count" id="trophies-count">0 / 35 unlocked (0%)</span>
-              </div>
-              <div class="trophy-summary-track">
-                <div class="trophy-summary-fill" id="trophies-progress-bar" style="width: 0%;"></div>
-              </div>
-            </div>
-            <div class="trophy-filters" id="trophy-filters">
-              <button class="trophy-filter-btn active" data-filter="all">All</button>
-              <button class="trophy-filter-btn" data-filter="speed">Speed</button>
-              <button class="trophy-filter-btn" data-filter="flow">Flow</button>
-              <button class="trophy-filter-btn" data-filter="precision">Precision</button>
-              <button class="trophy-filter-btn" data-filter="hidden">Hidden</button>
-              <button class="trophy-filter-btn" data-filter="ghost">Ghost</button>
-              <button class="trophy-filter-btn" data-filter="rpg">RPG & Deck</button>
-              <button class="trophy-filter-btn" data-filter="feats">Feats</button>
-            </div>
-            <div class="trophies-grid" id="trophies-grid">
-            </div>
-          </div>
-          <div class="stats-pane" id="pane-stats-armory" style="display: none;">
-            <div class="trophy-summary-bar">
-              <div class="trophy-summary-left">
-                <span class="trophy-summary-title">Cosmetic Armory</span>
-                <span class="trophy-summary-count" id="armory-count">6 / 34 unlocked (18%)</span>
-              </div>
-              <div class="trophy-summary-track">
-                <div class="trophy-summary-fill" id="armory-progress-bar" style="width: 18%;"></div>
-              </div>
-            </div>
-            <div class="trophy-filters armory-filters" id="armory-filters">
-              <button class="trophy-filter-btn armory-filter-btn active" data-filter="all">All</button>
-              <button class="trophy-filter-btn armory-filter-btn" data-filter="theme">🎨 Themes</button>
-              <button class="trophy-filter-btn armory-filter-btn" data-filter="flowFx">🌌 Flow FX</button>
-              <button class="trophy-filter-btn armory-filter-btn" data-filter="caret">│ Caret Shapes</button>
-              <button class="trophy-filter-btn armory-filter-btn" data-filter="caretFx">✨ Caret FX</button>
-              <button class="trophy-filter-btn armory-filter-btn" data-filter="ghostStyle">👻 Ghost Pacer</button>
-              <button class="trophy-filter-btn armory-filter-btn" data-filter="sound">🔊 Sounds</button>
-            </div>
-            <div class="armory-scroll-container">
-              <div class="armory-section" data-armory-section="theme">
-                <div class="armory-section-title">🎨 OLED Stage Themes</div>
-                <div class="armory-grid" id="armory-themes-grid"></div>
-              </div>
-              <div class="armory-section" data-armory-section="flowFx">
-                <div class="armory-section-title">🌌 Flow State Atmospheres (Flow FX)</div>
-                <div class="armory-grid" id="armory-flowfx-grid"></div>
-              </div>
-              <div class="armory-section" data-armory-section="caret">
-                <div class="armory-section-title">│ Caret Geometries</div>
-                <div class="armory-grid" id="armory-carets-grid"></div>
-              </div>
-              <div class="armory-section" data-armory-section="caretFx">
-                <div class="armory-section-title">✨ Flow Caret Modifiers (Independent)</div>
-                <div class="armory-grid" id="armory-caretfx-grid"></div>
-              </div>
-              <div class="armory-section" data-armory-section="ghostStyle">
-                <div class="armory-section-title">👻 Ghost Cursor Pacer Styles</div>
-                <div class="armory-grid" id="armory-ghost-grid"></div>
-              </div>
-              <div class="armory-section" data-armory-section="sound">
-                <div class="armory-section-title">🔊 Mechanical Switch Sound Packs</div>
-                <div class="armory-grid" id="armory-sounds-grid"></div>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer space-between" style="margin-top: 18px;">
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <button class="btn-danger-outline" id="reset-rpg-stats-btn" title="Reset Flow RPG progress back to Level 1, 0 XP, and 1 Word">Reset RPG (Ground Zero) ↺</button>
-              <button class="btn-secondary" id="reset-classic-stats-btn" style="font-size: 12px; padding: 7px 14px;" title="Reset Classic Mode Personal Bests & Records">Clear Records</button>
-            </div>
-            <button class="btn-secondary" id="close-stats-footer-btn">Close</button>
           </div>
         </div>
       </section>
     </main>
-    <footer>
-      <div class="footer-left">
-        <span><span class="shortcut-badge">tab</span> + <span class="shortcut-badge">enter</span> - restart</span>
-        <span><span class="shortcut-badge">esc</span> - pause / hatchery</span>
-      </div>
-      <div class="footer-right">
-        <span>TypeFlow v4.0 • Flow RPG Edition</span>
-      </div>
-    </footer>
   </div>
   <script>
 const CONSTANTS = {
@@ -8340,6 +8834,7 @@ class NestView {
       document.getElementById('nest-slot-2')
     ] : []);
     this.nestHint = elements.nestHint || (typeof document !== 'undefined' ? document.getElementById('nest-hint') : null);
+    this.restartBtn = elements.restartBtn || (typeof document !== 'undefined' ? document.getElementById('restart-btn') : null);
     this.incubationTrack = elements.incubationTrack || (typeof document !== 'undefined' ? document.getElementById('nest-incubation-track') : null);
     this.incubationFill = elements.incubationFill || (typeof document !== 'undefined' ? document.getElementById('nest-incubation-fill') : null);
     this.flowRecapPill = elements.flowRecapPill || (typeof document !== 'undefined' ? document.getElementById('flow-recap-pill') : null);
@@ -8443,15 +8938,21 @@ class NestView {
     }, 200);
   }
   updateHint(isHatching, eggCount) {
-    if (!this.nestHint) return;
-    if (isHatching) {
-      this.nestHint.classList.add('visible');
-      this.nestHint.textContent = "type 'egg' (tab: back)";
-    } else if (eggCount > 0) {
-      this.nestHint.classList.add('visible');
-      this.nestHint.textContent = 'tab: hatch';
-    } else {
-      this.nestHint.classList.remove('visible');
+    if (this.nestHint) {
+      if (isHatching) {
+        this.nestHint.classList.add('visible');
+        this.nestHint.textContent = "type 'egg' (tab: back)";
+      } else if (eggCount >= 3) {
+        this.nestHint.classList.add('visible');
+        this.nestHint.textContent = 'tab: hatch';
+      } else {
+        this.nestHint.classList.remove('visible');
+        this.nestHint.textContent = '';
+      }
+    }
+    if (this.restartBtn) {
+      const shouldFadeOutRestart = isHatching || eggCount >= 3;
+      this.restartBtn.classList.toggle('fade-out', shouldFadeOutRestart);
     }
   }
   updateIncubation(chargePct = 0, comboTier = 'baseline', isFull = false) {
@@ -8512,7 +9013,12 @@ class HUDView {
     this.ghostSliderPill = elements.ghostSliderPill || (typeof document !== 'undefined' ? document.getElementById('ghost-slider-pill') : null);
     this.ghostSlider = elements.ghostSlider || (typeof document !== 'undefined' ? document.getElementById('ghost-slider') : null);
     this.ghostVal = elements.ghostVal || (typeof document !== 'undefined' ? document.getElementById('ghost-val') : null);
+    this.modsBtn = elements.modsBtn || (typeof document !== 'undefined' ? document.getElementById('mods-btn') : null);
+    this.modsPopover = elements.modsPopover || (typeof document !== 'undefined' ? document.getElementById('mods-popover') : null);
+    this.modsCloseBtn = elements.modsCloseBtn || (typeof document !== 'undefined' ? document.getElementById('mods-close-btn') : null);
+    this.modsActiveDot = elements.modsActiveDot || (typeof document !== 'undefined' ? document.getElementById('mods-active-dot') : null);
     this.timerEl = elements.timerEl || (typeof document !== 'undefined' ? document.getElementById('timer') : null);
+    this.restartBtn = elements.restartBtn || (typeof document !== 'undefined' ? document.getElementById('restart-btn') : null);
     this.restartBtnLabel = elements.restartBtnLabel || (typeof document !== 'undefined' ? document.getElementById('restart-btn-label') : null);
     this.liveStats = elements.liveStats || (typeof document !== 'undefined' ? document.getElementById('live-stats') : null);
     this.liveWpmEl = elements.liveWpmEl || (typeof document !== 'undefined' ? document.getElementById('live-wpm') : null);
@@ -8640,6 +9146,31 @@ class HUDView {
         if (handlers.onOpenArmory) handlers.onOpenArmory();
       });
     }
+    const modsBtn = this.modsBtn || ((typeof document !== 'undefined') ? document.getElementById('mods-btn') : null);
+    if (modsBtn) {
+      modsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleModsPopover();
+      });
+    }
+    const modsCloseBtn = this.modsCloseBtn || ((typeof document !== 'undefined') ? document.getElementById('mods-close-btn') : null);
+    if (modsCloseBtn) {
+      modsCloseBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleModsPopover(false);
+      });
+    }
+    if (typeof document !== 'undefined') {
+      document.addEventListener('click', (e) => {
+        const popover = this.modsPopover || document.getElementById('mods-popover');
+        const btn = this.modsBtn || document.getElementById('mods-btn');
+        if (popover && popover.style.display !== 'none') {
+          if (!popover.contains(e.target) && (!btn || !btn.contains(e.target))) {
+            this.toggleModsPopover(false);
+          }
+        }
+      });
+    }
   }
   setFocusOpacity(opacity) {
     if (typeof document !== 'undefined' && document.documentElement) {
@@ -8660,10 +9191,18 @@ class HUDView {
     if (this.flowTargetPill) this.flowTargetPill.style.display = isClassic ? 'none' : 'flex';
     if (this.levelHudCard) this.levelHudCard.style.display = isClassic ? 'none' : 'flex';
     if (this.restartBtnLabel) {
-      this.restartBtnLabel.textContent = isClassic ? 'restart test' : 'restart flow';
+      this.restartBtnLabel.textContent = 'tab';
+    }
+    if (this.restartBtn && isClassic) {
+      this.restartBtn.classList.remove('fade-out');
     }
     if (this.liveStats) {
       this.liveStats.classList.remove('visible');
+    }
+  }
+  setRestartPromptVisible(visible) {
+    if (this.restartBtn) {
+      this.restartBtn.classList.toggle('fade-out', !visible);
     }
   }
   updateTimer(timeLeft) {
@@ -8737,7 +9276,7 @@ class HUDView {
   }
   updateLevelCard(level, currentXp, reqXp, title) {
     if (!this.levelHudCard) return;
-    if (this.hudLevelBadge) this.hudLevelBadge.textContent = `Lv. ${level}`;
+    if (this.hudLevelBadge) this.hudLevelBadge.textContent = `LVL ${level}`;
     if (this.hudLevelTitle) this.hudLevelTitle.textContent = title;
     if (this.hudXpRatio) this.hudXpRatio.textContent = `${currentXp}/${reqXp} XP`;
     if (this.hudLevelBarFill) {
@@ -8763,6 +9302,7 @@ class HUDView {
   updateSoundState(enabled) {
     if (this.soundIconOn) this.soundIconOn.style.display = enabled ? 'block' : 'none';
     if (this.soundIconOff) this.soundIconOff.style.display = enabled ? 'none' : 'block';
+    this._refreshModsIndicator();
   }
   spawnXpToast(text, multiplier = 1.0, anchorEl = null, isBonus = false, isRainbow = false) {
     if (!this.xpToastLayer) return;
@@ -8821,6 +9361,7 @@ class HUDView {
     if (valEl) {
       valEl.textContent = `${distance} ${distance === 1 ? 'word' : 'words'}`;
     }
+    this._refreshModsIndicator();
   }
   updateGhostState(enabled, speed) {
     const btn = this.ghostBtn || ((typeof document !== 'undefined') ? document.getElementById('ghost-btn') : null);
@@ -8843,6 +9384,43 @@ class HUDView {
     if (valEl) {
       valEl.textContent = `${speed || 50} WPM`;
     }
+    this._refreshModsIndicator();
+  }
+  toggleModsPopover(forceState) {
+    const popover = this.modsPopover || ((typeof document !== 'undefined') ? document.getElementById('mods-popover') : null);
+    const btn = this.modsBtn || ((typeof document !== 'undefined') ? document.getElementById('mods-btn') : null);
+    if (!popover) return;
+    const isCurrentlyVisible = popover.style.display !== 'none';
+    const show = forceState !== undefined ? Boolean(forceState) : !isCurrentlyVisible;
+    popover.style.display = show ? 'flex' : 'none';
+    if (btn) {
+      btn.setAttribute('aria-expanded', show ? 'true' : 'false');
+      btn.classList.toggle('active', show);
+    }
+  }
+  isModsPopoverOpen() {
+    const popover = this.modsPopover || ((typeof document !== 'undefined') ? document.getElementById('mods-popover') : null);
+    return Boolean(popover && popover.style.display !== 'none');
+  }
+  updateModsActiveIndicator(isHdActive, isGhostActive, isSoundActive) {
+    const dot = this.modsActiveDot || ((typeof document !== 'undefined') ? document.getElementById('mods-active-dot') : null);
+    const btn = this.modsBtn || ((typeof document !== 'undefined') ? document.getElementById('mods-btn') : null);
+    const hasActiveMods = Boolean(isHdActive || isGhostActive || isSoundActive);
+    if (dot) {
+      dot.style.display = hasActiveMods ? 'inline-block' : 'none';
+    }
+    if (btn) {
+      btn.classList.toggle('has-active-mods', hasActiveMods);
+    }
+  }
+  _refreshModsIndicator() {
+    const hdBtn = this.hdBtn || ((typeof document !== 'undefined') ? document.getElementById('hd-btn') : null);
+    const ghostBtn = this.ghostBtn || ((typeof document !== 'undefined') ? document.getElementById('ghost-btn') : null);
+    const soundOn = this.soundIconOn || ((typeof document !== 'undefined') ? document.getElementById('sound-icon-on') : null);
+    const isHd = Boolean(hdBtn && hdBtn.classList.contains('active'));
+    const isGhost = Boolean(ghostBtn && ghostBtn.classList.contains('active'));
+    const isSound = Boolean(soundOn && soundOn.style.display !== 'none');
+    this.updateModsActiveIndicator(isHd, isGhost, isSound);
   }
   showAchievementToast(achievement) {
     if (!achievement) return;
@@ -9205,10 +9783,15 @@ class ModalView {
     this.tabStatsClassic = elements.tabStatsClassic || (typeof document !== 'undefined' ? document.getElementById('tab-stats-classic') : null);
     this.tabStatsTrophies = elements.tabStatsTrophies || (typeof document !== 'undefined' ? document.getElementById('tab-stats-trophies') : null);
     this.tabStatsArmory = elements.tabStatsArmory || (typeof document !== 'undefined' ? document.getElementById('tab-stats-armory') : null);
+    this.tabStatsMotor = elements.tabStatsMotor || (typeof document !== 'undefined' ? document.getElementById('tab-stats-motor') : null);
+    this.tabStatsConfig = elements.tabStatsConfig || (typeof document !== 'undefined' ? document.getElementById('tab-stats-config') : null);
     this.paneStatsFlow = elements.paneStatsFlow || (typeof document !== 'undefined' ? document.getElementById('pane-stats-flow') : null);
     this.paneStatsClassic = elements.paneStatsClassic || (typeof document !== 'undefined' ? document.getElementById('pane-stats-classic') : null);
     this.paneStatsTrophies = elements.paneStatsTrophies || (typeof document !== 'undefined' ? document.getElementById('pane-stats-trophies') : null);
     this.paneStatsArmory = elements.paneStatsArmory || (typeof document !== 'undefined' ? document.getElementById('pane-stats-armory') : null);
+    this.paneStatsMotor = elements.paneStatsMotor || (typeof document !== 'undefined' ? document.getElementById('pane-stats-motor') : null);
+    this.paneStatsConfig = elements.paneStatsConfig || (typeof document !== 'undefined' ? document.getElementById('pane-stats-config') : null);
+    this.drawerActiveTitle = elements.drawerActiveTitle || (typeof document !== 'undefined' ? document.getElementById('drawer-active-title') : null);
     this.trophiesCountEl = elements.trophiesCountEl || (typeof document !== 'undefined' ? document.getElementById('trophies-count') : null);
     this.trophiesProgressBar = elements.trophiesProgressBar || (typeof document !== 'undefined' ? document.getElementById('trophies-progress-bar') : null);
     this.trophiesGrid = elements.trophiesGrid || (typeof document !== 'undefined' ? document.getElementById('trophies-grid') : null);
@@ -9310,11 +9893,13 @@ class ModalView {
   openStatsModal(defaultTab = 'flow') {
     if (this.statsModal) {
       this.statsModal.style.display = 'flex';
+      this.statsModal.classList.add('open');
     }
     this.switchStatsTab(defaultTab);
   }
   closeStatsModal() {
     if (this.statsModal) {
+      this.statsModal.classList.remove('open');
       this.statsModal.style.display = 'none';
     }
   }
@@ -9323,14 +9908,31 @@ class ModalView {
     const isClassic = tabName === 'classic';
     const isTrophies = tabName === 'trophies';
     const isArmory = tabName === 'armory';
+    const isMotor = tabName === 'motor';
+    const isConfig = tabName === 'config';
     if (this.tabStatsFlow) this.tabStatsFlow.classList.toggle('active', isFlow);
     if (this.tabStatsClassic) this.tabStatsClassic.classList.toggle('active', isClassic);
     if (this.tabStatsTrophies) this.tabStatsTrophies.classList.toggle('active', isTrophies);
     if (this.tabStatsArmory) this.tabStatsArmory.classList.toggle('active', isArmory);
+    if (this.tabStatsMotor) this.tabStatsMotor.classList.toggle('active', isMotor);
+    if (this.tabStatsConfig) this.tabStatsConfig.classList.toggle('active', isConfig);
     if (this.paneStatsFlow) this.paneStatsFlow.style.display = isFlow ? 'flex' : 'none';
     if (this.paneStatsClassic) this.paneStatsClassic.style.display = isClassic ? 'flex' : 'none';
     if (this.paneStatsTrophies) this.paneStatsTrophies.style.display = isTrophies ? 'flex' : 'none';
     if (this.paneStatsArmory) this.paneStatsArmory.style.display = isArmory ? 'flex' : 'none';
+    if (this.paneStatsMotor) this.paneStatsMotor.style.display = isMotor ? 'flex' : 'none';
+    if (this.paneStatsConfig) this.paneStatsConfig.style.display = isConfig ? 'flex' : 'none';
+    if (this.drawerActiveTitle) {
+      const titles = {
+        flow: 'PROFILE // RPG OVERVIEW',
+        armory: 'ARMORY // COSMETIC REPOSITORY',
+        trophies: 'TROPHIES // ACHIEVEMENTS CASE',
+        classic: 'RECORDS // BENCHMARK ARCHIVE',
+        motor: 'MOTOR // NEUROMUSCULAR PATTERNS',
+        config: 'CONFIG // SYSTEM PARAMETERS'
+      };
+      this.drawerActiveTitle.textContent = titles[tabName] || 'PROFILE // OVERVIEW';
+    }
   }
   bindEvents(handlers = {}) {
     if (this.tabStatsFlow) {
@@ -9351,6 +9953,18 @@ class ModalView {
         if (handlers.onSelectArmoryTab) handlers.onSelectArmoryTab();
       });
     }
+    if (this.tabStatsMotor) {
+      this.tabStatsMotor.addEventListener('click', () => {
+        this.switchStatsTab('motor');
+        if (handlers.onSelectMotorTab) handlers.onSelectMotorTab();
+      });
+    }
+    if (this.tabStatsConfig) {
+      this.tabStatsConfig.addEventListener('click', () => {
+        this.switchStatsTab('config');
+        if (handlers.onSelectConfigTab) handlers.onSelectConfigTab();
+      });
+    }
     if (this.nextTestBtn) {
       this.nextTestBtn.addEventListener('click', () => {
         if (handlers.onNextTest) handlers.onNextTest();
@@ -9358,6 +9972,7 @@ class ModalView {
     }
     const closeStatsBtn = (typeof document !== 'undefined') ? document.getElementById('close-stats-btn') : null;
     const closeStatsFooterBtn = (typeof document !== 'undefined') ? document.getElementById('close-stats-footer-btn') : null;
+    const closeStatsTopBtn = (typeof document !== 'undefined') ? document.getElementById('close-stats-top-btn') : null;
     if (closeStatsBtn) {
       closeStatsBtn.addEventListener('click', () => {
         if (handlers.onCloseStats) handlers.onCloseStats();
@@ -9366,6 +9981,18 @@ class ModalView {
     if (closeStatsFooterBtn) {
       closeStatsFooterBtn.addEventListener('click', () => {
         if (handlers.onCloseStats) handlers.onCloseStats();
+      });
+    }
+    if (closeStatsTopBtn) {
+      closeStatsTopBtn.addEventListener('click', () => {
+        if (handlers.onCloseStats) handlers.onCloseStats();
+      });
+    }
+    if (this.statsModal) {
+      this.statsModal.addEventListener('click', (e) => {
+        if (e.target === this.statsModal) {
+          if (handlers.onCloseStats) handlers.onCloseStats();
+        }
       });
     }
     const statsBtn = (typeof document !== 'undefined') ? document.getElementById('stats-btn') : null;
@@ -10133,6 +10760,8 @@ class GameController {
     this.isGhostRunning = false;
     this.ghostNeedsSync = true;
     this._onWindowResize = null;
+    this.isZenActive = false;
+    this.zenTimer = null;
     const KBClass = deps.keyboardControllerClass || _KeyboardController;
     if (KBClass) {
       this.keyboardController = new KBClass({
@@ -10239,7 +10868,7 @@ class GameController {
         if (status.state === 'occupied') {
           if (this.eggNestModel.hatchingSlotIndex === slotIdx) {
             this.exitHatchMode();
-          } else {
+          } else if (this.eggNestModel.basket.length >= 3) {
             this.enterHatchMode(slotIdx);
           }
         }
@@ -10325,6 +10954,11 @@ class GameController {
         }
       };
       window.addEventListener('resize', this._onWindowResize);
+    }
+    if (typeof document !== 'undefined') {
+      document.addEventListener('mousemove', () => {
+        this.deactivateZenFocus();
+      });
     }
     if (this.achievementsModel && this.storageService.syncRetroactiveAchievements) {
       const newRetroUnlocks = this.storageService.syncRetroactiveAchievements(this.achievementsModel);
@@ -10667,6 +11301,7 @@ class GameController {
     }
   }
   resetTest() {
+    this.deactivateZenFocus();
     if (this.classicTimerInterval) {
       clearInterval(this.classicTimerInterval);
       this.classicTimerInterval = null;
@@ -10759,6 +11394,7 @@ class GameController {
     }, 1000);
   }
   endClassicTest() {
+    this.deactivateZenFocus();
     this.lastTestFinishedTime = Date.now();
     const stats = this.sessionModel.calculateFinalStats();
     this.stopGhostPacer(true);
@@ -10816,6 +11452,7 @@ class GameController {
   handleChar(char) {
     if (this.sessionModel.isFinished) return;
     this.audioService.init();
+    this.onTypingActivity();
     if (!this.sessionModel.isActive && this.currentMode === 'classic') {
       this.startClassicTimer();
     }
@@ -10872,6 +11509,7 @@ class GameController {
   }
   handleBackspace() {
     if (this.sessionModel.isFinished) return;
+    this.onTypingActivity();
     this.lastKeystrokeTime = null;
     if (this.sessionModel.currentCharIdx === 0) {
       if (this.sessionModel.currentWordIdx > 0) {
@@ -10917,6 +11555,7 @@ class GameController {
   handleSpace() {
     if (this.sessionModel.isFinished) return;
     if (this.sessionModel.currentCharIdx === 0) return;
+    this.onTypingActivity();
     this.lastKeystrokeTime = null;
     this.flowModel.recordKeystroke();
     this.audioService.init();
@@ -11269,13 +11908,18 @@ class GameController {
       this.exitHatchMode();
       return;
     }
-    if (this.currentMode === 'flow' && this.eggNestModel.basket.length > 0) {
+    if (this.currentMode === 'flow' && this.eggNestModel.basket.length >= 3) {
       this.enterHatchMode();
       return;
     }
     this.resetTest();
   }
   handleEscape() {
+    this.deactivateZenFocus();
+    if (this.hudView && this.hudView.isModsPopoverOpen && this.hudView.isModsPopoverOpen()) {
+      this.hudView.toggleModsPopover(false);
+      return;
+    }
     if (this.eggNestModel.isHatching()) {
       this.exitHatchMode();
       return;
@@ -11353,6 +11997,42 @@ class GameController {
       return this.dismissFlowRecap(false);
     }
     return this.openFlowRecap(false);
+  }
+  _getDoc() {
+    const inputDoc = (this.stageView && this.stageView.typingInput && this.stageView.typingInput.ownerDocument);
+    if (inputDoc && typeof inputDoc.getElementById === 'function') {
+      return inputDoc;
+    }
+    return (typeof document !== 'undefined' && typeof document.getElementById === 'function') ? document : null;
+  }
+  activateZenFocus() {
+    if (this.isZenActive) return;
+    this.isZenActive = true;
+    const doc = this._getDoc();
+    if (doc) {
+      const appEl = (typeof doc.getElementById === 'function') ? (doc.getElementById('app') || doc.body) : doc.body;
+      if (appEl && appEl.classList) appEl.classList.add('zen-active');
+    }
+  }
+  deactivateZenFocus() {
+    if (this.zenTimer) {
+      clearTimeout(this.zenTimer);
+      this.zenTimer = null;
+    }
+    if (!this.isZenActive) return;
+    this.isZenActive = false;
+    const doc = this._getDoc();
+    if (doc) {
+      const appEl = (typeof doc.getElementById === 'function') ? (doc.getElementById('app') || doc.body) : doc.body;
+      if (appEl && appEl.classList) appEl.classList.remove('zen-active');
+    }
+  }
+  onTypingActivity() {
+    this.activateZenFocus();
+    if (this.zenTimer) clearTimeout(this.zenTimer);
+    this.zenTimer = setTimeout(() => {
+      this.deactivateZenFocus();
+    }, 1000);
   }
   openStats(tab = 'flow') {
     this.resetTest();
