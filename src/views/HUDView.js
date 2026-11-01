@@ -40,6 +40,11 @@ class HUDView {
     this.ghostSliderPill = elements.ghostSliderPill || (typeof document !== 'undefined' ? document.getElementById('ghost-slider-pill') : null);
     this.ghostSlider = elements.ghostSlider || (typeof document !== 'undefined' ? document.getElementById('ghost-slider') : null);
     this.ghostVal = elements.ghostVal || (typeof document !== 'undefined' ? document.getElementById('ghost-val') : null);
+    this.wordDiffEasy = elements.wordDiffEasy || (typeof document !== 'undefined' ? document.getElementById('word-diff-easy') : null);
+    this.wordDiffNormal = elements.wordDiffNormal || (typeof document !== 'undefined' ? document.getElementById('word-diff-normal') : null);
+    this.wordDiffHard = elements.wordDiffHard || (typeof document !== 'undefined' ? document.getElementById('word-diff-hard') : null);
+    this.punctBtn = elements.punctBtn || (typeof document !== 'undefined' ? document.getElementById('punct-btn') : null);
+    this.capsBtn = elements.capsBtn || (typeof document !== 'undefined' ? document.getElementById('caps-btn') : null);
 
     // Mods Folder / Popover Controls
     this.modsBtn = elements.modsBtn || (typeof document !== 'undefined' ? document.getElementById('mods-btn') : null);
@@ -173,6 +178,39 @@ class HUDView {
       });
     }
 
+    const diffEasy = this.wordDiffEasy || ((typeof document !== 'undefined') ? document.getElementById('word-diff-easy') : null);
+    const diffNormal = this.wordDiffNormal || ((typeof document !== 'undefined') ? document.getElementById('word-diff-normal') : null);
+    const diffHard = this.wordDiffHard || ((typeof document !== 'undefined') ? document.getElementById('word-diff-hard') : null);
+    if (diffEasy) {
+      diffEasy.addEventListener('click', () => {
+        if (handlers.onWordDifficultyChange) handlers.onWordDifficultyChange('easy');
+      });
+    }
+    if (diffNormal) {
+      diffNormal.addEventListener('click', () => {
+        if (handlers.onWordDifficultyChange) handlers.onWordDifficultyChange('normal');
+      });
+    }
+    if (diffHard) {
+      diffHard.addEventListener('click', () => {
+        if (handlers.onWordDifficultyChange) handlers.onWordDifficultyChange('hard');
+      });
+    }
+
+    const punctBtn = this.punctBtn || ((typeof document !== 'undefined') ? document.getElementById('punct-btn') : null);
+    if (punctBtn) {
+      punctBtn.addEventListener('click', () => {
+        if (handlers.onPunctuationToggle) handlers.onPunctuationToggle();
+      });
+    }
+
+    const capsBtn = this.capsBtn || ((typeof document !== 'undefined') ? document.getElementById('caps-btn') : null);
+    if (capsBtn) {
+      capsBtn.addEventListener('click', () => {
+        if (handlers.onCapitalsToggle) handlers.onCapitalsToggle();
+      });
+    }
+
     const restartBtn = (typeof document !== 'undefined') ? document.getElementById('restart-btn') : null;
     const brandLogo = (typeof document !== 'undefined') ? document.getElementById('brand-logo') : null;
     if (restartBtn) {
@@ -211,8 +249,11 @@ class HUDView {
       });
     }
 
-    if (typeof document !== 'undefined') {
-      document.addEventListener('click', (e) => {
+    if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+      if (this._onDocClick && typeof document.removeEventListener === 'function') {
+        document.removeEventListener('click', this._onDocClick);
+      }
+      this._onDocClick = (e) => {
         const popover = this.modsPopover || document.getElementById('mods-popover');
         const btn = this.modsBtn || document.getElementById('mods-btn');
         if (popover && popover.style.display !== 'none') {
@@ -220,7 +261,8 @@ class HUDView {
             this.toggleModsPopover(false);
           }
         }
-      });
+      };
+      document.addEventListener('click', this._onDocClick);
     }
   }
 
@@ -495,6 +537,42 @@ class HUDView {
     this._refreshModsIndicator();
   }
 
+  updateWordDifficultyState(difficulty = 'normal') {
+    const clean = (difficulty === 'easy' || difficulty === 'hard') ? difficulty : 'normal';
+    const easyBtn = this.wordDiffEasy || ((typeof document !== 'undefined') ? document.getElementById('word-diff-easy') : null);
+    const normalBtn = this.wordDiffNormal || ((typeof document !== 'undefined') ? document.getElementById('word-diff-normal') : null);
+    const hardBtn = this.wordDiffHard || ((typeof document !== 'undefined') ? document.getElementById('word-diff-hard') : null);
+
+    if (easyBtn) easyBtn.classList.toggle('active', clean === 'easy');
+    if (normalBtn) normalBtn.classList.toggle('active', clean === 'normal');
+    if (hardBtn) hardBtn.classList.toggle('active', clean === 'hard');
+    this._refreshModsIndicator();
+  }
+
+  updatePunctuationState(enabled = false) {
+    const btn = this.punctBtn || ((typeof document !== 'undefined') ? document.getElementById('punct-btn') : null);
+    if (btn) {
+      btn.classList.toggle('active', !!enabled);
+      btn.setAttribute('aria-pressed', String(!!enabled));
+      btn.title = enabled
+        ? 'Punctuation Mode: ON - Click to disable'
+        : 'Toggle Punctuation (. , ! ? \' " -)';
+    }
+    this._refreshModsIndicator();
+  }
+
+  updateCapitalsState(enabled = false) {
+    const btn = this.capsBtn || ((typeof document !== 'undefined') ? document.getElementById('caps-btn') : null);
+    if (btn) {
+      btn.classList.toggle('active', !!enabled);
+      btn.setAttribute('aria-pressed', String(!!enabled));
+      btn.title = enabled
+        ? 'Capital Letters Mode: ON - Click to disable'
+        : 'Toggle Capital Letters at the start of words';
+    }
+    this._refreshModsIndicator();
+  }
+
   toggleModsPopover(forceState) {
     const popover = this.modsPopover || ((typeof document !== 'undefined') ? document.getElementById('mods-popover') : null);
     const btn = this.modsBtn || ((typeof document !== 'undefined') ? document.getElementById('mods-btn') : null);
@@ -513,10 +591,10 @@ class HUDView {
     return Boolean(popover && popover.style.display !== 'none');
   }
 
-  updateModsActiveIndicator(isHdActive, isGhostActive, isSoundActive) {
+  updateModsActiveIndicator(isHdActive, isGhostActive, isSoundActive, isExtraModActive = false) {
     const dot = this.modsActiveDot || ((typeof document !== 'undefined') ? document.getElementById('mods-active-dot') : null);
     const btn = this.modsBtn || ((typeof document !== 'undefined') ? document.getElementById('mods-btn') : null);
-    const hasActiveMods = Boolean(isHdActive || isGhostActive || isSoundActive);
+    const hasActiveMods = Boolean(isHdActive || isGhostActive || isSoundActive || isExtraModActive);
     if (dot) {
       dot.style.display = hasActiveMods ? 'inline-block' : 'none';
     }
@@ -529,12 +607,19 @@ class HUDView {
     const hdBtn = this.hdBtn || ((typeof document !== 'undefined') ? document.getElementById('hd-btn') : null);
     const ghostBtn = this.ghostBtn || ((typeof document !== 'undefined') ? document.getElementById('ghost-btn') : null);
     const soundOn = this.soundIconOn || ((typeof document !== 'undefined') ? document.getElementById('sound-icon-on') : null);
+    const punctBtn = this.punctBtn || ((typeof document !== 'undefined') ? document.getElementById('punct-btn') : null);
+    const capsBtn = this.capsBtn || ((typeof document !== 'undefined') ? document.getElementById('caps-btn') : null);
+    const easyBtn = this.wordDiffEasy || ((typeof document !== 'undefined') ? document.getElementById('word-diff-easy') : null);
+    const hardBtn = this.wordDiffHard || ((typeof document !== 'undefined') ? document.getElementById('word-diff-hard') : null);
 
     const isHd = Boolean(hdBtn && hdBtn.classList.contains('active'));
     const isGhost = Boolean(ghostBtn && ghostBtn.classList.contains('active'));
     const isSound = Boolean(soundOn && soundOn.style.display !== 'none');
+    const isPunct = Boolean(punctBtn && punctBtn.classList.contains('active'));
+    const isCaps = Boolean(capsBtn && capsBtn.classList.contains('active'));
+    const isCustomDiff = Boolean((easyBtn && easyBtn.classList.contains('active')) || (hardBtn && hardBtn.classList.contains('active')));
 
-    this.updateModsActiveIndicator(isHd, isGhost, isSound);
+    this.updateModsActiveIndicator(isHd, isGhost, isSound, isPunct || isCaps || isCustomDiff);
   }
 
   /**
@@ -632,6 +717,19 @@ class HUDView {
       this.flowVignetteOverlay.classList.add(`flow-fx-${this.activeFlowFxId}`);
     }
     return this.activeFlowFxId;
+  }
+
+  destroy() {
+    if (this._onDocClick && typeof document !== 'undefined' && typeof document.removeEventListener === 'function') {
+      document.removeEventListener('click', this._onDocClick);
+      this._onDocClick = null;
+    }
+    if (this.toastTimeout) {
+      clearTimeout(this.toastTimeout);
+      this.toastTimeout = null;
+    }
+    this.toastQueue = [];
+    this.isToastShowing = false;
   }
 }
 

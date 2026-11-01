@@ -5,23 +5,11 @@
  * Zero DOM dependencies.
  */
 
-var _EventEmitter = (typeof EventEmitter !== 'undefined') ? EventEmitter : null;
-if (!_EventEmitter && typeof require !== 'undefined') {
-  try {
-    _EventEmitter = require('../core/EventEmitter.js').EventEmitter;
-  } catch (e) {}
-}
-if (!_EventEmitter) {
-  _EventEmitter = class {
-    constructor() { this._listeners = new Map(); }
-    on(event, handler) { if (!this._listeners.has(event)) this._listeners.set(event, []); this._listeners.get(event).push(handler); return () => this.off(event, handler); }
-    off(event, handler) { const l = this._listeners.get(event); if (!l) return; const i = l.indexOf(handler); if (i !== -1) l.splice(i, 1); }
-    emit(event, ...args) { const l = this._listeners.get(event); if (!l) return; l.slice().forEach(fn => { try { fn(...args); } catch(e) { console.error(e); } }); }
-    removeAllListeners(event) { if (event) this._listeners.delete(event); else this._listeners.clear(); }
-  };
-}
+var _NestEmitterBase = (typeof EventEmitter !== 'undefined')
+  ? EventEmitter
+  : (typeof require !== 'undefined' ? require('../core/EventEmitter.js').EventEmitter : class {});
 
-class EggNestModel extends _EventEmitter {
+class EggNestModel extends _NestEmitterBase {
   constructor(options = {}) {
     super();
     this.maxSlots = options.maxSlots || 3;

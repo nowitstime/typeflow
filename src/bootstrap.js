@@ -13,6 +13,7 @@
     const sessionModel = new SessionModel();
     const flowModel = new FlowModel();
     const eggNestModel = new EggNestModel();
+    const ghostPacerModel = (typeof GhostPacerModel !== 'undefined') ? new GhostPacerModel() : null;
 
     const storageService = (typeof StorageManager !== 'undefined') ? StorageManager : new StorageService();
     const audio = (typeof audioService !== 'undefined') ? audioService : new AudioService();
@@ -28,6 +29,7 @@
       sessionModel,
       flowModel,
       eggNestModel,
+      ghostPacerModel,
       storageService,
       audioService: audio,
       stageView,

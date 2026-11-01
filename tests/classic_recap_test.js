@@ -414,6 +414,7 @@ it('opens classic recap and renders timeline graph when selecting a classic reco
   assert.ok(renderedHistory, 'Chart must be rendered');
   assert.strictEqual(renderedHistory.length, 2);
   assert.strictEqual(renderedHistory[1].wpm, 90);
+  controller.destroy();
 });
 
 it('switches to classic mode if clicked from flow mode stats view', () => {
@@ -438,6 +439,7 @@ it('switches to classic mode if clicked from flow mode stats view', () => {
   assert.strictEqual(controller.currentMode, 'classic', 'Must switch mode to classic');
   assert.strictEqual(controller.isClassicRecapVisible, true);
   assert.strictEqual(chartCalled, true);
+  controller.destroy();
 });
 
 it('dismisses classic recap when Next Test is triggered', () => {
@@ -459,6 +461,7 @@ it('dismisses classic recap when Next Test is triggered', () => {
   assert.strictEqual(controller.isClassicRecapVisible, false);
   assert.strictEqual(controller.modalView.resultsSection.classList.contains('visible'), false);
   assert.strictEqual(controller.modalView.testSection.style.display, 'flex');
+  controller.destroy();
 });
 
 it('generates fallback timeline for legacy records that lack wpmHistory', () => {
@@ -483,6 +486,7 @@ it('generates fallback timeline for legacy records that lack wpmHistory', () => 
   assert.strictEqual(renderedHistory.length, 15);
   assert.strictEqual(renderedHistory[0].wpm, 70);
   assert.strictEqual(renderedHistory[14].second, 15);
+  controller.destroy();
 });
 
 it('KeyboardController treats isClassicRecapOpen as finished screen preventing space restart', () => {

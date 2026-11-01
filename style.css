@@ -126,7 +126,7 @@ header {
 }
 
 .mode-tab.active {
-  background: var(--bg-primary);
+  background: var(--bg-color);
   color: var(--main-color);
   border: none;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
@@ -189,13 +189,15 @@ header {
   top: calc(100% + 8px);
   right: 0;
   width: 320px;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
   background: #080c10;
   border: 1px solid var(--border-color);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.95), 0 0 16px color-mix(in srgb, var(--main-color) 12%, transparent);
   padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   z-index: 60;
   animation: popoverFadeIn 0.15s ease-out;
 }
@@ -1035,17 +1037,6 @@ main {
 
 .flow-recap-pill {
   display: none !important;
-}
-
-.flow-recap-pill .key-hint {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 0px;
-  background: var(--sub-alt-color);
-  border: 1px solid var(--border-color);
-  color: var(--main-color);
 }
 
 /* Results Section */
@@ -2394,8 +2385,6 @@ main {
 
 /* Focus Mode Ambient Dimming (Continuous Analog Dimmer) */
 header .header-left,
-header .header-controls,
-header .header-actions,
 #brand-logo {
   opacity: var(--focus-opacity, 1);
   transition: opacity 0.15s ease-out;

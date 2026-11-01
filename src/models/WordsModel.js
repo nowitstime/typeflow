@@ -43,6 +43,44 @@ const CLASSIC_WEIGHTS = RAW_WORDS_LIST.map((word, i) => {
 });
 const CLASSIC_TOTAL_WEIGHT = CLASSIC_WEIGHTS.reduce((a, b) => a + b, 0);
 
+// Easy Mode ("Monkeytype 200" feel): Top 200 most common words, capped at <= 6 letters
+const CLASSIC_WEIGHTS_EASY = RAW_WORDS_LIST.map((word, i) => {
+  if (i >= 200 || word.length > 6) return 0;
+  const base = i < 80 ? (0.65 / 80) : (0.35 / 120);
+  const lenMult = word.length <= 2 ? 0.55 : (word.length <= 5 ? 1.25 : 0.90);
+  return base * lenMult;
+});
+const CLASSIC_TOTAL_EASY = CLASSIC_WEIGHTS_EASY.reduce((a, b) => a + b, 0);
+
+// Hard Mode: Full 1,000-word pool heavily weighted toward Uncommon/Rare/Epic & longer words
+const CLASSIC_WEIGHTS_HARD = RAW_WORDS_LIST.map((word, i) => {
+  let base;
+  if (i < 100) base = 0.08 / 100;
+  else if (i < 350) base = 0.22 / 250;
+  else if (i < 700) base = 0.38 / 350;
+  else base = 0.32 / 300;
+  const len = word.length;
+  const lenMult = len <= 3 ? 0.05
+                : len === 4 ? 0.25
+                : len === 5 ? 0.65
+                : len === 6 ? 1.15
+                : len === 7 ? 1.60 : 2.20;
+  return base * lenMult;
+});
+const CLASSIC_TOTAL_HARD = CLASSIC_WEIGHTS_HARD.reduce((a, b) => a + b, 0);
+
+const CLASSIC_WEIGHTS_BY_DIFFICULTY = {
+  easy: CLASSIC_WEIGHTS_EASY,
+  normal: CLASSIC_WEIGHTS,
+  hard: CLASSIC_WEIGHTS_HARD
+};
+
+const CLASSIC_TOTAL_BY_DIFFICULTY = {
+  easy: CLASSIC_TOTAL_EASY,
+  normal: CLASSIC_TOTAL_WEIGHT,
+  hard: CLASSIC_TOTAL_HARD
+};
+
 // 2. Keyboard Geography & Friction Sets
 const LEFT_HAND = new Set("qwertasdfgzxcvb".split(""));
 const TOP_ROW   = new Set("qwertyuiop".split(""));
@@ -797,18 +835,105 @@ function getSrsWeightedRandomWords(unlockedRanks, userStats, targetWpm, count = 
   return generateWords(count, unlockedRanks, DICTIONARY, userStats, targetWpm, currentMomentum, bigramLedger);
 }
 
-function getRandomWords(count = 70, recentBuffer = null) {
+const CONTRACTION_MAP = {
+  do: "don't",
+  can: "can't",
+  will: "won't",
+  it: "it's",
+  that: "that's",
+  what: "what's",
+  there: "there's",
+  he: "he's",
+  she: "she's",
+  we: "we're",
+  they: "they're",
+  you: "you're",
+  would: "wouldn't",
+  could: "couldn't",
+  should: "shouldn't",
+  have: "haven't",
+  not: "isn't"
+};
+
+const REVERSE_CONTRACTION_MAP = Object.entries(CONTRACTION_MAP).reduce((acc, [base, contracted]) => {
+  acc[contracted] = base;
+  return acc;
+}, {});
+
+function capitalizeFirstLetter(word) {
+  if (!word || typeof word !== 'string') return word;
+  return word.replace(/[a-zA-Z]/, ch => ch.toUpperCase());
+}
+
+/**
+ * Applies natural sentence capitalization and/or punctuation to a word array.
+ * Keeps ';' unused so the home-row ';;' Flow Recap shortcut remains conflict-free.
+ */
+function applyTextModifiers(words = [], options = {}, state = null) {
+  if (!Array.isArray(words) || words.length === 0) return [];
+  const capitals = Boolean(options && options.capitals);
+  const punctuation = Boolean(options && options.punctuation);
+  if (!capitals && !punctuation) return words.slice();
+
+  const tracker = (state && typeof state === 'object')
+    ? state
+    : { forceNextCapital: punctuation && capitals };
+
+  return words.map((rawWord) => {
+    let w = String(rawWord || '');
+    if (!w) return w;
+
+    const lower = w.toLowerCase();
+    const shouldCap = capitals && (tracker.forceNextCapital || Math.random() < 0.20);
+    tracker.forceNextCapital = false;
+
+    if (punctuation) {
+      if (CONTRACTION_MAP[lower] && Math.random() < 0.28) {
+        w = CONTRACTION_MAP[lower];
+      } else if (Math.random() < 0.22) {
+        const roll = Math.random();
+        if (roll < 0.45) {
+          w = w + ',';
+        } else if (roll < 0.75) {
+          w = w + '.';
+          tracker.forceNextCapital = true;
+        } else if (roll < 0.83) {
+          w = w + '?';
+          tracker.forceNextCapital = true;
+        } else if (roll < 0.90) {
+          w = w + '!';
+          tracker.forceNextCapital = true;
+        } else if (roll < 0.95) {
+          w = `"${w}"`;
+        } else {
+          w = w + '-';
+        }
+      }
+    }
+
+    if (shouldCap) {
+      w = capitalizeFirstLetter(w);
+    }
+
+    return w;
+  });
+}
+
+function getRandomWords(count = 70, recentBuffer = null, difficulty = 'normal') {
   const result = [];
   const bufferCap = 20;
   const buffer = recentBuffer || [];
+  const diffKey = (difficulty === 'easy' || difficulty === 'hard') ? difficulty : 'normal';
+  const weights = CLASSIC_WEIGHTS_BY_DIFFICULTY[diffKey] || CLASSIC_WEIGHTS;
+  const totalWeight = CLASSIC_TOTAL_BY_DIFFICULTY[diffKey] || CLASSIC_TOTAL_WEIGHT;
 
   for (let i = 0; i < count; i++) {
     let word;
     for (let attempts = 0; attempts < 60; attempts++) {
-      let r = Math.random() * CLASSIC_TOTAL_WEIGHT;
+      let r = Math.random() * totalWeight;
       let idx = 0;
-      for (let j = 0; j < CLASSIC_WEIGHTS.length; j++) {
-        r -= CLASSIC_WEIGHTS[j];
+      for (let j = 0; j < weights.length; j++) {
+        r -= weights[j];
         if (r <= 0) {
           idx = j;
           break;
@@ -828,6 +953,7 @@ class WordsModel {
   constructor(dictionary = DICTIONARY) {
     this.dictionary = dictionary;
     this.classicBuffer = [];
+    this.textModState = { forceNextCapital: true };
     this.rankedWords = dictionary.map(d => d.word);
     this.wordByRank = new Map();
     this.wordByText = new Map();
@@ -844,16 +970,34 @@ class WordsModel {
   }
 
   getWordByText(text) {
-    const raw = this.wordByText.get(text);
+    if (!text || typeof text !== 'string') return null;
+    let raw = this.wordByText.get(text);
+    if (!raw) {
+      const stripped = text.replace(/^[^a-zA-Z]+|[^a-zA-Z]+$/g, '').toLowerCase();
+      const base = REVERSE_CONTRACTION_MAP[stripped] || stripped.replace(/[^a-z]/g, '');
+      raw = this.wordByText.get(base);
+    }
     return raw ? getWordMetadata(raw.rank) : null;
   }
 
-  generateBatch(count, unlockedRanks, userStats, targetWpm, currentMomentum, bigramLedger = null) {
-    return generateWords(count, unlockedRanks, this.dictionary, userStats, targetWpm, currentMomentum, bigramLedger || this.bigramLedger);
+  generateBatch(count, unlockedRanks, userStats, targetWpm, currentMomentum, bigramLedger = null, textModOptions = null) {
+    const words = generateWords(count, unlockedRanks, this.dictionary, userStats, targetWpm, currentMomentum, bigramLedger || this.bigramLedger);
+    if (textModOptions && (textModOptions.capitals || textModOptions.punctuation)) {
+      return this.applyTextModifiers(words, textModOptions);
+    }
+    return words;
   }
 
-  generateClassicBatch(count = 70) {
-    return getRandomWords(count, this.classicBuffer);
+  generateClassicBatch(count = 70, difficulty = 'normal', textModOptions = null) {
+    const words = getRandomWords(count, this.classicBuffer, difficulty);
+    if (textModOptions && (textModOptions.capitals || textModOptions.punctuation)) {
+      return this.applyTextModifiers(words, textModOptions);
+    }
+    return words;
+  }
+
+  applyTextModifiers(words = [], options = {}) {
+    return applyTextModifiers(words, options, this.textModState);
   }
 
   getAnchors(unlockedRanks, userStats, bigramLedger = null) {
@@ -879,6 +1023,7 @@ class WordsModel {
   resetHistory() {
     resetRecentHistory();
     this.classicBuffer = [];
+    this.textModState = { forceNextCapital: true };
   }
 
   rollEgg(unlockedRanks, streak = 0, forceRarity = null, wordStats = {}, targetWpm = 40, pendingRanks = [], bigramLedger = null) {
@@ -891,6 +1036,9 @@ if (typeof window !== 'undefined') {
   window.RAW_WORDS_LIST = RAW_WORDS_LIST;
   window.CLASSIC_WEIGHTS = CLASSIC_WEIGHTS;
   window.CLASSIC_TOTAL_WEIGHT = CLASSIC_TOTAL_WEIGHT;
+  window.CLASSIC_WEIGHTS_BY_DIFFICULTY = CLASSIC_WEIGHTS_BY_DIFFICULTY;
+  window.CLASSIC_TOTAL_BY_DIFFICULTY = CLASSIC_TOTAL_BY_DIFFICULTY;
+  window.applyTextModifiers = applyTextModifiers;
   window.getClassicTypabilityMultiplier = getClassicTypabilityMultiplier;
   window.RANKED_WORDS = RANKED_WORDS;
   window.DICTIONARY = DICTIONARY;
@@ -925,6 +1073,9 @@ if (typeof module !== 'undefined' && module.exports) {
     RAW_WORDS_LIST,
     CLASSIC_WEIGHTS,
     CLASSIC_TOTAL_WEIGHT,
+    CLASSIC_WEIGHTS_BY_DIFFICULTY,
+    CLASSIC_TOTAL_BY_DIFFICULTY,
+    applyTextModifiers,
     getClassicTypabilityMultiplier,
     RANKED_WORDS,
     DICTIONARY,

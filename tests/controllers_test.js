@@ -1213,6 +1213,38 @@ it('Tab only enters hatch mode when player has 3 eggs, otherwise resets session 
   assert.strictEqual(eggNestModel.isHatching(), false);
 });
 
+it('GameController manages Word Difficulty (Easy/Normal/Hard in Classic Mode), Punctuation, and Capital Letters mods', () => {
+  const { controller, storageService, sessionModel } = createTestHarness();
+  controller.init();
+
+  assert.strictEqual(controller.wordDifficulty, 'normal');
+  assert.strictEqual(controller.punctuationEnabled, false);
+  assert.strictEqual(controller.capitalsEnabled, false);
+
+  // Switch to Classic Mode and select Easy difficulty
+  controller.switchMode('classic');
+  controller.setWordDifficulty('easy');
+  assert.strictEqual(storageService.getWordDifficulty(), 'easy');
+  assert.ok(sessionModel.words.every(w => w.length <= 6), 'All Classic Easy words should be <= 6 chars');
+
+  // Enable Capital Letters & Punctuation
+  controller.toggleCapitalsMode();
+  controller.togglePunctuationMode();
+  assert.strictEqual(storageService.getCapitalsMode(), true);
+  assert.strictEqual(storageService.getPunctuationMode(), true);
+  assert.ok(sessionModel.words.some(w => /[A-Z]/.test(w)), 'Words should contain capital letters when Capitals mod is on');
+
+  // Type the first word (including any uppercase or punctuation characters) cleanly
+  const firstWord = sessionModel.getCurrentWordText();
+  for (const ch of firstWord) {
+    controller.handleChar(ch);
+  }
+  controller.handleSpace();
+  assert.strictEqual(sessionModel.currentWordIdx, 1);
+  assert.strictEqual(sessionModel.incorrectKeystrokes, 0);
+  controller.destroy();
+});
+
 console.log('\n========================================');
 console.log(`TEST RESULTS: ${passedTests} / ${totalTests} PASSED`);
 if (passedTests === totalTests) {

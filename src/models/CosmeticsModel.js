@@ -1,12 +1,12 @@
 /**
  * TypeFlow - CosmeticsModel
  * Pure headless model for Level Progression Unlocks & Cosmetic Armory (v4.0).
- * Defines 32 procedural cosmetics across 6 categories:
+ * Defines 34 procedural cosmetics across 6 categories:
  *   - 6 OLED Themes & Palettes
  *   - 6 Flow FX Atmospheres & Shaders
  *   - 5 Caret Geometries & Physics
  *   - 6 Caret FX Modifiers
- *   - 4 Ghost Pacer Rival Styles
+ *   - 6 Ghost Pacer Rival Styles
  *   - 5 Web Audio Mechanical Switch Sound Packs
  * Zero DOM or storage dependencies.
  */
@@ -300,8 +300,8 @@ const COSMETIC_FLOW_FX = {
     icon: '🕸️',
     desc: 'Synthwave wireframe laser frame with perspective corner grids and subtle CRT scanlines.',
     reqLevel: 11,
-    reqTrophies: ['flow_architect'],
-    reqLabel: 'Lv. 11 or Flow Architect Trophy',
+    reqTrophies: ['lexicon_architect'],
+    reqLabel: 'Lv. 11 or Lexicon Architect Trophy',
     swatches: ['#e879f9', '#22d3ee', '#7928ca']
   },
   solar_flame: {
@@ -311,8 +311,8 @@ const COSMETIC_FLOW_FX = {
     icon: '🔥',
     desc: 'Procedural organic flames generated via SVG turbulence filters with rising combustion embers.',
     reqLevel: 16,
-    reqTrophies: ['unstoppable_current', 'supersonic_90'],
-    reqLabel: 'Lv. 16 or Unstoppable / Supersonic',
+    reqTrophies: ['unbroken_stream', 'triple_digits'],
+    reqLabel: 'Lv. 16 or Unbroken Stream / Triple Digits',
     swatches: ['#dc2626', '#f97316', '#fbbf24', '#fef08a']
   },
   hyperdrive_warp: {
@@ -322,8 +322,8 @@ const COSMETIC_FLOW_FX = {
     icon: '🚀',
     desc: 'Sci-fi velocity tunnel with radial speedline streaks around the viewport periphery.',
     reqLevel: 19,
-    reqTrophies: ['flow_grandmaster', 'mach_1'],
-    reqLabel: 'Lv. 19 or Grandmaster / Mach 1',
+    reqTrophies: ['zen_master', 'terminal_velocity'],
+    reqLabel: 'Lv. 19 or Zen Master / Terminal Velocity',
     swatches: ['#38bdf8', '#818cf8', '#f8fafc']
   }
 };
@@ -358,8 +358,8 @@ const COSMETIC_CARET_FX = {
     icon: '☀️',
     desc: 'Blazing thermal gradient rising from cherry red and ember orange to solar gold.',
     reqLevel: 8,
-    reqTrophies: ['hot_streak'],
-    reqLabel: 'Lv. 8 or Hot Streak Trophy',
+    reqTrophies: ['redline_runner'],
+    reqLabel: 'Lv. 8 or Redline Runner Trophy',
     swatches: ['#dc2626', '#f97316', '#fbbf24', '#fef08a']
   },
   holo_glitch: {
@@ -380,8 +380,8 @@ const COSMETIC_CARET_FX = {
     icon: '❄️',
     desc: 'Shimmering diamond cyan, polar ice, and snow-white crystalline refraction.',
     reqLevel: 15,
-    reqTrophies: ['ice_veins'],
-    reqLabel: 'Lv. 15 or Ice in the Veins Trophy',
+    reqTrophies: ['surgical_precision'],
+    reqLabel: 'Lv. 15 or Surgical Precision Trophy',
     swatches: ['#38bdf8', '#e0f2fe', '#ffffff', '#818cf8']
   },
   plasma_arc: {
@@ -416,8 +416,8 @@ const COSMETIC_GHOST_STYLES = {
     icon: '▁',
     desc: 'Full-character glowing cyan underline runner skimming beneath target letters.',
     reqLevel: 3,
-    reqTrophies: ['pace_setter'],
-    reqLabel: 'Lv. 3 or Pace Setter Trophy',
+    reqTrophies: ['rabbit_chaser'],
+    reqLabel: 'Lv. 3 or Rabbit Chaser Trophy',
     swatches: ['#22d3ee', '#0ea5e9']
   },
   theme_specter: {
@@ -438,8 +438,8 @@ const COSMETIC_GHOST_STYLES = {
     icon: '▢',
     desc: 'Full-character hollow terminal wireframe box framing the target pace character.',
     reqLevel: 6,
-    reqTrophies: ['ghost_whisperer'],
-    reqLabel: 'Lv. 6 or Ghost Whisperer Trophy',
+    reqTrophies: ['rabbit_chaser'],
+    reqLabel: 'Lv. 6 or Rabbit Chaser Trophy',
     swatches: ['#38bdf8', '#0f172a']
   },
   golden_hare: {
@@ -449,8 +449,8 @@ const COSMETIC_GHOST_STYLES = {
     icon: '🏆',
     desc: 'Championship radiant gold vertical capsule with warm amber luminescence.',
     reqLevel: 10,
-    reqTrophies: ['shadow_conqueror'],
-    reqLabel: 'Lv. 10 or Shadow Conqueror Trophy',
+    reqTrophies: ['shadow_boxer'],
+    reqLabel: 'Lv. 10 or Shadow Boxer Trophy',
     swatches: ['#fbbf24', '#f59e0b', '#fef08a']
   },
   shadow_rival: {
@@ -460,8 +460,8 @@ const COSMETIC_GHOST_STYLES = {
     icon: '⚔️',
     desc: 'Translucent dark-crimson block cursor with a razor-sharp crimson bottom edge.',
     reqLevel: 14,
-    reqTrophies: ['ghost_duelist'],
-    reqLabel: 'Lv. 14 or Ghost Duelist Trophy',
+    reqTrophies: ['shadow_boxer'],
+    reqLabel: 'Lv. 14 or Shadow Boxer Trophy',
     swatches: ['#f43f5e', '#881337']
   }
 };
@@ -602,6 +602,18 @@ class CosmeticsModel {
     return this.listAll().filter(item => {
       const wasUnlocked = this.isUnlocked(item.id, prevLv, unlockedAchievements);
       const nowUnlocked = this.isUnlocked(item.id, nextLv, unlockedAchievements);
+      return !wasUnlocked && nowUnlocked;
+    });
+  }
+
+  /**
+   * Returns an array of cosmetic items that crossed from locked -> unlocked when new achievements are earned.
+   */
+  getNewlyUnlockedOnAchievement(level = 1, prevAchievements = {}, nextAchievements = {}) {
+    const lv = Math.max(1, Number(level) || 1);
+    return this.listAll().filter(item => {
+      const wasUnlocked = this.isUnlocked(item.id, lv, prevAchievements);
+      const nowUnlocked = this.isUnlocked(item.id, lv, nextAchievements);
       return !wasUnlocked && nowUnlocked;
     });
   }

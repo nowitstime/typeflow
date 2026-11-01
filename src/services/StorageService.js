@@ -5,14 +5,17 @@
  */
 
 const STORAGE_KEYS = {
-  CLASSIC_STATS: 'typeflow_classic_stats_v1',
-  GAME_SAVE:     'typeflow_game_save_v2',
-  ACTIVE_MODE:   'typeflow_active_mode',
-  HIDDEN_MODE:   'typeflow_hidden_mode',
-  HIDDEN_METHOD: 'typeflow_hidden_method',
+  CLASSIC_STATS:    'typeflow_classic_stats_v1',
+  GAME_SAVE:        'typeflow_game_save_v2',
+  ACTIVE_MODE:      'typeflow_active_mode',
+  HIDDEN_MODE:      'typeflow_hidden_mode',
+  HIDDEN_METHOD:    'typeflow_hidden_method',
   HIDDEN_WORD_DIST: 'typeflow_hidden_word_dist',
-  GHOST_CURSOR:  'typeflow_ghost_cursor',
-  GHOST_SPEED:   'typeflow_ghost_speed'
+  GHOST_CURSOR:     'typeflow_ghost_cursor',
+  GHOST_SPEED:      'typeflow_ghost_speed',
+  WORD_DIFFICULTY:  'typeflow_word_difficulty',
+  PUNCTUATION_MODE: 'typeflow_punctuation_mode',
+  CAPITALS_MODE:    'typeflow_capitals_mode'
 };
 
 const DEFAULT_CLASSIC_STATS = {
@@ -45,6 +48,9 @@ const DEFAULT_GAME_SAVE = {
   hiddenWordDistance: 1,
   ghostCursor: false,
   ghostSpeed: 50,
+  wordDifficulty: 'normal',
+  punctuationMode: false,
+  capitalsMode: false,
   achievements: {},
   achievementCounters: {
     tests60Wpm: 0,
@@ -236,6 +242,78 @@ class StorageService {
     return 'Novice Typist';
   }
 
+  normalizeHiddenMethod(val) {
+    if (val === 'char' || val === 'combo') return 'char';
+    return 'word';
+  }
+
+  clampHiddenWordDistance(val) {
+    const parsed = parseInt(val, 10);
+    if (isNaN(parsed) || parsed < 1 || parsed > 6) return 1;
+    return parsed;
+  }
+
+  clampGhostSpeed(val, strictClamp = false) {
+    const parsed = parseInt(val, 10);
+    if (isNaN(parsed) || parsed <= 0) return 50;
+    return strictClamp ? Math.max(15, Math.min(150, parsed)) : parsed;
+  }
+
+  normalizeWordDifficulty(val) {
+    if (val === 'easy' || val === 'normal' || val === 'hard') return val;
+    return 'normal';
+  }
+
+  normalizeEquippedCosmetics(equipped) {
+    const defaults = {
+      theme: 'oled_cyan',
+      flowFx: 'adaptive_resonance',
+      caret: 'line',
+      caretFx: 'rainbow_prism',
+      ghostStyle: 'phantom_line',
+      sound: 'clicky_blue'
+    };
+    if (!equipped || typeof equipped !== 'object') {
+      return Object.assign({}, defaults);
+    }
+    return Object.assign({}, defaults, equipped);
+  }
+
+  sanitizeGameSave(rawState) {
+    const defaultClone = JSON.parse(JSON.stringify(DEFAULT_GAME_SAVE));
+    const state = Object.assign(defaultClone, rawState || {});
+    if (!state.unlockedRanks || state.unlockedRanks.length === 0) {
+      state.unlockedRanks = [1];
+    }
+    if (state.eggBasket && state.eggBasket.length > 3) {
+      state.eggBasket = state.eggBasket.slice(0, 3);
+    }
+    if (!state.bigramLedger || typeof state.bigramLedger !== 'object') {
+      state.bigramLedger = {};
+    }
+    if (typeof state.hiddenMode !== 'boolean') {
+      state.hiddenMode = false;
+    }
+    state.hiddenMethod = this.normalizeHiddenMethod(state.hiddenMethod);
+    state.hiddenWordDistance = this.clampHiddenWordDistance(state.hiddenWordDistance);
+    if (typeof state.ghostCursor !== 'boolean') {
+      state.ghostCursor = false;
+    }
+    state.ghostSpeed = this.clampGhostSpeed(state.ghostSpeed, false);
+    state.wordDifficulty = this.normalizeWordDifficulty(state.wordDifficulty);
+    if (typeof state.punctuationMode !== 'boolean') {
+      state.punctuationMode = false;
+    }
+    if (typeof state.capitalsMode !== 'boolean') {
+      state.capitalsMode = false;
+    }
+    state.equippedCosmetics = this.normalizeEquippedCosmetics(state.equippedCosmetics);
+    if (!Array.isArray(state.flowHistory)) {
+      state.flowHistory = [];
+    }
+    return state;
+  }
+
   // Load game mode save
   getGameSave() {
     try {
@@ -247,51 +325,7 @@ class StorageService {
         return fresh;
       }
       const parsed = JSON.parse(data);
-      const defaultClone = JSON.parse(JSON.stringify(DEFAULT_GAME_SAVE));
-      const state = Object.assign(defaultClone, parsed);
-      if (!state.unlockedRanks || state.unlockedRanks.length === 0) {
-        state.unlockedRanks = [1];
-      }
-      if (state.eggBasket && state.eggBasket.length > 3) {
-        state.eggBasket = state.eggBasket.slice(0, 3);
-      }
-      if (!state.bigramLedger || typeof state.bigramLedger !== 'object') {
-        state.bigramLedger = {};
-      }
-      if (typeof state.hiddenMode !== 'boolean') {
-        state.hiddenMode = false;
-      }
-      if (state.hiddenMethod !== 'char' && state.hiddenMethod !== 'word' && state.hiddenMethod !== 'combo') {
-        state.hiddenMethod = 'word';
-      } else if (state.hiddenMethod === 'combo') {
-        state.hiddenMethod = 'char';
-      }
-      if (typeof state.hiddenWordDistance !== 'number' || isNaN(state.hiddenWordDistance) || state.hiddenWordDistance < 1 || state.hiddenWordDistance > 5) {
-        state.hiddenWordDistance = 1;
-      }
-      if (typeof state.ghostCursor !== 'boolean') {
-        state.ghostCursor = false;
-      }
-      if (typeof state.ghostSpeed !== 'number' || isNaN(state.ghostSpeed) || state.ghostSpeed <= 0) {
-        state.ghostSpeed = 50;
-      }
-      const defaultCosmetics = {
-        theme: 'oled_cyan',
-        flowFx: 'adaptive_resonance',
-        caret: 'line',
-        caretFx: 'rainbow_prism',
-        ghostStyle: 'phantom_line',
-        sound: 'clicky_blue'
-      };
-      if (!state.equippedCosmetics || typeof state.equippedCosmetics !== 'object') {
-        state.equippedCosmetics = Object.assign({}, defaultCosmetics);
-      } else {
-        state.equippedCosmetics = Object.assign({}, defaultCosmetics, state.equippedCosmetics);
-      }
-      if (!Array.isArray(state.flowHistory)) {
-        state.flowHistory = [];
-      }
-      return state;
+      return this.sanitizeGameSave(parsed);
     } catch (e) {
       return JSON.parse(JSON.stringify(DEFAULT_GAME_SAVE));
     }
@@ -689,18 +723,17 @@ class StorageService {
       const s = this._getStorage();
       if (s) {
         const val = s.getItem(STORAGE_KEYS.HIDDEN_METHOD);
-        if (val === 'char' || val === 'word') return val;
-        if (val === 'combo') return 'char';
+        if (val !== null) return this.normalizeHiddenMethod(val);
       }
       const save = this.getGameSave();
-      return (save.hiddenMethod === 'char') ? 'char' : 'word';
+      return this.normalizeHiddenMethod(save.hiddenMethod);
     } catch (e) {
       return 'word';
     }
   }
 
   setHiddenMethod(val) {
-    const method = (val === 'char' || val === 'combo') ? 'char' : 'word';
+    const method = this.normalizeHiddenMethod(val);
     try {
       const s = this._getStorage();
       if (s) s.setItem(STORAGE_KEYS.HIDDEN_METHOD, method);
@@ -717,12 +750,11 @@ class StorageService {
     try {
       const s = this._getStorage();
       if (s) {
-        const val = parseInt(s.getItem(STORAGE_KEYS.HIDDEN_WORD_DIST), 10);
-        if (!isNaN(val) && val >= 1 && val <= 6) return val;
+        const raw = s.getItem(STORAGE_KEYS.HIDDEN_WORD_DIST);
+        if (raw !== null) return this.clampHiddenWordDistance(raw);
       }
       const save = this.getGameSave();
-      const dist = parseInt(save.hiddenWordDistance, 10);
-      return (!isNaN(dist) && dist >= 1 && dist <= 6) ? dist : 1;
+      return this.clampHiddenWordDistance(save.hiddenWordDistance);
     } catch (e) {
       return 1;
     }
@@ -776,20 +808,17 @@ class StorageService {
       const s = this._getStorage();
       if (s) {
         const val = s.getItem(STORAGE_KEYS.GHOST_SPEED);
-        if (val !== null) {
-          const num = parseInt(val, 10);
-          if (!isNaN(num) && num > 0) return num;
-        }
+        if (val !== null) return this.clampGhostSpeed(val, false);
       }
       const save = this.getGameSave();
-      return (typeof save.ghostSpeed === 'number' && save.ghostSpeed > 0) ? save.ghostSpeed : 50;
+      return this.clampGhostSpeed(save.ghostSpeed, false);
     } catch (e) {
       return 50;
     }
   }
 
   setGhostSpeed(speed) {
-    const num = Math.max(15, Math.min(150, parseInt(speed, 10) || 50));
+    const num = this.clampGhostSpeed(speed, true);
     try {
       const s = this._getStorage();
       if (s) s.setItem(STORAGE_KEYS.GHOST_SPEED, String(num));
@@ -799,6 +828,90 @@ class StorageService {
       return num;
     } catch (e) {
       return num;
+    }
+  }
+
+  getWordDifficulty() {
+    try {
+      const s = this._getStorage();
+      if (s) {
+        const val = s.getItem(STORAGE_KEYS.WORD_DIFFICULTY);
+        if (val !== null) return this.normalizeWordDifficulty(val);
+      }
+      const save = this.getGameSave();
+      return this.normalizeWordDifficulty(save.wordDifficulty);
+    } catch (e) {
+      return 'normal';
+    }
+  }
+
+  setWordDifficulty(diff) {
+    const clean = this.normalizeWordDifficulty(diff);
+    try {
+      const s = this._getStorage();
+      if (s) s.setItem(STORAGE_KEYS.WORD_DIFFICULTY, clean);
+      const save = this.getGameSave();
+      save.wordDifficulty = clean;
+      this.saveGameSave(save);
+      return clean;
+    } catch (e) {
+      return clean;
+    }
+  }
+
+  getPunctuationMode() {
+    try {
+      const s = this._getStorage();
+      if (s) {
+        const val = s.getItem(STORAGE_KEYS.PUNCTUATION_MODE);
+        if (val !== null) return val === 'true';
+      }
+      const save = this.getGameSave();
+      return !!save.punctuationMode;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  setPunctuationMode(enabled) {
+    const val = !!enabled;
+    try {
+      const s = this._getStorage();
+      if (s) s.setItem(STORAGE_KEYS.PUNCTUATION_MODE, String(val));
+      const save = this.getGameSave();
+      save.punctuationMode = val;
+      this.saveGameSave(save);
+      return val;
+    } catch (e) {
+      return val;
+    }
+  }
+
+  getCapitalsMode() {
+    try {
+      const s = this._getStorage();
+      if (s) {
+        const val = s.getItem(STORAGE_KEYS.CAPITALS_MODE);
+        if (val !== null) return val === 'true';
+      }
+      const save = this.getGameSave();
+      return !!save.capitalsMode;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  setCapitalsMode(enabled) {
+    const val = !!enabled;
+    try {
+      const s = this._getStorage();
+      if (s) s.setItem(STORAGE_KEYS.CAPITALS_MODE, String(val));
+      const save = this.getGameSave();
+      save.capitalsMode = val;
+      this.saveGameSave(save);
+      return val;
+    } catch (e) {
+      return val;
     }
   }
 
@@ -871,14 +984,16 @@ class StorageService {
         for (const t of classicStats.recentHistory) {
           if (t.duration >= 30) {
             const acc = t.accuracy ?? t.acc ?? 0;
-            if (t.wpm >= 60 && acc >= 96) counters.tests60Wpm++;
-            if (t.wpm >= 100 && acc >= 96) counters.tests100Wpm++;
-            if (acc >= 98) counters.tests98Acc++;
-            if (typeof t.incorrectChars === 'number' && t.incorrectChars === 0 && (!t.fixedErrors || t.fixedErrors === 0)) {
+            const wpm = t.wpm || 0;
+            if (wpm >= 60 && acc >= 96) counters.tests60Wpm++;
+            if (wpm >= 100 && acc >= 96) counters.tests100Wpm++;
+            if (wpm >= 50 && acc >= 98) counters.tests98Acc++;
+            if (wpm >= 50 && typeof t.incorrectChars === 'number' && t.incorrectChars === 0 && (!t.fixedErrors || t.fixedErrors === 0)) {
               counters.tests100RawAcc++;
             }
-            if (t.wpm >= 50 && t.consistency >= 85) counters.tests85Consistency++;
-            if (t.wpm >= 70 && t.consistency >= 92) counters.tests92Consistency++;
+            if (wpm >= 50 && t.consistency >= 85) counters.tests85Consistency++;
+            if (wpm >= 70 && t.consistency >= 92) counters.tests92Consistency++;
+            if (t.hiddenMode && acc >= 96) counters.testsHiddenMode++;
             modified = true;
           }
         }
@@ -915,32 +1030,13 @@ class StorageService {
 
   getEquippedCosmetics() {
     const save = this.getGameSave();
-    return Object.assign(
-      {
-        theme: 'oled_cyan',
-        flowFx: 'adaptive_resonance',
-        caret: 'line',
-        caretFx: 'rainbow_prism',
-        ghostStyle: 'phantom_line',
-        sound: 'clicky_blue'
-      },
-      save.equippedCosmetics || {}
-    );
+    return this.normalizeEquippedCosmetics(save.equippedCosmetics);
   }
 
   setEquippedCosmetic(category, id) {
     if (!category || !id) return this.getEquippedCosmetics();
     const save = this.getGameSave();
-    if (!save.equippedCosmetics || typeof save.equippedCosmetics !== 'object') {
-      save.equippedCosmetics = {
-        theme: 'oled_cyan',
-        flowFx: 'adaptive_resonance',
-        caret: 'line',
-        caretFx: 'rainbow_prism',
-        ghostStyle: 'phantom_line',
-        sound: 'clicky_blue'
-      };
-    }
+    save.equippedCosmetics = this.normalizeEquippedCosmetics(save.equippedCosmetics);
     save.equippedCosmetics[category] = id;
     this.saveGameSave(save);
     return Object.assign({}, save.equippedCosmetics);

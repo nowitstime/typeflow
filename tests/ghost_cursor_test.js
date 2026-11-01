@@ -569,6 +569,68 @@ it('syncs to player and hides when ghost advances out of bounds', () => {
   assert.strictEqual(controller.ghostTotalChars, 0);
 });
 
+// ----------------------------------------------------
+// 7. Standalone GhostPacerModel Unit Tests
+// ----------------------------------------------------
+console.log('\n--- 7. Standalone GhostPacerModel Unit Tests ---');
+
+const { GhostPacerModel } = require('../src/models/GhostPacerModel.js');
+
+it('GhostPacerModel clamps speed to [15, 150] and defaults to 50 WPM on invalid input', () => {
+  const model = new GhostPacerModel();
+  assert.strictEqual(model.speed, 50);
+  assert.strictEqual(model.setSpeed(5), 15);
+  assert.strictEqual(model.setSpeed(999), 150);
+  assert.strictEqual(model.setSpeed('invalid'), 50);
+});
+
+it('GhostPacerModel computes cumulative char indices and maps fractional positions accurately', () => {
+  const model = new GhostPacerModel({ enabled: true, speed: 60 });
+  const words = ['the', 'flow', 'test'];
+  // 'the' (3) + space (1) = 4; 'flow' (4) + space (1) = 9
+  assert.strictEqual(model.getCharCumulativeIndex(words, 0, 0), 0);
+  assert.strictEqual(model.getCharCumulativeIndex(words, 1, 0), 4);
+  assert.strictEqual(model.getCharCumulativeIndex(words, 2, 2), 11);
+
+  const pos0 = model.mapCharsToPosition(words, 0);
+  assert.strictEqual(pos0.wordIdx, 0);
+  assert.strictEqual(pos0.charIdx, 0);
+  assert.strictEqual(pos0.isOutOfBounds, false);
+
+  const pos1 = model.mapCharsToPosition(words, 3.8);
+  assert.strictEqual(pos1.wordIdx, 0);
+  assert.strictEqual(pos1.charIdx, 3);
+  assert.strictEqual(pos1.isOutOfBounds, false);
+
+  const pos2 = model.mapCharsToPosition(words, 4.25);
+  assert.strictEqual(pos2.wordIdx, 1);
+  assert.strictEqual(pos2.charIdx, 0);
+  assert.strictEqual(Math.abs(pos2.fraction - 0.25) < 1e-6, true);
+  assert.strictEqual(pos2.isOutOfBounds, false);
+
+  assert.strictEqual(model.mapCharsToPosition(words, 50).isOutOfBounds, true);
+});
+
+it('GhostPacerModel advances over dtMs (clamped at 100ms), compensates inserted words, and checks isPlayerAhead', () => {
+  const model = new GhostPacerModel({ enabled: true, speed: 60 });
+  const words = ['the', 'quick', 'brown'];
+  // 60 WPM = 5 chars/sec = 0.005 chars/ms; 100ms frame = 0.5 chars
+  model.advance(100, words);
+  assert.strictEqual(model.totalChars, 0.5);
+
+  // Inserting ['alpha', 'beta'] (5+1 + 4+1 = 11 chars) shifts totalChars by +11
+  model.compensateInsertedWords(['alpha', 'beta']);
+  assert.strictEqual(model.totalChars, 11.5);
+
+  // Player at word 2 char 0 = 4 + 6 = 10 <= floor(11.5) -> not ahead
+  assert.strictEqual(model.isPlayerAhead(words, 2, 0), false);
+
+  model.syncToPlayer(words, 2, 0);
+  assert.strictEqual(model.totalChars, 10);
+  // Player at word 2 char 1 = 11 > floor(10) -> ahead
+  assert.strictEqual(model.isPlayerAhead(words, 2, 1), true);
+});
+
 console.log('\n========================================');
 console.log(`TEST RESULTS: ${passedTests} / ${totalTests} PASSED`);
 console.log('GHOST CURSOR SYSTEM FULLY VERIFIED! 🚀');

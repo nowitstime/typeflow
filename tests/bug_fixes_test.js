@@ -240,6 +240,25 @@ it('deep-clones DEFAULT_GAME_SAVE and DEFAULT_CLASSIC_STATS preventing template 
   assert.strictEqual(freshStats.personalBests['30'].wpm, 0, 'DEFAULT_CLASSIC_STATS template must not be polluted');
 });
 
+it('preserves hiddenWordDistance === 6 across getGameSave() reloads and enforces >= 50 WPM in syncRetroactiveAchievements', () => {
+  const mockStorage = new MockLocalStorage();
+  const storage = new StorageService(mockStorage);
+  storage.setHiddenWordDistance(6);
+  assert.strictEqual(storage.getHiddenWordDistance(), 6, 'getGameSave() must not reset hiddenWordDistance = 6 back to 1');
+
+  const classic = storage.getClassicStats();
+  classic.recentHistory.push(
+    { duration: 30, wpm: 35, acc: 100, incorrectChars: 0, fixedErrors: 0, consistency: 95 },
+    { duration: 30, wpm: 65, acc: 99, incorrectChars: 0, fixedErrors: 0, consistency: 95 }
+  );
+  storage.saveClassicStats(classic);
+  const { AchievementsModel } = require('../src/models/AchievementsModel.js');
+  storage.syncRetroactiveAchievements(new AchievementsModel());
+  const counters = storage.getAchievementCounters();
+  assert.strictEqual(counters.tests98Acc, 1, 'Sub-50 WPM test must not increment tests98Acc');
+  assert.strictEqual(counters.tests100RawAcc, 1, 'Sub-50 WPM test must not increment tests100RawAcc');
+});
+
 // 3. StageView Hidden Mode Lookahead Clearing
 console.log('\n--- 3. StageView Hidden Horizon Buffer Cleanup ---');
 

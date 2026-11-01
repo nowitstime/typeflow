@@ -26,6 +26,7 @@ const { WordsModel } = require('../src/models/WordsModel.js');
 const { SessionModel } = require('../src/models/SessionModel.js');
 const { FlowModel } = require('../src/models/FlowModel.js');
 const { EggNestModel } = require('../src/models/EggNestModel.js');
+const { ACHIEVEMENTS } = require('../src/models/AchievementsModel.js');
 const { NestView } = require('../src/views/NestView.js');
 const { ChartView } = require('../src/views/ChartView.js');
 
@@ -134,7 +135,7 @@ console.log('🎨 TypeFlow v4.0 Cosmetic Armory Test Suite');
 console.log('======================================================\n');
 
 // 1. CosmeticsModel Catalog & Unlock Logic
-test('1. CosmeticsModel defines 34 cosmetics across 6 categories (6 themes, 6 flowFx, 5 carets, 6 caretFx, 6 ghostStyles, 5 sounds)', () => {
+test('1. CosmeticsModel defines 34 cosmetics across 6 categories (6 themes, 6 flowFx, 5 carets, 6 caretFx, 6 ghostStyles, 5 sounds) with valid achievement IDs', () => {
   const model = new CosmeticsModel();
   assert.strictEqual(Object.keys(COSMETIC_THEMES).length, 6);
   assert.strictEqual(Object.keys(COSMETIC_FLOW_FX).length, 6);
@@ -149,6 +150,13 @@ test('1. CosmeticsModel defines 34 cosmetics across 6 categories (6 themes, 6 fl
   assert.strictEqual(model.listByCategory('caretFx').length, 6);
   assert.strictEqual(model.listByCategory('ghostStyle').length, 6);
   assert.strictEqual(model.listByCategory('sound').length, 5);
+
+  // Every single reqTrophies ID across all 34 cosmetics must exist in ACHIEVEMENTS
+  for (const item of model.listAll()) {
+    for (const tId of (item.reqTrophies || [])) {
+      assert.ok(ACHIEVEMENTS[tId], `Cosmetic "${item.id}" references non-existent achievement "${tId}"`);
+    }
+  }
 });
 
 test('2. CosmeticsModel unlocks 6 defaults at Level 1 and gates higher-tier cosmetics by Level or Achievement', () => {
@@ -186,14 +194,19 @@ test('2. CosmeticsModel unlocks 6 defaults at Level 1 and gates higher-tier cosm
   assert.strictEqual(model.isUnlocked('cyberpunk_neon', 1, { cruising_60: 123 }), true);
   assert.strictEqual(model.isUnlocked('nord_frost', 1, { silver_stream: 123 }), true);
   assert.strictEqual(model.isUnlocked('prismatic_aurora', 1, { sustained_current: 123 }), true);
-  assert.strictEqual(model.isUnlocked('solar_flame', 1, { supersonic_90: 123 }), true);
-  assert.strictEqual(model.isUnlocked('hyperdrive_warp', 1, { mach_1: 123 }), true);
+  assert.strictEqual(model.isUnlocked('cyberpunk_grid', 1, { lexicon_architect: 123 }), true);
+  assert.strictEqual(model.isUnlocked('solar_flame', 1, { triple_digits: 123 }), true);
+  assert.strictEqual(model.isUnlocked('hyperdrive_warp', 1, { terminal_velocity: 123 }), true);
   assert.strictEqual(model.isUnlocked('capsule', 1, { sustained_current: 123 }), true);
   assert.strictEqual(model.isUnlocked('prism', 1, { overclocked: 123 }), true);
+  assert.strictEqual(model.isUnlocked('solar_flare', 1, { redline_runner: 123 }), true);
   assert.strictEqual(model.isUnlocked('holo_glitch', 1, { clutch_recovery: 123 }), true);
+  assert.strictEqual(model.isUnlocked('frost_sparkle', 1, { surgical_precision: 123 }), true);
   assert.strictEqual(model.isUnlocked('plasma_arc', 1, { overclocked: 123 }), true);
-  assert.strictEqual(model.isUnlocked('golden_hare', 1, { shadow_conqueror: 123 }), true);
-  assert.strictEqual(model.isUnlocked('shadow_rival', 1, { ghost_duelist: 123 }), true);
+  assert.strictEqual(model.isUnlocked('hologram_runner', 1, { rabbit_chaser: 123 }), true);
+  assert.strictEqual(model.isUnlocked('wireframe_block', 1, { rabbit_chaser: 123 }), true);
+  assert.strictEqual(model.isUnlocked('golden_hare', 1, { shadow_boxer: 123 }), true);
+  assert.strictEqual(model.isUnlocked('shadow_rival', 1, { shadow_boxer: 123 }), true);
   assert.strictEqual(model.isUnlocked('zen_droplet', 1, { shadow_walker: 123 }), true);
   assert.strictEqual(model.isUnlocked('typewriter', 1, { marksman: 123 }), true);
 
@@ -202,7 +215,7 @@ test('2. CosmeticsModel unlocks 6 defaults at Level 1 and gates higher-tier cosm
   assert.strictEqual(model.isUnlocked('obsidian_gold', 1, tenTrophies), true);
 });
 
-test('3. CosmeticsModel.getNewlyUnlockedOnLevelUp returns only items newly unlocked between oldLevel and newLevel', () => {
+test('3. CosmeticsModel.getNewlyUnlockedOnLevelUp and getNewlyUnlockedOnAchievement return newly unlocked items', () => {
   const model = new CosmeticsModel();
   // Level 1 -> Level 3 unlocks zen_trance (Lv. 2), underline (Lv. 2), sakura_stream (Lv. 3), hologram_runner (Lv. 3), thoccy_linear (Lv. 3)
   const unlocked1to3 = model.getNewlyUnlockedOnLevelUp(1, 3, {});
@@ -219,6 +232,11 @@ test('3. CosmeticsModel.getNewlyUnlockedOnLevelUp returns only items newly unloc
   const unlocked5to6WithAch = model.getNewlyUnlockedOnLevelUp(5, 6, { steady_cadence: 100 });
   assert.strictEqual(unlocked5to6WithAch.length, 1);
   assert.strictEqual(unlocked5to6WithAch[0].id, 'wireframe_block');
+
+  // Unlocking steady_cadence at Level 1 unlocks phosphor_crt via trophy
+  const unlockedOnAch = model.getNewlyUnlockedOnAchievement(1, {}, { steady_cadence: 100 });
+  assert.strictEqual(unlockedOnAch.length, 1);
+  assert.strictEqual(unlockedOnAch[0].id, 'phosphor_crt');
 });
 
 // 2. StorageService Cosmetic Persistence

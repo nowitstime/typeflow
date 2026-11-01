@@ -1094,6 +1094,67 @@ it('SessionModel.calculateWordVanishEffectiveCount scales progressively with wor
   assert.strictEqual(session.hiddenWordDistance, 6);
 });
 
+// 11. Classic Word Pool Difficulty & Text Modifiers (Punctuation / Capitals)
+console.log('\n--- 11. Classic Word Difficulty & Text Modifiers ---');
+
+it('generateClassicBatch("easy") restricts pool to top 200 short/common words (<= 6 chars)', () => {
+  const model = new WordsModel();
+  const easyWords = model.generateClassicBatch(500, 'easy');
+  assert.strictEqual(easyWords.length, 500);
+  const top200Set = new Set(RAW_WORDS.trim().split(/\s+/).slice(0, 200));
+  for (const w of easyWords) {
+    assert.ok(top200Set.has(w), `Easy word "${w}" should be in top 200`);
+    assert.ok(w.length <= 6, `Easy word "${w}" should be <= 6 chars`);
+  }
+});
+
+it('generateClassicBatch("hard") produces significantly longer average word length than "easy" and "normal"', () => {
+  const model = new WordsModel();
+  const easyBatch = model.generateClassicBatch(600, 'easy');
+  const normalBatch = model.generateClassicBatch(600, 'normal');
+  const hardBatch = model.generateClassicBatch(600, 'hard');
+
+  const avgLen = (arr) => arr.reduce((sum, w) => sum + w.length, 0) / arr.length;
+  const easyAvg = avgLen(easyBatch);
+  const normalAvg = avgLen(normalBatch);
+  const hardAvg = avgLen(hardBatch);
+
+  assert.ok(easyAvg < normalAvg, `Expected easyAvg (${easyAvg.toFixed(2)}) < normalAvg (${normalAvg.toFixed(2)})`);
+  assert.ok(hardAvg > normalAvg + 0.8, `Expected hardAvg (${hardAvg.toFixed(2)}) > normalAvg (${normalAvg.toFixed(2)}) + 0.8`);
+});
+
+it('applyTextModifiers applies capitalization, natural punctuation without semicolons, and resolves base words in getWordByText', () => {
+  const model = new WordsModel();
+  const baseWords = Array.from({ length: 200 }, (_, i) => (i % 3 === 0 ? 'do' : (i % 3 === 1 ? 'world' : 'the')));
+  const decorated = model.applyTextModifiers(baseWords, { capitals: true, punctuation: true });
+
+  assert.strictEqual(decorated.length, 200);
+  // First word is automatically capitalized when both punctuation and capitals are enabled
+  assert.ok(/^[A-Z]/.test(decorated[0].replace(/^[^a-zA-Z]+/, '')), `First word "${decorated[0]}" should start with capital letter`);
+
+  let capCount = 0;
+  let punctCount = 0;
+  for (let i = 0; i < decorated.length; i++) {
+    const w = decorated[i];
+    assert.ok(!w.includes(';'), `Punctuated word "${w}" must never include semicolon ';' (reserved for ;; shortcut)`);
+    if (/[A-Z]/.test(w)) capCount++;
+    if (/[^a-zA-Z]/.test(w)) punctCount++;
+
+    // If a word ends with '.', '!', or '?', the next word must be capitalized
+    if (/[.!?]$/.test(w) && i + 1 < decorated.length) {
+      const nextAlpha = decorated[i + 1].replace(/^[^a-zA-Z]+/, '');
+      assert.ok(/^[A-Z]/.test(nextAlpha), `Word "${decorated[i + 1]}" after "${w}" must be capitalized`);
+    }
+
+    // Verify getWordByText resolves decorated/contracted words back to their dictionary metadata
+    const meta = model.getWordByText(w);
+    assert.ok(meta && meta.rank >= 1, `getWordByText("${w}") should resolve to valid dictionary metadata`);
+  }
+
+  assert.ok(capCount >= 15, `Expected at least 15 capitalized words in 200, got ${capCount}`);
+  assert.ok(punctCount >= 15, `Expected at least 15 punctuated words in 200, got ${punctCount}`);
+});
+
 console.log('\n========================================');
 console.log(`TEST RESULTS: ${passedTests} / ${totalTests} PASSED`);
 if (passedTests === totalTests) {

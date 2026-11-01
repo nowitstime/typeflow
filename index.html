@@ -119,7 +119,7 @@ header {
   color: var(--text-color);
 }
 .mode-tab.active {
-  background: var(--bg-primary);
+  background: var(--bg-color);
   color: var(--main-color);
   border: none;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
@@ -172,13 +172,15 @@ header {
   top: calc(100% + 8px);
   right: 0;
   width: 320px;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
   background: #080c10;
   border: 1px solid var(--border-color);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.95), 0 0 16px color-mix(in srgb, var(--main-color) 12%, transparent);
   padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   z-index: 60;
   animation: popoverFadeIn 0.15s ease-out;
 }
@@ -893,16 +895,6 @@ main {
 }
 .flow-recap-pill {
   display: none !important;
-}
-.flow-recap-pill .key-hint {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 0px;
-  background: var(--sub-alt-color);
-  border: 1px solid var(--border-color);
-  color: var(--main-color);
 }
 .results-section {
   display: none;
@@ -2050,8 +2042,6 @@ main {
   }
 }
 header .header-left,
-header .header-controls,
-header .header-actions,
 #brand-logo {
   opacity: var(--focus-opacity, 1);
   transition: opacity 0.15s ease-out;
@@ -2998,7 +2988,7 @@ header .header-actions,
             <span class="diff-label">Pace:</span>
             <input type="range" id="diff-slider" class="diff-slider" min="15" max="120" step="1" value="40" aria-label="Difficulty slider">
             <div class="diff-input-wrap">
-              <input type="number" id="diff-input" class="diff-input" min="10" max="300" step="1" value="40" aria-label="Target WPM input">
+              <input type="number" id="diff-input" class="diff-input" min="5" max="300" step="1" value="40" aria-label="Target WPM input">
               <span class="diff-unit">wpm</span>
             </div>
           </div>
@@ -3054,6 +3044,41 @@ header .header-actions,
                 <span class="ghost-label">Pace:</span>
                 <input type="range" id="ghost-slider" class="diff-slider" min="15" max="150" step="5" value="50" aria-label="Ghost Cursor speed slider">
                 <span class="ghost-val" id="ghost-val">50 WPM</span>
+              </div>
+            </div>
+            <div class="mod-card" id="mod-card-difficulty">
+              <div class="mod-card-top">
+                <div class="mod-info">
+                  <span class="mod-tag">MOD 03 // CLASSIC</span>
+                  <span class="mod-name">Word Difficulty</span>
+                </div>
+              </div>
+              <div class="hd-mode-toggle" id="word-diff-toggle" role="group" aria-label="Classic Word Pool Difficulty">
+                <button type="button" class="hd-mode-btn" id="word-diff-easy" data-difficulty="easy" title="Easy Pool (Top 200 short & common words)">Easy</button>
+                <button type="button" class="hd-mode-btn active" id="word-diff-normal" data-difficulty="normal" title="Normal Pool (Balanced 1,000 words)">Normal</button>
+                <button type="button" class="hd-mode-btn" id="word-diff-hard" data-difficulty="hard" title="Hard Pool (Long & complex 1,000 words)">Hard</button>
+              </div>
+            </div>
+            <div class="mod-card" id="mod-card-punct">
+              <div class="mod-card-top">
+                <div class="mod-info">
+                  <span class="mod-tag">MOD 04</span>
+                  <span class="mod-name">Punctuation</span>
+                </div>
+                <button type="button" class="icon-btn" id="punct-btn" title="Toggle Punctuation (. , ! ? ' &quot; -)" aria-pressed="false">
+                  <span>@!</span>
+                </button>
+              </div>
+            </div>
+            <div class="mod-card" id="mod-card-caps">
+              <div class="mod-card-top">
+                <div class="mod-info">
+                  <span class="mod-tag">MOD 05</span>
+                  <span class="mod-name">Capital Letters</span>
+                </div>
+                <button type="button" class="icon-btn" id="caps-btn" title="Toggle Capital Letters at the start of words" aria-pressed="false">
+                  <span>Aa</span>
+                </button>
               </div>
             </div>
             <div class="mod-card" id="mod-card-sound">
@@ -3591,11 +3616,13 @@ const CONSTANTS = {
     MOMENTUM_MAX: 1.20,
     APEX_THRESHOLD: 1.00,
     TRANSITION_THRESHOLD: 0.85,
+    CONTINUATION_FLOOR: 0.50,
     ACCEL_PER_CLEAN_WORD: 0.04,
     DAMPENED_STUMBLE_PENALTY: 0.08,
-    NORMAL_STUMBLE_PENALTY: 0.18,
+    NORMAL_STUMBLE_PENALTY: 0.12,
+    ERROR_PENALTY: 0.25,
     CUSHION_TIME_MS: 3000,
-    IDLE_DECAY_RATE_PER_SEC: 0.05,
+    IDLE_DECAY_RATE_PER_SEC: 0.06,
     CHALLENGE_SCALE: {
       SUB_FLOW: 0.35,
       TRANSITION: 0.85,
@@ -3609,15 +3636,41 @@ const CONSTANTS = {
     INPUT_MAX: 300,
     DEFAULT_WPM: 40
   },
+  HIDDEN: {
+    METHODS: ['word', 'char'],
+    DEFAULT_METHOD: 'word',
+    WORD_DISTANCE_MIN: 1,
+    WORD_DISTANCE_MAX: 6,
+    DEFAULT_WORD_DISTANCE: 1
+  },
+  GHOST: {
+    MIN_WPM: 15,
+    MAX_WPM: 150,
+    DEFAULT_WPM: 50,
+    FADE_DELAY_MS: 600,
+    RESET_DELAY_MS: 1200,
+    MAX_FRAME_DT_MS: 100
+  },
   CLASSIC: {
     DURATIONS: [15, 30, 60],
-    DEFAULT_DURATION: 30
+    DEFAULT_DURATION: 30,
+    DIFFICULTIES: ['easy', 'normal', 'hard'],
+    DEFAULT_DIFFICULTY: 'normal'
+  },
+  TEXT_MODS: {
+    DIFFICULTIES: ['easy', 'normal', 'hard'],
+    DEFAULT_DIFFICULTY: 'normal',
+    DEFAULT_PUNCTUATION: false,
+    DEFAULT_CAPITALS: false
   },
   NEST: {
     MAX_SLOTS: 3,
     CRACK_WORD: 'egg',
     DROP_CHANCE_BASE: 0.15,
-    STREAK_BONUS_INTERVAL: 15
+    STREAK_BONUS_INTERVAL: 15,
+    CHARGE_MAX: 100.0,
+    CHARGE_TYPO_PENALTY: 12.0,
+    CHARGE_SLOW_PENALTY: 3.0
   },
   STREAM_BUFFER: {
     INITIAL_WORD_COUNT: 60,
@@ -3625,9 +3678,12 @@ const CONSTANTS = {
     REFILL_BATCH_SIZE: 30
   },
   STORAGE_KEYS: {
-    CLASSIC_STATS: 'typeflow_classic_stats_v1',
-    GAME_SAVE:     'typeflow_game_save_v2',
-    ACTIVE_MODE:   'typeflow_active_mode'
+    CLASSIC_STATS:    'typeflow_classic_stats_v1',
+    GAME_SAVE:        'typeflow_game_save_v2',
+    ACTIVE_MODE:      'typeflow_active_mode',
+    WORD_DIFFICULTY:  'typeflow_word_difficulty',
+    PUNCTUATION_MODE: 'typeflow_punctuation_mode',
+    CAPITALS_MODE:    'typeflow_capitals_mode'
   }
 };
 if (typeof window !== 'undefined') {
@@ -3839,6 +3895,38 @@ const CLASSIC_WEIGHTS = RAW_WORDS_LIST.map((word, i) => {
   return base * getClassicTypabilityMultiplier(word);
 });
 const CLASSIC_TOTAL_WEIGHT = CLASSIC_WEIGHTS.reduce((a, b) => a + b, 0);
+const CLASSIC_WEIGHTS_EASY = RAW_WORDS_LIST.map((word, i) => {
+  if (i >= 200 || word.length > 6) return 0;
+  const base = i < 80 ? (0.65 / 80) : (0.35 / 120);
+  const lenMult = word.length <= 2 ? 0.55 : (word.length <= 5 ? 1.25 : 0.90);
+  return base * lenMult;
+});
+const CLASSIC_TOTAL_EASY = CLASSIC_WEIGHTS_EASY.reduce((a, b) => a + b, 0);
+const CLASSIC_WEIGHTS_HARD = RAW_WORDS_LIST.map((word, i) => {
+  let base;
+  if (i < 100) base = 0.08 / 100;
+  else if (i < 350) base = 0.22 / 250;
+  else if (i < 700) base = 0.38 / 350;
+  else base = 0.32 / 300;
+  const len = word.length;
+  const lenMult = len <= 3 ? 0.05
+                : len === 4 ? 0.25
+                : len === 5 ? 0.65
+                : len === 6 ? 1.15
+                : len === 7 ? 1.60 : 2.20;
+  return base * lenMult;
+});
+const CLASSIC_TOTAL_HARD = CLASSIC_WEIGHTS_HARD.reduce((a, b) => a + b, 0);
+const CLASSIC_WEIGHTS_BY_DIFFICULTY = {
+  easy: CLASSIC_WEIGHTS_EASY,
+  normal: CLASSIC_WEIGHTS,
+  hard: CLASSIC_WEIGHTS_HARD
+};
+const CLASSIC_TOTAL_BY_DIFFICULTY = {
+  easy: CLASSIC_TOTAL_EASY,
+  normal: CLASSIC_TOTAL_WEIGHT,
+  hard: CLASSIC_TOTAL_HARD
+};
 const LEFT_HAND = new Set("qwertasdfgzxcvb".split(""));
 const TOP_ROW   = new Set("qwertyuiop".split(""));
 const BOT_ROW   = new Set("zxcvbnm".split(""));
@@ -4423,17 +4511,90 @@ function createWordSandwich(newWordText, unlockedRanks = [1], dictionary = DICTI
 function getSrsWeightedRandomWords(unlockedRanks, userStats, targetWpm, count = 70, currentMomentum = 0, bigramLedger = null) {
   return generateWords(count, unlockedRanks, DICTIONARY, userStats, targetWpm, currentMomentum, bigramLedger);
 }
-function getRandomWords(count = 70, recentBuffer = null) {
+const CONTRACTION_MAP = {
+  do: "don't",
+  can: "can't",
+  will: "won't",
+  it: "it's",
+  that: "that's",
+  what: "what's",
+  there: "there's",
+  he: "he's",
+  she: "she's",
+  we: "we're",
+  they: "they're",
+  you: "you're",
+  would: "wouldn't",
+  could: "couldn't",
+  should: "shouldn't",
+  have: "haven't",
+  not: "isn't"
+};
+const REVERSE_CONTRACTION_MAP = Object.entries(CONTRACTION_MAP).reduce((acc, [base, contracted]) => {
+  acc[contracted] = base;
+  return acc;
+}, {});
+function capitalizeFirstLetter(word) {
+  if (!word || typeof word !== 'string') return word;
+  return word.replace(/[a-zA-Z]/, ch => ch.toUpperCase());
+}
+function applyTextModifiers(words = [], options = {}, state = null) {
+  if (!Array.isArray(words) || words.length === 0) return [];
+  const capitals = Boolean(options && options.capitals);
+  const punctuation = Boolean(options && options.punctuation);
+  if (!capitals && !punctuation) return words.slice();
+  const tracker = (state && typeof state === 'object')
+    ? state
+    : { forceNextCapital: punctuation && capitals };
+  return words.map((rawWord) => {
+    let w = String(rawWord || '');
+    if (!w) return w;
+    const lower = w.toLowerCase();
+    const shouldCap = capitals && (tracker.forceNextCapital || Math.random() < 0.20);
+    tracker.forceNextCapital = false;
+    if (punctuation) {
+      if (CONTRACTION_MAP[lower] && Math.random() < 0.28) {
+        w = CONTRACTION_MAP[lower];
+      } else if (Math.random() < 0.22) {
+        const roll = Math.random();
+        if (roll < 0.45) {
+          w = w + ',';
+        } else if (roll < 0.75) {
+          w = w + '.';
+          tracker.forceNextCapital = true;
+        } else if (roll < 0.83) {
+          w = w + '?';
+          tracker.forceNextCapital = true;
+        } else if (roll < 0.90) {
+          w = w + '!';
+          tracker.forceNextCapital = true;
+        } else if (roll < 0.95) {
+          w = `"${w}"`;
+        } else {
+          w = w + '-';
+        }
+      }
+    }
+    if (shouldCap) {
+      w = capitalizeFirstLetter(w);
+    }
+    return w;
+  });
+}
+function getRandomWords(count = 70, recentBuffer = null, difficulty = 'normal') {
   const result = [];
   const bufferCap = 20;
   const buffer = recentBuffer || [];
+  const diffKey = (difficulty === 'easy' || difficulty === 'hard') ? difficulty : 'normal';
+  const weights = CLASSIC_WEIGHTS_BY_DIFFICULTY[diffKey] || CLASSIC_WEIGHTS;
+  const totalWeight = CLASSIC_TOTAL_BY_DIFFICULTY[diffKey] || CLASSIC_TOTAL_WEIGHT;
   for (let i = 0; i < count; i++) {
     let word;
     for (let attempts = 0; attempts < 60; attempts++) {
-      let r = Math.random() * CLASSIC_TOTAL_WEIGHT;
+      let r = Math.random() * totalWeight;
       let idx = 0;
-      for (let j = 0; j < CLASSIC_WEIGHTS.length; j++) {
-        r -= CLASSIC_WEIGHTS[j];
+      for (let j = 0; j < weights.length; j++) {
+        r -= weights[j];
         if (r <= 0) {
           idx = j;
           break;
@@ -4452,6 +4613,7 @@ class WordsModel {
   constructor(dictionary = DICTIONARY) {
     this.dictionary = dictionary;
     this.classicBuffer = [];
+    this.textModState = { forceNextCapital: true };
     this.rankedWords = dictionary.map(d => d.word);
     this.wordByRank = new Map();
     this.wordByText = new Map();
@@ -4466,14 +4628,31 @@ class WordsModel {
     return getWordMetadata(rank);
   }
   getWordByText(text) {
-    const raw = this.wordByText.get(text);
+    if (!text || typeof text !== 'string') return null;
+    let raw = this.wordByText.get(text);
+    if (!raw) {
+      const stripped = text.replace(/^[^a-zA-Z]+|[^a-zA-Z]+$/g, '').toLowerCase();
+      const base = REVERSE_CONTRACTION_MAP[stripped] || stripped.replace(/[^a-z]/g, '');
+      raw = this.wordByText.get(base);
+    }
     return raw ? getWordMetadata(raw.rank) : null;
   }
-  generateBatch(count, unlockedRanks, userStats, targetWpm, currentMomentum, bigramLedger = null) {
-    return generateWords(count, unlockedRanks, this.dictionary, userStats, targetWpm, currentMomentum, bigramLedger || this.bigramLedger);
+  generateBatch(count, unlockedRanks, userStats, targetWpm, currentMomentum, bigramLedger = null, textModOptions = null) {
+    const words = generateWords(count, unlockedRanks, this.dictionary, userStats, targetWpm, currentMomentum, bigramLedger || this.bigramLedger);
+    if (textModOptions && (textModOptions.capitals || textModOptions.punctuation)) {
+      return this.applyTextModifiers(words, textModOptions);
+    }
+    return words;
   }
-  generateClassicBatch(count = 70) {
-    return getRandomWords(count, this.classicBuffer);
+  generateClassicBatch(count = 70, difficulty = 'normal', textModOptions = null) {
+    const words = getRandomWords(count, this.classicBuffer, difficulty);
+    if (textModOptions && (textModOptions.capitals || textModOptions.punctuation)) {
+      return this.applyTextModifiers(words, textModOptions);
+    }
+    return words;
+  }
+  applyTextModifiers(words = [], options = {}) {
+    return applyTextModifiers(words, options, this.textModState);
   }
   getAnchors(unlockedRanks, userStats, bigramLedger = null) {
     return getAnchorWords(unlockedRanks, this.dictionary, userStats, bigramLedger || this.bigramLedger);
@@ -4494,6 +4673,7 @@ class WordsModel {
   resetHistory() {
     resetRecentHistory();
     this.classicBuffer = [];
+    this.textModState = { forceNextCapital: true };
   }
   rollEgg(unlockedRanks, streak = 0, forceRarity = null, wordStats = {}, targetWpm = 40, pendingRanks = [], bigramLedger = null) {
     return rollNewEgg(unlockedRanks, streak, forceRarity, wordStats, targetWpm, pendingRanks, bigramLedger);
@@ -4504,6 +4684,9 @@ if (typeof window !== 'undefined') {
   window.RAW_WORDS_LIST = RAW_WORDS_LIST;
   window.CLASSIC_WEIGHTS = CLASSIC_WEIGHTS;
   window.CLASSIC_TOTAL_WEIGHT = CLASSIC_TOTAL_WEIGHT;
+  window.CLASSIC_WEIGHTS_BY_DIFFICULTY = CLASSIC_WEIGHTS_BY_DIFFICULTY;
+  window.CLASSIC_TOTAL_BY_DIFFICULTY = CLASSIC_TOTAL_BY_DIFFICULTY;
+  window.applyTextModifiers = applyTextModifiers;
   window.getClassicTypabilityMultiplier = getClassicTypabilityMultiplier;
   window.RANKED_WORDS = RANKED_WORDS;
   window.DICTIONARY = DICTIONARY;
@@ -4537,6 +4720,9 @@ if (typeof module !== 'undefined' && module.exports) {
     RAW_WORDS_LIST,
     CLASSIC_WEIGHTS,
     CLASSIC_TOTAL_WEIGHT,
+    CLASSIC_WEIGHTS_BY_DIFFICULTY,
+    CLASSIC_TOTAL_BY_DIFFICULTY,
+    applyTextModifiers,
     getClassicTypabilityMultiplier,
     RANKED_WORDS,
     DICTIONARY,
@@ -4565,22 +4751,10 @@ if (typeof module !== 'undefined' && module.exports) {
     WordsModel
   };
 }
-var _EventEmitter = (typeof EventEmitter !== 'undefined') ? EventEmitter : null;
-if (!_EventEmitter && typeof require !== 'undefined') {
-  try {
-    _EventEmitter = require('../core/EventEmitter.js').EventEmitter;
-  } catch (e) {}
-}
-if (!_EventEmitter) {
-  _EventEmitter = class {
-    constructor() { this._listeners = new Map(); }
-    on(event, handler) { if (!this._listeners.has(event)) this._listeners.set(event, []); this._listeners.get(event).push(handler); return () => this.off(event, handler); }
-    off(event, handler) { const l = this._listeners.get(event); if (!l) return; const i = l.indexOf(handler); if (i !== -1) l.splice(i, 1); }
-    emit(event, ...args) { const l = this._listeners.get(event); if (!l) return; l.slice().forEach(fn => { try { fn(...args); } catch(e) { console.error(e); } }); }
-    removeAllListeners(event) { if (event) this._listeners.delete(event); else this._listeners.clear(); }
-  };
-}
-class FlowModel extends _EventEmitter {
+var _FlowEmitterBase = (typeof EventEmitter !== 'undefined')
+  ? EventEmitter
+  : (typeof require !== 'undefined' ? require('../core/EventEmitter.js').EventEmitter : class {});
+class FlowModel extends _FlowEmitterBase {
   constructor(options = {}) {
     super();
     this.targetWpm = options.targetWpm || 40;
@@ -4779,22 +4953,10 @@ if (typeof window !== 'undefined') {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { FlowModel };
 }
-var _EventEmitter = (typeof EventEmitter !== 'undefined') ? EventEmitter : null;
-if (!_EventEmitter && typeof require !== 'undefined') {
-  try {
-    _EventEmitter = require('../core/EventEmitter.js').EventEmitter;
-  } catch (e) {}
-}
-if (!_EventEmitter) {
-  _EventEmitter = class {
-    constructor() { this._listeners = new Map(); }
-    on(event, handler) { if (!this._listeners.has(event)) this._listeners.set(event, []); this._listeners.get(event).push(handler); return () => this.off(event, handler); }
-    off(event, handler) { const l = this._listeners.get(event); if (!l) return; const i = l.indexOf(handler); if (i !== -1) l.splice(i, 1); }
-    emit(event, ...args) { const l = this._listeners.get(event); if (!l) return; l.slice().forEach(fn => { try { fn(...args); } catch(e) { console.error(e); } }); }
-    removeAllListeners(event) { if (event) this._listeners.delete(event); else this._listeners.clear(); }
-  };
-}
-class SessionModel extends _EventEmitter {
+var _SessionEmitterBase = (typeof EventEmitter !== 'undefined')
+  ? EventEmitter
+  : (typeof require !== 'undefined' ? require('../core/EventEmitter.js').EventEmitter : class {});
+class SessionModel extends _SessionEmitterBase {
   constructor(options = {}) {
     super();
     this.mode = options.mode || 'flow'; // 'classic' | 'flow'
@@ -5627,22 +5789,10 @@ if (typeof window !== 'undefined') {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { SessionModel };
 }
-var _EventEmitter = (typeof EventEmitter !== 'undefined') ? EventEmitter : null;
-if (!_EventEmitter && typeof require !== 'undefined') {
-  try {
-    _EventEmitter = require('../core/EventEmitter.js').EventEmitter;
-  } catch (e) {}
-}
-if (!_EventEmitter) {
-  _EventEmitter = class {
-    constructor() { this._listeners = new Map(); }
-    on(event, handler) { if (!this._listeners.has(event)) this._listeners.set(event, []); this._listeners.get(event).push(handler); return () => this.off(event, handler); }
-    off(event, handler) { const l = this._listeners.get(event); if (!l) return; const i = l.indexOf(handler); if (i !== -1) l.splice(i, 1); }
-    emit(event, ...args) { const l = this._listeners.get(event); if (!l) return; l.slice().forEach(fn => { try { fn(...args); } catch(e) { console.error(e); } }); }
-    removeAllListeners(event) { if (event) this._listeners.delete(event); else this._listeners.clear(); }
-  };
-}
-class EggNestModel extends _EventEmitter {
+var _NestEmitterBase = (typeof EventEmitter !== 'undefined')
+  ? EventEmitter
+  : (typeof require !== 'undefined' ? require('../core/EventEmitter.js').EventEmitter : class {});
+class EggNestModel extends _NestEmitterBase {
   constructor(options = {}) {
     super();
     this.maxSlots = options.maxSlots || 3;
@@ -5846,6 +5996,111 @@ if (typeof window !== 'undefined') {
 }
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { EggNestModel };
+}
+var _GhostEmitterBase = (typeof EventEmitter !== 'undefined')
+  ? EventEmitter
+  : (typeof require !== 'undefined' ? require('../core/EventEmitter.js').EventEmitter : class {});
+class GhostPacerModel extends _GhostEmitterBase {
+  constructor(options = {}) {
+    super();
+    this.minWpm = options.minWpm || 15;
+    this.maxWpm = options.maxWpm || 150;
+    this.maxFrameDtMs = options.maxFrameDtMs || 100;
+    this.enabled = Boolean(options.enabled);
+    this.speed = this.clampSpeed(options.speed !== undefined ? options.speed : 50);
+    this.totalChars = 0;
+    this.isRunning = false;
+    this.needsSync = true;
+    this.consecutiveWords = 0;
+  }
+  clampSpeed(speed) {
+    const parsed = parseInt(speed, 10);
+    const num = (typeof parsed === 'number' && !isNaN(parsed) && parsed > 0) ? parsed : 50;
+    return Math.max(this.minWpm, Math.min(this.maxWpm, num));
+  }
+  setSpeed(speed) {
+    this.speed = this.clampSpeed(speed);
+    this.emit('speedChanged', this.speed);
+    return this.speed;
+  }
+  setEnabled(enabled) {
+    this.enabled = Boolean(enabled);
+    if (this.enabled) {
+      this.needsSync = true;
+    } else {
+      this.isRunning = false;
+    }
+    this.emit('enabledChanged', this.enabled);
+    return this.enabled;
+  }
+  toggle() {
+    return this.setEnabled(!this.enabled);
+  }
+  getCharCumulativeIndex(words = [], wordIdx = 0, charIdx = 0) {
+    const list = Array.isArray(words) ? words : [];
+    let total = 0;
+    for (let i = 0; i < wordIdx && i < list.length; i++) {
+      total += list[i].length + 1;
+    }
+    return total + charIdx;
+  }
+  mapCharsToPosition(words = [], totalChars = this.totalChars) {
+    const list = Array.isArray(words) ? words : [];
+    let remaining = Math.max(0, totalChars);
+    for (let i = 0; i < list.length; i++) {
+      const wLen = list[i].length;
+      const totalSlot = wLen + 1;
+      if (remaining < totalSlot) {
+        const charIdx = Math.floor(remaining);
+        const fraction = remaining - charIdx;
+        return {
+          wordIdx: i,
+          charIdx: Math.min(charIdx, wLen),
+          fraction,
+          isOutOfBounds: false
+        };
+      }
+      remaining -= totalSlot;
+    }
+    return {
+      wordIdx: Math.max(0, list.length - 1),
+      charIdx: 999,
+      fraction: 0,
+      isOutOfBounds: true
+    };
+  }
+  advance(dtMs, words = []) {
+    const clampedDt = Math.max(0, Math.min(this.maxFrameDtMs, Number(dtMs) || 0));
+    const charsPerMs = (this.speed * 5) / 60000;
+    this.totalChars += charsPerMs * clampedDt;
+    return this.mapCharsToPosition(words, this.totalChars);
+  }
+  syncToPlayer(words = [], wordIdx = 0, charIdx = 0) {
+    this.totalChars = this.getCharCumulativeIndex(words, wordIdx, charIdx);
+    return this.totalChars;
+  }
+  compensateInsertedWords(insertedWords = []) {
+    if (!Array.isArray(insertedWords) || insertedWords.length === 0) return this.totalChars;
+    const insertedChars = insertedWords.reduce((acc, w) => acc + w.length + 1, 0);
+    this.totalChars += insertedChars;
+    return this.totalChars;
+  }
+  isPlayerAhead(words = [], wordIdx = 0, charIdx = 0) {
+    const playerCumIdx = this.getCharCumulativeIndex(words, wordIdx, charIdx);
+    return playerCumIdx > Math.floor(this.totalChars);
+  }
+  reset() {
+    this.totalChars = 0;
+    this.isRunning = false;
+    this.needsSync = true;
+    this.consecutiveWords = 0;
+  }
+}
+if (typeof window !== 'undefined') {
+  window.GhostPacerModel = GhostPacerModel;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { GhostPacerModel };
 }
 const ACHIEVEMENTS = {
   cruising_60: {
@@ -6170,7 +6425,7 @@ const ACHIEVEMENTS = {
     tier: 'feat',
     title: 'Shock Absorber',
     icon: '🛡️',
-    desc: 'Absorb a typo above 100% Apex using the Cushion Buffer without dropping below 85% Flow, and recover back to 100%.',
+    desc: 'Absorb a fixed typo or slow word above 100% Apex using the Cushion Buffer without dropping below 85% Flow, and recover back to 100%.',
     category: 'feats'
   },
   in_stride_crack: {
@@ -6693,8 +6948,8 @@ const COSMETIC_FLOW_FX = {
     icon: '🕸️',
     desc: 'Synthwave wireframe laser frame with perspective corner grids and subtle CRT scanlines.',
     reqLevel: 11,
-    reqTrophies: ['flow_architect'],
-    reqLabel: 'Lv. 11 or Flow Architect Trophy',
+    reqTrophies: ['lexicon_architect'],
+    reqLabel: 'Lv. 11 or Lexicon Architect Trophy',
     swatches: ['#e879f9', '#22d3ee', '#7928ca']
   },
   solar_flame: {
@@ -6704,8 +6959,8 @@ const COSMETIC_FLOW_FX = {
     icon: '🔥',
     desc: 'Procedural organic flames generated via SVG turbulence filters with rising combustion embers.',
     reqLevel: 16,
-    reqTrophies: ['unstoppable_current', 'supersonic_90'],
-    reqLabel: 'Lv. 16 or Unstoppable / Supersonic',
+    reqTrophies: ['unbroken_stream', 'triple_digits'],
+    reqLabel: 'Lv. 16 or Unbroken Stream / Triple Digits',
     swatches: ['#dc2626', '#f97316', '#fbbf24', '#fef08a']
   },
   hyperdrive_warp: {
@@ -6715,8 +6970,8 @@ const COSMETIC_FLOW_FX = {
     icon: '🚀',
     desc: 'Sci-fi velocity tunnel with radial speedline streaks around the viewport periphery.',
     reqLevel: 19,
-    reqTrophies: ['flow_grandmaster', 'mach_1'],
-    reqLabel: 'Lv. 19 or Grandmaster / Mach 1',
+    reqTrophies: ['zen_master', 'terminal_velocity'],
+    reqLabel: 'Lv. 19 or Zen Master / Terminal Velocity',
     swatches: ['#38bdf8', '#818cf8', '#f8fafc']
   }
 };
@@ -6750,8 +7005,8 @@ const COSMETIC_CARET_FX = {
     icon: '☀️',
     desc: 'Blazing thermal gradient rising from cherry red and ember orange to solar gold.',
     reqLevel: 8,
-    reqTrophies: ['hot_streak'],
-    reqLabel: 'Lv. 8 or Hot Streak Trophy',
+    reqTrophies: ['redline_runner'],
+    reqLabel: 'Lv. 8 or Redline Runner Trophy',
     swatches: ['#dc2626', '#f97316', '#fbbf24', '#fef08a']
   },
   holo_glitch: {
@@ -6772,8 +7027,8 @@ const COSMETIC_CARET_FX = {
     icon: '❄️',
     desc: 'Shimmering diamond cyan, polar ice, and snow-white crystalline refraction.',
     reqLevel: 15,
-    reqTrophies: ['ice_veins'],
-    reqLabel: 'Lv. 15 or Ice in the Veins Trophy',
+    reqTrophies: ['surgical_precision'],
+    reqLabel: 'Lv. 15 or Surgical Precision Trophy',
     swatches: ['#38bdf8', '#e0f2fe', '#ffffff', '#818cf8']
   },
   plasma_arc: {
@@ -6807,8 +7062,8 @@ const COSMETIC_GHOST_STYLES = {
     icon: '▁',
     desc: 'Full-character glowing cyan underline runner skimming beneath target letters.',
     reqLevel: 3,
-    reqTrophies: ['pace_setter'],
-    reqLabel: 'Lv. 3 or Pace Setter Trophy',
+    reqTrophies: ['rabbit_chaser'],
+    reqLabel: 'Lv. 3 or Rabbit Chaser Trophy',
     swatches: ['#22d3ee', '#0ea5e9']
   },
   theme_specter: {
@@ -6829,8 +7084,8 @@ const COSMETIC_GHOST_STYLES = {
     icon: '▢',
     desc: 'Full-character hollow terminal wireframe box framing the target pace character.',
     reqLevel: 6,
-    reqTrophies: ['ghost_whisperer'],
-    reqLabel: 'Lv. 6 or Ghost Whisperer Trophy',
+    reqTrophies: ['rabbit_chaser'],
+    reqLabel: 'Lv. 6 or Rabbit Chaser Trophy',
     swatches: ['#38bdf8', '#0f172a']
   },
   golden_hare: {
@@ -6840,8 +7095,8 @@ const COSMETIC_GHOST_STYLES = {
     icon: '🏆',
     desc: 'Championship radiant gold vertical capsule with warm amber luminescence.',
     reqLevel: 10,
-    reqTrophies: ['shadow_conqueror'],
-    reqLabel: 'Lv. 10 or Shadow Conqueror Trophy',
+    reqTrophies: ['shadow_boxer'],
+    reqLabel: 'Lv. 10 or Shadow Boxer Trophy',
     swatches: ['#fbbf24', '#f59e0b', '#fef08a']
   },
   shadow_rival: {
@@ -6851,8 +7106,8 @@ const COSMETIC_GHOST_STYLES = {
     icon: '⚔️',
     desc: 'Translucent dark-crimson block cursor with a razor-sharp crimson bottom edge.',
     reqLevel: 14,
-    reqTrophies: ['ghost_duelist'],
-    reqLabel: 'Lv. 14 or Ghost Duelist Trophy',
+    reqTrophies: ['shadow_boxer'],
+    reqLabel: 'Lv. 14 or Shadow Boxer Trophy',
     swatches: ['#f43f5e', '#881337']
   }
 };
@@ -6969,6 +7224,14 @@ class CosmeticsModel {
       return !wasUnlocked && nowUnlocked;
     });
   }
+  getNewlyUnlockedOnAchievement(level = 1, prevAchievements = {}, nextAchievements = {}) {
+    const lv = Math.max(1, Number(level) || 1);
+    return this.listAll().filter(item => {
+      const wasUnlocked = this.isUnlocked(item.id, lv, prevAchievements);
+      const nowUnlocked = this.isUnlocked(item.id, lv, nextAchievements);
+      return !wasUnlocked && nowUnlocked;
+    });
+  }
 }
 if (typeof window !== 'undefined') {
   window.COSMETIC_THEMES = COSMETIC_THEMES;
@@ -6993,14 +7256,17 @@ if (typeof module !== 'undefined' && module.exports) {
   };
 }
 const STORAGE_KEYS = {
-  CLASSIC_STATS: 'typeflow_classic_stats_v1',
-  GAME_SAVE:     'typeflow_game_save_v2',
-  ACTIVE_MODE:   'typeflow_active_mode',
-  HIDDEN_MODE:   'typeflow_hidden_mode',
-  HIDDEN_METHOD: 'typeflow_hidden_method',
+  CLASSIC_STATS:    'typeflow_classic_stats_v1',
+  GAME_SAVE:        'typeflow_game_save_v2',
+  ACTIVE_MODE:      'typeflow_active_mode',
+  HIDDEN_MODE:      'typeflow_hidden_mode',
+  HIDDEN_METHOD:    'typeflow_hidden_method',
   HIDDEN_WORD_DIST: 'typeflow_hidden_word_dist',
-  GHOST_CURSOR:  'typeflow_ghost_cursor',
-  GHOST_SPEED:   'typeflow_ghost_speed'
+  GHOST_CURSOR:     'typeflow_ghost_cursor',
+  GHOST_SPEED:      'typeflow_ghost_speed',
+  WORD_DIFFICULTY:  'typeflow_word_difficulty',
+  PUNCTUATION_MODE: 'typeflow_punctuation_mode',
+  CAPITALS_MODE:    'typeflow_capitals_mode'
 };
 const DEFAULT_CLASSIC_STATS = {
   personalBests: {
@@ -7031,6 +7297,9 @@ const DEFAULT_GAME_SAVE = {
   hiddenWordDistance: 1,
   ghostCursor: false,
   ghostSpeed: 50,
+  wordDifficulty: 'normal',
+  punctuationMode: false,
+  capitalsMode: false,
   achievements: {},
   achievementCounters: {
     tests60Wpm: 0,
@@ -7201,6 +7470,72 @@ class StorageService {
     if (level >= 5)  return 'Rhythm Apprentice';
     return 'Novice Typist';
   }
+  normalizeHiddenMethod(val) {
+    if (val === 'char' || val === 'combo') return 'char';
+    return 'word';
+  }
+  clampHiddenWordDistance(val) {
+    const parsed = parseInt(val, 10);
+    if (isNaN(parsed) || parsed < 1 || parsed > 6) return 1;
+    return parsed;
+  }
+  clampGhostSpeed(val, strictClamp = false) {
+    const parsed = parseInt(val, 10);
+    if (isNaN(parsed) || parsed <= 0) return 50;
+    return strictClamp ? Math.max(15, Math.min(150, parsed)) : parsed;
+  }
+  normalizeWordDifficulty(val) {
+    if (val === 'easy' || val === 'normal' || val === 'hard') return val;
+    return 'normal';
+  }
+  normalizeEquippedCosmetics(equipped) {
+    const defaults = {
+      theme: 'oled_cyan',
+      flowFx: 'adaptive_resonance',
+      caret: 'line',
+      caretFx: 'rainbow_prism',
+      ghostStyle: 'phantom_line',
+      sound: 'clicky_blue'
+    };
+    if (!equipped || typeof equipped !== 'object') {
+      return Object.assign({}, defaults);
+    }
+    return Object.assign({}, defaults, equipped);
+  }
+  sanitizeGameSave(rawState) {
+    const defaultClone = JSON.parse(JSON.stringify(DEFAULT_GAME_SAVE));
+    const state = Object.assign(defaultClone, rawState || {});
+    if (!state.unlockedRanks || state.unlockedRanks.length === 0) {
+      state.unlockedRanks = [1];
+    }
+    if (state.eggBasket && state.eggBasket.length > 3) {
+      state.eggBasket = state.eggBasket.slice(0, 3);
+    }
+    if (!state.bigramLedger || typeof state.bigramLedger !== 'object') {
+      state.bigramLedger = {};
+    }
+    if (typeof state.hiddenMode !== 'boolean') {
+      state.hiddenMode = false;
+    }
+    state.hiddenMethod = this.normalizeHiddenMethod(state.hiddenMethod);
+    state.hiddenWordDistance = this.clampHiddenWordDistance(state.hiddenWordDistance);
+    if (typeof state.ghostCursor !== 'boolean') {
+      state.ghostCursor = false;
+    }
+    state.ghostSpeed = this.clampGhostSpeed(state.ghostSpeed, false);
+    state.wordDifficulty = this.normalizeWordDifficulty(state.wordDifficulty);
+    if (typeof state.punctuationMode !== 'boolean') {
+      state.punctuationMode = false;
+    }
+    if (typeof state.capitalsMode !== 'boolean') {
+      state.capitalsMode = false;
+    }
+    state.equippedCosmetics = this.normalizeEquippedCosmetics(state.equippedCosmetics);
+    if (!Array.isArray(state.flowHistory)) {
+      state.flowHistory = [];
+    }
+    return state;
+  }
   getGameSave() {
     try {
       const s = this._getStorage();
@@ -7211,51 +7546,7 @@ class StorageService {
         return fresh;
       }
       const parsed = JSON.parse(data);
-      const defaultClone = JSON.parse(JSON.stringify(DEFAULT_GAME_SAVE));
-      const state = Object.assign(defaultClone, parsed);
-      if (!state.unlockedRanks || state.unlockedRanks.length === 0) {
-        state.unlockedRanks = [1];
-      }
-      if (state.eggBasket && state.eggBasket.length > 3) {
-        state.eggBasket = state.eggBasket.slice(0, 3);
-      }
-      if (!state.bigramLedger || typeof state.bigramLedger !== 'object') {
-        state.bigramLedger = {};
-      }
-      if (typeof state.hiddenMode !== 'boolean') {
-        state.hiddenMode = false;
-      }
-      if (state.hiddenMethod !== 'char' && state.hiddenMethod !== 'word' && state.hiddenMethod !== 'combo') {
-        state.hiddenMethod = 'word';
-      } else if (state.hiddenMethod === 'combo') {
-        state.hiddenMethod = 'char';
-      }
-      if (typeof state.hiddenWordDistance !== 'number' || isNaN(state.hiddenWordDistance) || state.hiddenWordDistance < 1 || state.hiddenWordDistance > 5) {
-        state.hiddenWordDistance = 1;
-      }
-      if (typeof state.ghostCursor !== 'boolean') {
-        state.ghostCursor = false;
-      }
-      if (typeof state.ghostSpeed !== 'number' || isNaN(state.ghostSpeed) || state.ghostSpeed <= 0) {
-        state.ghostSpeed = 50;
-      }
-      const defaultCosmetics = {
-        theme: 'oled_cyan',
-        flowFx: 'adaptive_resonance',
-        caret: 'line',
-        caretFx: 'rainbow_prism',
-        ghostStyle: 'phantom_line',
-        sound: 'clicky_blue'
-      };
-      if (!state.equippedCosmetics || typeof state.equippedCosmetics !== 'object') {
-        state.equippedCosmetics = Object.assign({}, defaultCosmetics);
-      } else {
-        state.equippedCosmetics = Object.assign({}, defaultCosmetics, state.equippedCosmetics);
-      }
-      if (!Array.isArray(state.flowHistory)) {
-        state.flowHistory = [];
-      }
-      return state;
+      return this.sanitizeGameSave(parsed);
     } catch (e) {
       return JSON.parse(JSON.stringify(DEFAULT_GAME_SAVE));
     }
@@ -7606,17 +7897,16 @@ class StorageService {
       const s = this._getStorage();
       if (s) {
         const val = s.getItem(STORAGE_KEYS.HIDDEN_METHOD);
-        if (val === 'char' || val === 'word') return val;
-        if (val === 'combo') return 'char';
+        if (val !== null) return this.normalizeHiddenMethod(val);
       }
       const save = this.getGameSave();
-      return (save.hiddenMethod === 'char') ? 'char' : 'word';
+      return this.normalizeHiddenMethod(save.hiddenMethod);
     } catch (e) {
       return 'word';
     }
   }
   setHiddenMethod(val) {
-    const method = (val === 'char' || val === 'combo') ? 'char' : 'word';
+    const method = this.normalizeHiddenMethod(val);
     try {
       const s = this._getStorage();
       if (s) s.setItem(STORAGE_KEYS.HIDDEN_METHOD, method);
@@ -7632,12 +7922,11 @@ class StorageService {
     try {
       const s = this._getStorage();
       if (s) {
-        const val = parseInt(s.getItem(STORAGE_KEYS.HIDDEN_WORD_DIST), 10);
-        if (!isNaN(val) && val >= 1 && val <= 6) return val;
+        const raw = s.getItem(STORAGE_KEYS.HIDDEN_WORD_DIST);
+        if (raw !== null) return this.clampHiddenWordDistance(raw);
       }
       const save = this.getGameSave();
-      const dist = parseInt(save.hiddenWordDistance, 10);
-      return (!isNaN(dist) && dist >= 1 && dist <= 6) ? dist : 1;
+      return this.clampHiddenWordDistance(save.hiddenWordDistance);
     } catch (e) {
       return 1;
     }
@@ -7687,19 +7976,16 @@ class StorageService {
       const s = this._getStorage();
       if (s) {
         const val = s.getItem(STORAGE_KEYS.GHOST_SPEED);
-        if (val !== null) {
-          const num = parseInt(val, 10);
-          if (!isNaN(num) && num > 0) return num;
-        }
+        if (val !== null) return this.clampGhostSpeed(val, false);
       }
       const save = this.getGameSave();
-      return (typeof save.ghostSpeed === 'number' && save.ghostSpeed > 0) ? save.ghostSpeed : 50;
+      return this.clampGhostSpeed(save.ghostSpeed, false);
     } catch (e) {
       return 50;
     }
   }
   setGhostSpeed(speed) {
-    const num = Math.max(15, Math.min(150, parseInt(speed, 10) || 50));
+    const num = this.clampGhostSpeed(speed, true);
     try {
       const s = this._getStorage();
       if (s) s.setItem(STORAGE_KEYS.GHOST_SPEED, String(num));
@@ -7709,6 +7995,84 @@ class StorageService {
       return num;
     } catch (e) {
       return num;
+    }
+  }
+  getWordDifficulty() {
+    try {
+      const s = this._getStorage();
+      if (s) {
+        const val = s.getItem(STORAGE_KEYS.WORD_DIFFICULTY);
+        if (val !== null) return this.normalizeWordDifficulty(val);
+      }
+      const save = this.getGameSave();
+      return this.normalizeWordDifficulty(save.wordDifficulty);
+    } catch (e) {
+      return 'normal';
+    }
+  }
+  setWordDifficulty(diff) {
+    const clean = this.normalizeWordDifficulty(diff);
+    try {
+      const s = this._getStorage();
+      if (s) s.setItem(STORAGE_KEYS.WORD_DIFFICULTY, clean);
+      const save = this.getGameSave();
+      save.wordDifficulty = clean;
+      this.saveGameSave(save);
+      return clean;
+    } catch (e) {
+      return clean;
+    }
+  }
+  getPunctuationMode() {
+    try {
+      const s = this._getStorage();
+      if (s) {
+        const val = s.getItem(STORAGE_KEYS.PUNCTUATION_MODE);
+        if (val !== null) return val === 'true';
+      }
+      const save = this.getGameSave();
+      return !!save.punctuationMode;
+    } catch (e) {
+      return false;
+    }
+  }
+  setPunctuationMode(enabled) {
+    const val = !!enabled;
+    try {
+      const s = this._getStorage();
+      if (s) s.setItem(STORAGE_KEYS.PUNCTUATION_MODE, String(val));
+      const save = this.getGameSave();
+      save.punctuationMode = val;
+      this.saveGameSave(save);
+      return val;
+    } catch (e) {
+      return val;
+    }
+  }
+  getCapitalsMode() {
+    try {
+      const s = this._getStorage();
+      if (s) {
+        const val = s.getItem(STORAGE_KEYS.CAPITALS_MODE);
+        if (val !== null) return val === 'true';
+      }
+      const save = this.getGameSave();
+      return !!save.capitalsMode;
+    } catch (e) {
+      return false;
+    }
+  }
+  setCapitalsMode(enabled) {
+    const val = !!enabled;
+    try {
+      const s = this._getStorage();
+      if (s) s.setItem(STORAGE_KEYS.CAPITALS_MODE, String(val));
+      const save = this.getGameSave();
+      save.capitalsMode = val;
+      this.saveGameSave(save);
+      return val;
+    } catch (e) {
+      return val;
     }
   }
   getAchievements() {
@@ -7773,14 +8137,16 @@ class StorageService {
         for (const t of classicStats.recentHistory) {
           if (t.duration >= 30) {
             const acc = t.accuracy ?? t.acc ?? 0;
-            if (t.wpm >= 60 && acc >= 96) counters.tests60Wpm++;
-            if (t.wpm >= 100 && acc >= 96) counters.tests100Wpm++;
-            if (acc >= 98) counters.tests98Acc++;
-            if (typeof t.incorrectChars === 'number' && t.incorrectChars === 0 && (!t.fixedErrors || t.fixedErrors === 0)) {
+            const wpm = t.wpm || 0;
+            if (wpm >= 60 && acc >= 96) counters.tests60Wpm++;
+            if (wpm >= 100 && acc >= 96) counters.tests100Wpm++;
+            if (wpm >= 50 && acc >= 98) counters.tests98Acc++;
+            if (wpm >= 50 && typeof t.incorrectChars === 'number' && t.incorrectChars === 0 && (!t.fixedErrors || t.fixedErrors === 0)) {
               counters.tests100RawAcc++;
             }
-            if (t.wpm >= 50 && t.consistency >= 85) counters.tests85Consistency++;
-            if (t.wpm >= 70 && t.consistency >= 92) counters.tests92Consistency++;
+            if (wpm >= 50 && t.consistency >= 85) counters.tests85Consistency++;
+            if (wpm >= 70 && t.consistency >= 92) counters.tests92Consistency++;
+            if (t.hiddenMode && acc >= 96) counters.testsHiddenMode++;
             modified = true;
           }
         }
@@ -7811,31 +8177,12 @@ class StorageService {
   }
   getEquippedCosmetics() {
     const save = this.getGameSave();
-    return Object.assign(
-      {
-        theme: 'oled_cyan',
-        flowFx: 'adaptive_resonance',
-        caret: 'line',
-        caretFx: 'rainbow_prism',
-        ghostStyle: 'phantom_line',
-        sound: 'clicky_blue'
-      },
-      save.equippedCosmetics || {}
-    );
+    return this.normalizeEquippedCosmetics(save.equippedCosmetics);
   }
   setEquippedCosmetic(category, id) {
     if (!category || !id) return this.getEquippedCosmetics();
     const save = this.getGameSave();
-    if (!save.equippedCosmetics || typeof save.equippedCosmetics !== 'object') {
-      save.equippedCosmetics = {
-        theme: 'oled_cyan',
-        flowFx: 'adaptive_resonance',
-        caret: 'line',
-        caretFx: 'rainbow_prism',
-        ghostStyle: 'phantom_line',
-        sound: 'clicky_blue'
-      };
-    }
+    save.equippedCosmetics = this.normalizeEquippedCosmetics(save.equippedCosmetics);
     save.equippedCosmetics[category] = id;
     this.saveGameSave(save);
     return Object.assign({}, save.equippedCosmetics);
@@ -9092,6 +9439,11 @@ class HUDView {
     this.ghostSliderPill = elements.ghostSliderPill || (typeof document !== 'undefined' ? document.getElementById('ghost-slider-pill') : null);
     this.ghostSlider = elements.ghostSlider || (typeof document !== 'undefined' ? document.getElementById('ghost-slider') : null);
     this.ghostVal = elements.ghostVal || (typeof document !== 'undefined' ? document.getElementById('ghost-val') : null);
+    this.wordDiffEasy = elements.wordDiffEasy || (typeof document !== 'undefined' ? document.getElementById('word-diff-easy') : null);
+    this.wordDiffNormal = elements.wordDiffNormal || (typeof document !== 'undefined' ? document.getElementById('word-diff-normal') : null);
+    this.wordDiffHard = elements.wordDiffHard || (typeof document !== 'undefined' ? document.getElementById('word-diff-hard') : null);
+    this.punctBtn = elements.punctBtn || (typeof document !== 'undefined' ? document.getElementById('punct-btn') : null);
+    this.capsBtn = elements.capsBtn || (typeof document !== 'undefined' ? document.getElementById('caps-btn') : null);
     this.modsBtn = elements.modsBtn || (typeof document !== 'undefined' ? document.getElementById('mods-btn') : null);
     this.modsPopover = elements.modsPopover || (typeof document !== 'undefined' ? document.getElementById('mods-popover') : null);
     this.modsCloseBtn = elements.modsCloseBtn || (typeof document !== 'undefined' ? document.getElementById('mods-close-btn') : null);
@@ -9205,6 +9557,36 @@ class HUDView {
         if (handlers.onGhostSpeedChange) handlers.onGhostSpeedChange(val);
       });
     }
+    const diffEasy = this.wordDiffEasy || ((typeof document !== 'undefined') ? document.getElementById('word-diff-easy') : null);
+    const diffNormal = this.wordDiffNormal || ((typeof document !== 'undefined') ? document.getElementById('word-diff-normal') : null);
+    const diffHard = this.wordDiffHard || ((typeof document !== 'undefined') ? document.getElementById('word-diff-hard') : null);
+    if (diffEasy) {
+      diffEasy.addEventListener('click', () => {
+        if (handlers.onWordDifficultyChange) handlers.onWordDifficultyChange('easy');
+      });
+    }
+    if (diffNormal) {
+      diffNormal.addEventListener('click', () => {
+        if (handlers.onWordDifficultyChange) handlers.onWordDifficultyChange('normal');
+      });
+    }
+    if (diffHard) {
+      diffHard.addEventListener('click', () => {
+        if (handlers.onWordDifficultyChange) handlers.onWordDifficultyChange('hard');
+      });
+    }
+    const punctBtn = this.punctBtn || ((typeof document !== 'undefined') ? document.getElementById('punct-btn') : null);
+    if (punctBtn) {
+      punctBtn.addEventListener('click', () => {
+        if (handlers.onPunctuationToggle) handlers.onPunctuationToggle();
+      });
+    }
+    const capsBtn = this.capsBtn || ((typeof document !== 'undefined') ? document.getElementById('caps-btn') : null);
+    if (capsBtn) {
+      capsBtn.addEventListener('click', () => {
+        if (handlers.onCapitalsToggle) handlers.onCapitalsToggle();
+      });
+    }
     const restartBtn = (typeof document !== 'undefined') ? document.getElementById('restart-btn') : null;
     const brandLogo = (typeof document !== 'undefined') ? document.getElementById('brand-logo') : null;
     if (restartBtn) {
@@ -9239,8 +9621,11 @@ class HUDView {
         this.toggleModsPopover(false);
       });
     }
-    if (typeof document !== 'undefined') {
-      document.addEventListener('click', (e) => {
+    if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+      if (this._onDocClick && typeof document.removeEventListener === 'function') {
+        document.removeEventListener('click', this._onDocClick);
+      }
+      this._onDocClick = (e) => {
         const popover = this.modsPopover || document.getElementById('mods-popover');
         const btn = this.modsBtn || document.getElementById('mods-btn');
         if (popover && popover.style.display !== 'none') {
@@ -9248,7 +9633,8 @@ class HUDView {
             this.toggleModsPopover(false);
           }
         }
-      });
+      };
+      document.addEventListener('click', this._onDocClick);
     }
   }
   setFocusOpacity(opacity) {
@@ -9465,6 +9851,38 @@ class HUDView {
     }
     this._refreshModsIndicator();
   }
+  updateWordDifficultyState(difficulty = 'normal') {
+    const clean = (difficulty === 'easy' || difficulty === 'hard') ? difficulty : 'normal';
+    const easyBtn = this.wordDiffEasy || ((typeof document !== 'undefined') ? document.getElementById('word-diff-easy') : null);
+    const normalBtn = this.wordDiffNormal || ((typeof document !== 'undefined') ? document.getElementById('word-diff-normal') : null);
+    const hardBtn = this.wordDiffHard || ((typeof document !== 'undefined') ? document.getElementById('word-diff-hard') : null);
+    if (easyBtn) easyBtn.classList.toggle('active', clean === 'easy');
+    if (normalBtn) normalBtn.classList.toggle('active', clean === 'normal');
+    if (hardBtn) hardBtn.classList.toggle('active', clean === 'hard');
+    this._refreshModsIndicator();
+  }
+  updatePunctuationState(enabled = false) {
+    const btn = this.punctBtn || ((typeof document !== 'undefined') ? document.getElementById('punct-btn') : null);
+    if (btn) {
+      btn.classList.toggle('active', !!enabled);
+      btn.setAttribute('aria-pressed', String(!!enabled));
+      btn.title = enabled
+        ? 'Punctuation Mode: ON - Click to disable'
+        : 'Toggle Punctuation (. , ! ? \' " -)';
+    }
+    this._refreshModsIndicator();
+  }
+  updateCapitalsState(enabled = false) {
+    const btn = this.capsBtn || ((typeof document !== 'undefined') ? document.getElementById('caps-btn') : null);
+    if (btn) {
+      btn.classList.toggle('active', !!enabled);
+      btn.setAttribute('aria-pressed', String(!!enabled));
+      btn.title = enabled
+        ? 'Capital Letters Mode: ON - Click to disable'
+        : 'Toggle Capital Letters at the start of words';
+    }
+    this._refreshModsIndicator();
+  }
   toggleModsPopover(forceState) {
     const popover = this.modsPopover || ((typeof document !== 'undefined') ? document.getElementById('mods-popover') : null);
     const btn = this.modsBtn || ((typeof document !== 'undefined') ? document.getElementById('mods-btn') : null);
@@ -9481,10 +9899,10 @@ class HUDView {
     const popover = this.modsPopover || ((typeof document !== 'undefined') ? document.getElementById('mods-popover') : null);
     return Boolean(popover && popover.style.display !== 'none');
   }
-  updateModsActiveIndicator(isHdActive, isGhostActive, isSoundActive) {
+  updateModsActiveIndicator(isHdActive, isGhostActive, isSoundActive, isExtraModActive = false) {
     const dot = this.modsActiveDot || ((typeof document !== 'undefined') ? document.getElementById('mods-active-dot') : null);
     const btn = this.modsBtn || ((typeof document !== 'undefined') ? document.getElementById('mods-btn') : null);
-    const hasActiveMods = Boolean(isHdActive || isGhostActive || isSoundActive);
+    const hasActiveMods = Boolean(isHdActive || isGhostActive || isSoundActive || isExtraModActive);
     if (dot) {
       dot.style.display = hasActiveMods ? 'inline-block' : 'none';
     }
@@ -9496,10 +9914,17 @@ class HUDView {
     const hdBtn = this.hdBtn || ((typeof document !== 'undefined') ? document.getElementById('hd-btn') : null);
     const ghostBtn = this.ghostBtn || ((typeof document !== 'undefined') ? document.getElementById('ghost-btn') : null);
     const soundOn = this.soundIconOn || ((typeof document !== 'undefined') ? document.getElementById('sound-icon-on') : null);
+    const punctBtn = this.punctBtn || ((typeof document !== 'undefined') ? document.getElementById('punct-btn') : null);
+    const capsBtn = this.capsBtn || ((typeof document !== 'undefined') ? document.getElementById('caps-btn') : null);
+    const easyBtn = this.wordDiffEasy || ((typeof document !== 'undefined') ? document.getElementById('word-diff-easy') : null);
+    const hardBtn = this.wordDiffHard || ((typeof document !== 'undefined') ? document.getElementById('word-diff-hard') : null);
     const isHd = Boolean(hdBtn && hdBtn.classList.contains('active'));
     const isGhost = Boolean(ghostBtn && ghostBtn.classList.contains('active'));
     const isSound = Boolean(soundOn && soundOn.style.display !== 'none');
-    this.updateModsActiveIndicator(isHd, isGhost, isSound);
+    const isPunct = Boolean(punctBtn && punctBtn.classList.contains('active'));
+    const isCaps = Boolean(capsBtn && capsBtn.classList.contains('active'));
+    const isCustomDiff = Boolean((easyBtn && easyBtn.classList.contains('active')) || (hardBtn && hardBtn.classList.contains('active')));
+    this.updateModsActiveIndicator(isHd, isGhost, isSound, isPunct || isCaps || isCustomDiff);
   }
   showAchievementToast(achievement) {
     if (!achievement) return;
@@ -9579,6 +10004,18 @@ class HUDView {
       this.flowVignetteOverlay.classList.add(`flow-fx-${this.activeFlowFxId}`);
     }
     return this.activeFlowFxId;
+  }
+  destroy() {
+    if (this._onDocClick && typeof document !== 'undefined' && typeof document.removeEventListener === 'function') {
+      document.removeEventListener('click', this._onDocClick);
+      this._onDocClick = null;
+    }
+    if (this.toastTimeout) {
+      clearTimeout(this.toastTimeout);
+      this.toastTimeout = null;
+    }
+    this.toastQueue = [];
+    this.isToastShowing = false;
   }
 }
 if (typeof window !== 'undefined') {
@@ -10790,6 +11227,12 @@ if (!_CosmeticsModel && typeof require !== 'undefined') {
     _CosmeticsModel = require('../models/CosmeticsModel.js').CosmeticsModel;
   } catch (e) {}
 }
+var _GhostPacerModel = (typeof GhostPacerModel !== 'undefined') ? GhostPacerModel : null;
+if (!_GhostPacerModel && typeof require !== 'undefined') {
+  try {
+    _GhostPacerModel = require('../models/GhostPacerModel.js').GhostPacerModel;
+  } catch (e) {}
+}
 class GameController {
   constructor(deps = {}) {
     this.wordsModel = deps.wordsModel || new WordsModel();
@@ -10815,11 +11258,18 @@ class GameController {
     } else {
       this.cosmeticsModel = null;
     }
+    const GPClass = deps.ghostPacerModelClass || _GhostPacerModel || (typeof GhostPacerModel !== 'undefined' ? GhostPacerModel : null);
+    if (deps.ghostPacerModel) {
+      this.ghostPacerModel = deps.ghostPacerModel;
+    } else if (GPClass) {
+      this.ghostPacerModel = new GPClass();
+    } else {
+      this.ghostPacerModel = null;
+    }
     this.flowStartTime = null;
     this.consecutiveApexWords = 0;
     this.cushionAbsorbedState = false;
     this.hatchModeEnteredMomentum = null;
-    this.ghostConsecutiveWords = 0;
     const BLClass = deps.bigramLedgerClass || _BigramLedger || (typeof BigramLedger !== 'undefined' ? BigramLedger : null);
     if (deps.bigramLedger) {
       this.bigramLedger = deps.bigramLedger;
@@ -10857,15 +11307,10 @@ class GameController {
     this.lastFlowRunEndTime = 0;
     this.afkRecapTriggered = false;
     this.lastFlowTickTime = 0;
-    this.ghostEnabled = false;
-    this.ghostSpeed = 50;
     this.ghostAnimId = null;
     this.ghostLastFrameTime = null;
-    this.ghostTotalChars = 0;
     this.ghostPhaseTimer = null;
     this.ghostResetTimer = null;
-    this.isGhostRunning = false;
-    this.ghostNeedsSync = true;
     this._onWindowResize = null;
     this.isZenActive = false;
     this.zenTimer = null;
@@ -10945,6 +11390,18 @@ class GameController {
     if (this.hudView.updateGhostState) {
       this.hudView.updateGhostState(this.ghostEnabled, this.ghostSpeed);
     }
+    this.wordDifficulty = this.storageService.getWordDifficulty ? this.storageService.getWordDifficulty() : 'normal';
+    this.punctuationEnabled = this.storageService.getPunctuationMode ? this.storageService.getPunctuationMode() : false;
+    this.capitalsEnabled = this.storageService.getCapitalsMode ? this.storageService.getCapitalsMode() : false;
+    if (this.hudView.updateWordDifficultyState) {
+      this.hudView.updateWordDifficultyState(this.wordDifficulty);
+    }
+    if (this.hudView.updatePunctuationState) {
+      this.hudView.updatePunctuationState(this.punctuationEnabled);
+    }
+    if (this.hudView.updateCapitalsState) {
+      this.hudView.updateCapitalsState(this.capitalsEnabled);
+    }
     this.keyboardController.attach(
       typeof window !== 'undefined' ? window : null,
       this.stageView.typingInput,
@@ -10975,6 +11432,9 @@ class GameController {
       onHiddenWordDistanceChange: (dist) => this.setHiddenWordDistance(dist),
       onGhostToggle: () => this.toggleGhostCursor(),
       onGhostSpeedChange: (speed) => this.updateGhostSpeed(speed),
+      onWordDifficultyChange: (diff) => this.setWordDifficulty(diff),
+      onPunctuationToggle: () => this.togglePunctuationMode(),
+      onCapitalsToggle: () => this.toggleCapitalsMode(),
       onRestart: () => this.resetTest(),
       onOpenArmory: () => this.openStats('armory')
     });
@@ -11146,9 +11606,26 @@ class GameController {
     this.renderArmoryModal();
     return true;
   }
+  _notifyUnlockedCosmetics(unlockedCosmetics) {
+    if (!unlockedCosmetics || unlockedCosmetics.length === 0) return;
+    for (const item of unlockedCosmetics) {
+      if (this.hudView && this.hudView.showAchievementToast) {
+        this.hudView.showAchievementToast({
+          tier: 'cosmetic',
+          icon: item.icon,
+          title: item.title,
+          desc: `Unlocked ${item.category} in the Cosmetic Armory!`
+        });
+      }
+    }
+    if (this.hudView && this.hudView.setStatsBadgeVisible) {
+      this.hudView.setStatsBadgeVisible(true);
+    }
+  }
   triggerAchievementEvent(eventType, payload = {}) {
     if (!this.achievementsModel) return;
     const gameSave = this.storageService.getGameSave ? this.storageService.getGameSave() : {};
+    const prevAchievements = Object.assign({}, gameSave.achievements || (this.storageService.getAchievements ? this.storageService.getAchievements() : {}));
     const motorSummary = (eventType === 'lexicon_updated' && this.storageService.getMotorMasterySummary)
       ? this.storageService.getMotorMasterySummary(gameSave)
       : {};
@@ -11169,6 +11646,17 @@ class GameController {
         if (this.audioService && this.audioService.playAchievementUnlock) {
           this.audioService.playAchievementUnlock(ach.tier);
         }
+      }
+      if (this.cosmeticsModel && this.cosmeticsModel.getNewlyUnlockedOnAchievement) {
+        const nextAchievements = this.storageService.getAchievements
+          ? this.storageService.getAchievements()
+          : Object.assign({}, this.achievementsModel.unlocked);
+        const unlockedCosmetics = this.cosmeticsModel.getNewlyUnlockedOnAchievement(
+          gameSave.level || 1,
+          prevAchievements,
+          nextAchievements
+        );
+        this._notifyUnlockedCosmetics(unlockedCosmetics);
       }
       if (this.hudView && this.hudView.setStatsBadgeVisible) {
         this.hudView.setStatsBadgeVisible(true);
@@ -11273,15 +11761,57 @@ class GameController {
       streak
     );
   }
+  get ghostEnabled() {
+    return this.ghostPacerModel ? this.ghostPacerModel.enabled : Boolean(this._ghostEnabled);
+  }
+  set ghostEnabled(val) {
+    if (this.ghostPacerModel) this.ghostPacerModel.setEnabled(val);
+    else this._ghostEnabled = Boolean(val);
+  }
+  get ghostSpeed() {
+    return this.ghostPacerModel ? this.ghostPacerModel.speed : (this._ghostSpeed || 50);
+  }
+  set ghostSpeed(val) {
+    if (this.ghostPacerModel) this.ghostPacerModel.setSpeed(val);
+    else this._ghostSpeed = Math.max(15, Math.min(150, parseInt(val, 10) || 50));
+  }
+  get ghostTotalChars() {
+    return this.ghostPacerModel ? this.ghostPacerModel.totalChars : (this._ghostTotalChars || 0);
+  }
+  set ghostTotalChars(val) {
+    if (this.ghostPacerModel) this.ghostPacerModel.totalChars = Number(val) || 0;
+    else this._ghostTotalChars = Number(val) || 0;
+  }
+  get isGhostRunning() {
+    return this.ghostPacerModel ? this.ghostPacerModel.isRunning : Boolean(this._isGhostRunning);
+  }
+  set isGhostRunning(val) {
+    if (this.ghostPacerModel) this.ghostPacerModel.isRunning = Boolean(val);
+    else this._isGhostRunning = Boolean(val);
+  }
+  get ghostNeedsSync() {
+    return this.ghostPacerModel ? this.ghostPacerModel.needsSync : Boolean(this._ghostNeedsSync);
+  }
+  set ghostNeedsSync(val) {
+    if (this.ghostPacerModel) this.ghostPacerModel.needsSync = Boolean(val);
+    else this._ghostNeedsSync = Boolean(val);
+  }
+  get ghostConsecutiveWords() {
+    return this.ghostPacerModel ? this.ghostPacerModel.consecutiveWords : (this._ghostConsecutiveWords || 0);
+  }
+  set ghostConsecutiveWords(val) {
+    if (this.ghostPacerModel) this.ghostPacerModel.consecutiveWords = Number(val) || 0;
+    else this._ghostConsecutiveWords = Number(val) || 0;
+  }
   toggleGhostCursor() {
-    this.ghostEnabled = !this.ghostEnabled;
+    const next = this.ghostPacerModel ? this.ghostPacerModel.toggle() : (this.ghostEnabled = !this.ghostEnabled);
     if (this.storageService.setGhostCursor) {
-      this.storageService.setGhostCursor(this.ghostEnabled);
+      this.storageService.setGhostCursor(next);
     }
     if (this.hudView.updateGhostState) {
-      this.hudView.updateGhostState(this.ghostEnabled, this.ghostSpeed);
+      this.hudView.updateGhostState(next, this.ghostSpeed);
     }
-    if (!this.ghostEnabled) {
+    if (!next) {
       this.stopGhostPacer(true);
       if (this.stageView.setGhostVisible) {
         this.stageView.setGhostVisible(false);
@@ -11290,21 +11820,67 @@ class GameController {
       this.ghostNeedsSync = true;
       this.syncGhostToPlayer();
     }
-    return this.ghostEnabled;
+    return next;
   }
   updateGhostSpeed(speed) {
-    const num = Math.max(15, Math.min(150, parseInt(speed, 10) || 50));
-    this.ghostSpeed = num;
+    const num = this.ghostPacerModel
+      ? this.ghostPacerModel.setSpeed(speed)
+      : (this.ghostSpeed = Math.max(15, Math.min(150, parseInt(speed, 10) || 50)));
     if (this.storageService.setGhostSpeed) {
       this.storageService.setGhostSpeed(num);
     }
     if (this.hudView.updateGhostState) {
-      this.hudView.updateGhostState(this.ghostEnabled, this.ghostSpeed);
+      this.hudView.updateGhostState(this.ghostEnabled, num);
     }
     return num;
   }
+  _getTextModOptions() {
+    return {
+      capitals: Boolean(this.capitalsEnabled),
+      punctuation: Boolean(this.punctuationEnabled)
+    };
+  }
+  setWordDifficulty(diff) {
+    const clean = (diff === 'easy' || diff === 'hard') ? diff : 'normal';
+    this.wordDifficulty = clean;
+    if (this.storageService && this.storageService.setWordDifficulty) {
+      this.storageService.setWordDifficulty(clean);
+    }
+    if (this.hudView && this.hudView.updateWordDifficultyState) {
+      this.hudView.updateWordDifficultyState(clean);
+    }
+    if (this.currentMode === 'classic') {
+      this.resetTest();
+    }
+    return clean;
+  }
+  togglePunctuationMode() {
+    this.punctuationEnabled = !this.punctuationEnabled;
+    if (this.storageService && this.storageService.setPunctuationMode) {
+      this.storageService.setPunctuationMode(this.punctuationEnabled);
+    }
+    if (this.hudView && this.hudView.updatePunctuationState) {
+      this.hudView.updatePunctuationState(this.punctuationEnabled);
+    }
+    this.resetTest();
+    return this.punctuationEnabled;
+  }
+  toggleCapitalsMode() {
+    this.capitalsEnabled = !this.capitalsEnabled;
+    if (this.storageService && this.storageService.setCapitalsMode) {
+      this.storageService.setCapitalsMode(this.capitalsEnabled);
+    }
+    if (this.hudView && this.hudView.updateCapitalsState) {
+      this.hudView.updateCapitalsState(this.capitalsEnabled);
+    }
+    this.resetTest();
+    return this.capitalsEnabled;
+  }
   getCharCumulativeIndex(wordIdx, charIdx) {
     const words = this.sessionModel.words || [];
+    if (this.ghostPacerModel) {
+      return this.ghostPacerModel.getCharCumulativeIndex(words, wordIdx, charIdx);
+    }
     let total = 0;
     for (let i = 0; i < wordIdx && i < words.length; i++) {
       total += words[i].length + 1;
@@ -11313,16 +11889,8 @@ class GameController {
   }
   mapCharsToPosition(totalChars) {
     const words = this.sessionModel.words || [];
-    let remaining = Math.max(0, totalChars);
-    for (let i = 0; i < words.length; i++) {
-      const wLen = words[i].length;
-      const totalSlot = wLen + 1;
-      if (remaining < totalSlot) {
-        const charIdx = Math.floor(remaining);
-        const fraction = remaining - charIdx;
-        return { wordIdx: i, charIdx: Math.min(charIdx, wLen), fraction, isOutOfBounds: false };
-      }
-      remaining -= totalSlot;
+    if (this.ghostPacerModel) {
+      return this.ghostPacerModel.mapCharsToPosition(words, totalChars);
     }
     return { wordIdx: Math.max(0, words.length - 1), charIdx: 999, fraction: 0, isOutOfBounds: true };
   }
@@ -11373,9 +11941,10 @@ class GameController {
       const currentTime = now || ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now());
       const dt = Math.min(100, currentTime - this.ghostLastFrameTime);
       this.ghostLastFrameTime = currentTime;
-      const v = (this.ghostSpeed * 5) / 60000;
-      this.ghostTotalChars += v * dt;
-      const pos = this.mapCharsToPosition(this.ghostTotalChars);
+      const words = this.sessionModel.words || [];
+      const pos = this.ghostPacerModel
+        ? this.ghostPacerModel.advance(dt, words)
+        : this.mapCharsToPosition((this.ghostTotalChars += ((this.ghostSpeed * 5) / 60000) * dt));
       let res = null;
       if (this.stageView.updateGhostCaret) {
         res = this.stageView.updateGhostCaret(pos.wordIdx, pos.charIdx, pos.fraction);
@@ -11418,10 +11987,15 @@ class GameController {
     }
   }
   syncGhostToPlayer() {
-    this.ghostTotalChars = this.getCharCumulativeIndex(
-      this.sessionModel.currentWordIdx,
-      this.sessionModel.currentCharIdx
-    );
+    const words = this.sessionModel.words || [];
+    if (this.ghostPacerModel) {
+      this.ghostPacerModel.syncToPlayer(words, this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
+    } else {
+      this.ghostTotalChars = this.getCharCumulativeIndex(
+        this.sessionModel.currentWordIdx,
+        this.sessionModel.currentCharIdx
+      );
+    }
     if (this.stageView.syncGhostToCaret) {
       this.stageView.syncGhostToCaret(
         this.sessionModel.currentWordIdx,
@@ -11460,9 +12034,10 @@ class GameController {
     const gameState = this.storageService.getGameSave();
     this.eggNestModel.syncBasket(gameState.eggBasket || []);
     const count = this.bufferConfig.initialWordCount;
+    const textModOpts = this._getTextModOptions();
     const words = (this.currentMode === 'flow')
-      ? this.wordsModel.generateBatch(count, gameState.unlockedRanks, gameState.wordStats, this.flowModel.targetWpm, 0, this.bigramLedger)
-      : this.wordsModel.generateClassicBatch(count);
+      ? this.wordsModel.generateBatch(count, gameState.unlockedRanks, gameState.wordStats, this.flowModel.targetWpm, 0, this.bigramLedger, textModOpts)
+      : this.wordsModel.generateClassicBatch(count, this.wordDifficulty, textModOpts);
     if (this.currentMode === 'flow' && this.pendingHatchedWords && this.pendingHatchedWords.length > 0) {
       const nextWordObj = this.pendingHatchedWords.shift();
       const sandwich = this.wordsModel.createSandwich(
@@ -11822,21 +12397,7 @@ class GameController {
             xpRes.newLevel,
             curSave.achievements || {}
           );
-          if (unlockedCosmetics && unlockedCosmetics.length > 0) {
-            for (const item of unlockedCosmetics) {
-              if (this.hudView && this.hudView.showAchievementToast) {
-                this.hudView.showAchievementToast({
-                  tier: 'cosmetic',
-                  icon: item.icon,
-                  title: item.title,
-                  desc: `Unlocked ${item.category} in the Cosmetic Armory!`
-                });
-              }
-            }
-            if (this.hudView && this.hudView.setStatsBadgeVisible) {
-              this.hudView.setStatsBadgeVisible(true);
-            }
-          }
+          this._notifyUnlockedCosmetics(unlockedCosmetics);
         }
       }
       if (evalRes.eggRollSuccess) {
@@ -11904,8 +12465,11 @@ class GameController {
         this.sessionModel.insertWordsAt(insertPos, sandwich);
         this.stageView.insertWordsAt(insertPos, sandwich);
         if (this.ghostEnabled && this.ghostTotalChars >= insertBoundaryChars) {
-          const addedChars = sandwich.reduce((sum, w) => sum + w.length + 1, 0);
-          this.ghostTotalChars += addedChars;
+          if (this.ghostPacerModel) {
+            this.ghostPacerModel.compensateInsertedWords(sandwich);
+          } else {
+            this.ghostTotalChars += sandwich.reduce((sum, w) => sum + w.length + 1, 0);
+          }
         }
       }
     } else {
@@ -11938,9 +12502,10 @@ class GameController {
     if (remainingWords <= this.bufferConfig.refillThreshold) {
       const gameState = this.storageService.getGameSave();
       const refillCount = this.bufferConfig.refillBatchSize;
+      const textModOpts = this._getTextModOptions();
       const more = (this.currentMode === 'flow')
-        ? this.wordsModel.generateBatch(refillCount, gameState.unlockedRanks, gameState.wordStats, this.flowModel.targetWpm, this.flowModel.momentum, this.bigramLedger)
-        : this.wordsModel.generateClassicBatch(refillCount);
+        ? this.wordsModel.generateBatch(refillCount, gameState.unlockedRanks, gameState.wordStats, this.flowModel.targetWpm, this.flowModel.momentum, this.bigramLedger, textModOpts)
+        : this.wordsModel.generateClassicBatch(refillCount, this.wordDifficulty, textModOpts);
       this.sessionModel.appendWords(more);
       this.stageView.appendWords(more);
     }
@@ -12446,7 +13011,7 @@ class GameController {
       this._onMouseMove = null;
       this._boundMouseMoveDoc = null;
     }
-    this._resetZenMouseTracker();
+    this.deactivateZenFocus();
     if (this._onWindowResize && typeof window !== 'undefined') {
       window.removeEventListener('resize', this._onWindowResize);
       this._onWindowResize = null;
@@ -12468,6 +13033,9 @@ class GameController {
       window.cancelAnimationFrame(this.physicsAnimFrame);
       this.physicsAnimFrame = null;
     }
+    if (this.hudView && typeof this.hudView.destroy === 'function') {
+      this.hudView.destroy();
+    }
     if (this.keyboardController) {
       this.keyboardController.detach(typeof window !== 'undefined' ? window : null);
     }
@@ -12486,6 +13054,7 @@ if (typeof module !== 'undefined' && module.exports) {
     const sessionModel = new SessionModel();
     const flowModel = new FlowModel();
     const eggNestModel = new EggNestModel();
+    const ghostPacerModel = (typeof GhostPacerModel !== 'undefined') ? new GhostPacerModel() : null;
     const storageService = (typeof StorageManager !== 'undefined') ? StorageManager : new StorageService();
     const audio = (typeof audioService !== 'undefined') ? audioService : new AudioService();
     const stageView = new StageView();
@@ -12498,6 +13067,7 @@ if (typeof module !== 'undefined' && module.exports) {
       sessionModel,
       flowModel,
       eggNestModel,
+      ghostPacerModel,
       storageService,
       audioService: audio,
       stageView,

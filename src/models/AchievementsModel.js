@@ -343,7 +343,7 @@ const ACHIEVEMENTS = {
     tier: 'feat',
     title: 'Shock Absorber',
     icon: '🛡️',
-    desc: 'Absorb a typo above 100% Apex using the Cushion Buffer without dropping below 85% Flow, and recover back to 100%.',
+    desc: 'Absorb a fixed typo or slow word above 100% Apex using the Cushion Buffer without dropping below 85% Flow, and recover back to 100%.',
     category: 'feats'
   },
   in_stride_crack: {

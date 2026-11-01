@@ -40,6 +40,13 @@ if (!_CosmeticsModel && typeof require !== 'undefined') {
   } catch (e) {}
 }
 
+var _GhostPacerModel = (typeof GhostPacerModel !== 'undefined') ? GhostPacerModel : null;
+if (!_GhostPacerModel && typeof require !== 'undefined') {
+  try {
+    _GhostPacerModel = require('../models/GhostPacerModel.js').GhostPacerModel;
+  } catch (e) {}
+}
+
 class GameController {
   constructor(deps = {}) {
     // Models
@@ -73,12 +80,21 @@ class GameController {
       this.cosmeticsModel = null;
     }
 
+    // Ghost Pacer Model
+    const GPClass = deps.ghostPacerModelClass || _GhostPacerModel || (typeof GhostPacerModel !== 'undefined' ? GhostPacerModel : null);
+    if (deps.ghostPacerModel) {
+      this.ghostPacerModel = deps.ghostPacerModel;
+    } else if (GPClass) {
+      this.ghostPacerModel = new GPClass();
+    } else {
+      this.ghostPacerModel = null;
+    }
+
     // Achievements tracking telemetry
     this.flowStartTime = null;
     this.consecutiveApexWords = 0;
     this.cushionAbsorbedState = false;
     this.hatchModeEnteredMomentum = null;
-    this.ghostConsecutiveWords = 0;
 
     // Bigram Ledger
     const BLClass = deps.bigramLedgerClass || _BigramLedger || (typeof BigramLedger !== 'undefined' ? BigramLedger : null);
@@ -128,16 +144,11 @@ class GameController {
     this.afkRecapTriggered = false;
     this.lastFlowTickTime = 0;
 
-    // Ghost Cursor Pacer state
-    this.ghostEnabled = false;
-    this.ghostSpeed = 50;
+    // Ghost Cursor Pacer runtime timers
     this.ghostAnimId = null;
     this.ghostLastFrameTime = null;
-    this.ghostTotalChars = 0;
     this.ghostPhaseTimer = null;
     this.ghostResetTimer = null;
-    this.isGhostRunning = false;
-    this.ghostNeedsSync = true;
     this._onWindowResize = null;
 
     // Zen Focus Mode state
@@ -228,6 +239,19 @@ class GameController {
       this.hudView.updateGhostState(this.ghostEnabled, this.ghostSpeed);
     }
 
+    this.wordDifficulty = this.storageService.getWordDifficulty ? this.storageService.getWordDifficulty() : 'normal';
+    this.punctuationEnabled = this.storageService.getPunctuationMode ? this.storageService.getPunctuationMode() : false;
+    this.capitalsEnabled = this.storageService.getCapitalsMode ? this.storageService.getCapitalsMode() : false;
+    if (this.hudView.updateWordDifficultyState) {
+      this.hudView.updateWordDifficultyState(this.wordDifficulty);
+    }
+    if (this.hudView.updatePunctuationState) {
+      this.hudView.updatePunctuationState(this.punctuationEnabled);
+    }
+    if (this.hudView.updateCapitalsState) {
+      this.hudView.updateCapitalsState(this.capitalsEnabled);
+    }
+
     // 3. Attach keyboard controller
     this.keyboardController.attach(
       typeof window !== 'undefined' ? window : null,
@@ -267,6 +291,9 @@ class GameController {
       onHiddenWordDistanceChange: (dist) => this.setHiddenWordDistance(dist),
       onGhostToggle: () => this.toggleGhostCursor(),
       onGhostSpeedChange: (speed) => this.updateGhostSpeed(speed),
+      onWordDifficultyChange: (diff) => this.setWordDifficulty(diff),
+      onPunctuationToggle: () => this.togglePunctuationMode(),
+      onCapitalsToggle: () => this.toggleCapitalsMode(),
       onRestart: () => this.resetTest(),
       onOpenArmory: () => this.openStats('armory')
     });
@@ -460,9 +487,27 @@ class GameController {
     return true;
   }
 
+  _notifyUnlockedCosmetics(unlockedCosmetics) {
+    if (!unlockedCosmetics || unlockedCosmetics.length === 0) return;
+    for (const item of unlockedCosmetics) {
+      if (this.hudView && this.hudView.showAchievementToast) {
+        this.hudView.showAchievementToast({
+          tier: 'cosmetic',
+          icon: item.icon,
+          title: item.title,
+          desc: `Unlocked ${item.category} in the Cosmetic Armory!`
+        });
+      }
+    }
+    if (this.hudView && this.hudView.setStatsBadgeVisible) {
+      this.hudView.setStatsBadgeVisible(true);
+    }
+  }
+
   triggerAchievementEvent(eventType, payload = {}) {
     if (!this.achievementsModel) return;
     const gameSave = this.storageService.getGameSave ? this.storageService.getGameSave() : {};
+    const prevAchievements = Object.assign({}, gameSave.achievements || (this.storageService.getAchievements ? this.storageService.getAchievements() : {}));
     const motorSummary = (eventType === 'lexicon_updated' && this.storageService.getMotorMasterySummary)
       ? this.storageService.getMotorMasterySummary(gameSave)
       : {};
@@ -484,6 +529,17 @@ class GameController {
         if (this.audioService && this.audioService.playAchievementUnlock) {
           this.audioService.playAchievementUnlock(ach.tier);
         }
+      }
+      if (this.cosmeticsModel && this.cosmeticsModel.getNewlyUnlockedOnAchievement) {
+        const nextAchievements = this.storageService.getAchievements
+          ? this.storageService.getAchievements()
+          : Object.assign({}, this.achievementsModel.unlocked);
+        const unlockedCosmetics = this.cosmeticsModel.getNewlyUnlockedOnAchievement(
+          gameSave.level || 1,
+          prevAchievements,
+          nextAchievements
+        );
+        this._notifyUnlockedCosmetics(unlockedCosmetics);
       }
       if (this.hudView && this.hudView.setStatsBadgeVisible) {
         this.hudView.setStatsBadgeVisible(true);
@@ -597,15 +653,64 @@ class GameController {
     );
   }
 
+  // --- Ghost Pacer Model Delegating Accessors (Backward Compatibility) ---
+  get ghostEnabled() {
+    return this.ghostPacerModel ? this.ghostPacerModel.enabled : Boolean(this._ghostEnabled);
+  }
+  set ghostEnabled(val) {
+    if (this.ghostPacerModel) this.ghostPacerModel.setEnabled(val);
+    else this._ghostEnabled = Boolean(val);
+  }
+
+  get ghostSpeed() {
+    return this.ghostPacerModel ? this.ghostPacerModel.speed : (this._ghostSpeed || 50);
+  }
+  set ghostSpeed(val) {
+    if (this.ghostPacerModel) this.ghostPacerModel.setSpeed(val);
+    else this._ghostSpeed = Math.max(15, Math.min(150, parseInt(val, 10) || 50));
+  }
+
+  get ghostTotalChars() {
+    return this.ghostPacerModel ? this.ghostPacerModel.totalChars : (this._ghostTotalChars || 0);
+  }
+  set ghostTotalChars(val) {
+    if (this.ghostPacerModel) this.ghostPacerModel.totalChars = Number(val) || 0;
+    else this._ghostTotalChars = Number(val) || 0;
+  }
+
+  get isGhostRunning() {
+    return this.ghostPacerModel ? this.ghostPacerModel.isRunning : Boolean(this._isGhostRunning);
+  }
+  set isGhostRunning(val) {
+    if (this.ghostPacerModel) this.ghostPacerModel.isRunning = Boolean(val);
+    else this._isGhostRunning = Boolean(val);
+  }
+
+  get ghostNeedsSync() {
+    return this.ghostPacerModel ? this.ghostPacerModel.needsSync : Boolean(this._ghostNeedsSync);
+  }
+  set ghostNeedsSync(val) {
+    if (this.ghostPacerModel) this.ghostPacerModel.needsSync = Boolean(val);
+    else this._ghostNeedsSync = Boolean(val);
+  }
+
+  get ghostConsecutiveWords() {
+    return this.ghostPacerModel ? this.ghostPacerModel.consecutiveWords : (this._ghostConsecutiveWords || 0);
+  }
+  set ghostConsecutiveWords(val) {
+    if (this.ghostPacerModel) this.ghostPacerModel.consecutiveWords = Number(val) || 0;
+    else this._ghostConsecutiveWords = Number(val) || 0;
+  }
+
   toggleGhostCursor() {
-    this.ghostEnabled = !this.ghostEnabled;
+    const next = this.ghostPacerModel ? this.ghostPacerModel.toggle() : (this.ghostEnabled = !this.ghostEnabled);
     if (this.storageService.setGhostCursor) {
-      this.storageService.setGhostCursor(this.ghostEnabled);
+      this.storageService.setGhostCursor(next);
     }
     if (this.hudView.updateGhostState) {
-      this.hudView.updateGhostState(this.ghostEnabled, this.ghostSpeed);
+      this.hudView.updateGhostState(next, this.ghostSpeed);
     }
-    if (!this.ghostEnabled) {
+    if (!next) {
       this.stopGhostPacer(true);
       if (this.stageView.setGhostVisible) {
         this.stageView.setGhostVisible(false);
@@ -614,23 +719,73 @@ class GameController {
       this.ghostNeedsSync = true;
       this.syncGhostToPlayer();
     }
-    return this.ghostEnabled;
+    return next;
   }
 
   updateGhostSpeed(speed) {
-    const num = Math.max(15, Math.min(150, parseInt(speed, 10) || 50));
-    this.ghostSpeed = num;
+    const num = this.ghostPacerModel
+      ? this.ghostPacerModel.setSpeed(speed)
+      : (this.ghostSpeed = Math.max(15, Math.min(150, parseInt(speed, 10) || 50)));
     if (this.storageService.setGhostSpeed) {
       this.storageService.setGhostSpeed(num);
     }
     if (this.hudView.updateGhostState) {
-      this.hudView.updateGhostState(this.ghostEnabled, this.ghostSpeed);
+      this.hudView.updateGhostState(this.ghostEnabled, num);
     }
     return num;
   }
 
+  _getTextModOptions() {
+    return {
+      capitals: Boolean(this.capitalsEnabled),
+      punctuation: Boolean(this.punctuationEnabled)
+    };
+  }
+
+  setWordDifficulty(diff) {
+    const clean = (diff === 'easy' || diff === 'hard') ? diff : 'normal';
+    this.wordDifficulty = clean;
+    if (this.storageService && this.storageService.setWordDifficulty) {
+      this.storageService.setWordDifficulty(clean);
+    }
+    if (this.hudView && this.hudView.updateWordDifficultyState) {
+      this.hudView.updateWordDifficultyState(clean);
+    }
+    if (this.currentMode === 'classic') {
+      this.resetTest();
+    }
+    return clean;
+  }
+
+  togglePunctuationMode() {
+    this.punctuationEnabled = !this.punctuationEnabled;
+    if (this.storageService && this.storageService.setPunctuationMode) {
+      this.storageService.setPunctuationMode(this.punctuationEnabled);
+    }
+    if (this.hudView && this.hudView.updatePunctuationState) {
+      this.hudView.updatePunctuationState(this.punctuationEnabled);
+    }
+    this.resetTest();
+    return this.punctuationEnabled;
+  }
+
+  toggleCapitalsMode() {
+    this.capitalsEnabled = !this.capitalsEnabled;
+    if (this.storageService && this.storageService.setCapitalsMode) {
+      this.storageService.setCapitalsMode(this.capitalsEnabled);
+    }
+    if (this.hudView && this.hudView.updateCapitalsState) {
+      this.hudView.updateCapitalsState(this.capitalsEnabled);
+    }
+    this.resetTest();
+    return this.capitalsEnabled;
+  }
+
   getCharCumulativeIndex(wordIdx, charIdx) {
     const words = this.sessionModel.words || [];
+    if (this.ghostPacerModel) {
+      return this.ghostPacerModel.getCharCumulativeIndex(words, wordIdx, charIdx);
+    }
     let total = 0;
     for (let i = 0; i < wordIdx && i < words.length; i++) {
       total += words[i].length + 1;
@@ -640,16 +795,8 @@ class GameController {
 
   mapCharsToPosition(totalChars) {
     const words = this.sessionModel.words || [];
-    let remaining = Math.max(0, totalChars);
-    for (let i = 0; i < words.length; i++) {
-      const wLen = words[i].length;
-      const totalSlot = wLen + 1;
-      if (remaining < totalSlot) {
-        const charIdx = Math.floor(remaining);
-        const fraction = remaining - charIdx;
-        return { wordIdx: i, charIdx: Math.min(charIdx, wLen), fraction, isOutOfBounds: false };
-      }
-      remaining -= totalSlot;
+    if (this.ghostPacerModel) {
+      return this.ghostPacerModel.mapCharsToPosition(words, totalChars);
     }
     return { wordIdx: Math.max(0, words.length - 1), charIdx: 999, fraction: 0, isOutOfBounds: true };
   }
@@ -711,10 +858,10 @@ class GameController {
       const dt = Math.min(100, currentTime - this.ghostLastFrameTime);
       this.ghostLastFrameTime = currentTime;
 
-      const v = (this.ghostSpeed * 5) / 60000;
-      this.ghostTotalChars += v * dt;
-
-      const pos = this.mapCharsToPosition(this.ghostTotalChars);
+      const words = this.sessionModel.words || [];
+      const pos = this.ghostPacerModel
+        ? this.ghostPacerModel.advance(dt, words)
+        : this.mapCharsToPosition((this.ghostTotalChars += ((this.ghostSpeed * 5) / 60000) * dt));
       let res = null;
       if (this.stageView.updateGhostCaret) {
         res = this.stageView.updateGhostCaret(pos.wordIdx, pos.charIdx, pos.fraction);
@@ -762,10 +909,15 @@ class GameController {
   }
 
   syncGhostToPlayer() {
-    this.ghostTotalChars = this.getCharCumulativeIndex(
-      this.sessionModel.currentWordIdx,
-      this.sessionModel.currentCharIdx
-    );
+    const words = this.sessionModel.words || [];
+    if (this.ghostPacerModel) {
+      this.ghostPacerModel.syncToPlayer(words, this.sessionModel.currentWordIdx, this.sessionModel.currentCharIdx);
+    } else {
+      this.ghostTotalChars = this.getCharCumulativeIndex(
+        this.sessionModel.currentWordIdx,
+        this.sessionModel.currentCharIdx
+      );
+    }
     if (this.stageView.syncGhostToCaret) {
       this.stageView.syncGhostToCaret(
         this.sessionModel.currentWordIdx,
@@ -810,9 +962,10 @@ class GameController {
     const gameState = this.storageService.getGameSave();
     this.eggNestModel.syncBasket(gameState.eggBasket || []);
     const count = this.bufferConfig.initialWordCount;
+    const textModOpts = this._getTextModOptions();
     const words = (this.currentMode === 'flow')
-      ? this.wordsModel.generateBatch(count, gameState.unlockedRanks, gameState.wordStats, this.flowModel.targetWpm, 0, this.bigramLedger)
-      : this.wordsModel.generateClassicBatch(count);
+      ? this.wordsModel.generateBatch(count, gameState.unlockedRanks, gameState.wordStats, this.flowModel.targetWpm, 0, this.bigramLedger, textModOpts)
+      : this.wordsModel.generateClassicBatch(count, this.wordDifficulty, textModOpts);
 
     // Sandwiched Induction Rule: If new words were hatched, launch with [Anchor1, NewWord, Anchor2]
     if (this.currentMode === 'flow' && this.pendingHatchedWords && this.pendingHatchedWords.length > 0) {
@@ -1234,21 +1387,7 @@ class GameController {
             xpRes.newLevel,
             curSave.achievements || {}
           );
-          if (unlockedCosmetics && unlockedCosmetics.length > 0) {
-            for (const item of unlockedCosmetics) {
-              if (this.hudView && this.hudView.showAchievementToast) {
-                this.hudView.showAchievementToast({
-                  tier: 'cosmetic',
-                  icon: item.icon,
-                  title: item.title,
-                  desc: `Unlocked ${item.category} in the Cosmetic Armory!`
-                });
-              }
-            }
-            if (this.hudView && this.hudView.setStatsBadgeVisible) {
-              this.hudView.setStatsBadgeVisible(true);
-            }
-          }
+          this._notifyUnlockedCosmetics(unlockedCosmetics);
         }
       }
 
@@ -1329,8 +1468,11 @@ class GameController {
         this.sessionModel.insertWordsAt(insertPos, sandwich);
         this.stageView.insertWordsAt(insertPos, sandwich);
         if (this.ghostEnabled && this.ghostTotalChars >= insertBoundaryChars) {
-          const addedChars = sandwich.reduce((sum, w) => sum + w.length + 1, 0);
-          this.ghostTotalChars += addedChars;
+          if (this.ghostPacerModel) {
+            this.ghostPacerModel.compensateInsertedWords(sandwich);
+          } else {
+            this.ghostTotalChars += sandwich.reduce((sum, w) => sum + w.length + 1, 0);
+          }
         }
       }
     } else {
@@ -1372,9 +1514,10 @@ class GameController {
     if (remainingWords <= this.bufferConfig.refillThreshold) {
       const gameState = this.storageService.getGameSave();
       const refillCount = this.bufferConfig.refillBatchSize;
+      const textModOpts = this._getTextModOptions();
       const more = (this.currentMode === 'flow')
-        ? this.wordsModel.generateBatch(refillCount, gameState.unlockedRanks, gameState.wordStats, this.flowModel.targetWpm, this.flowModel.momentum, this.bigramLedger)
-        : this.wordsModel.generateClassicBatch(refillCount);
+        ? this.wordsModel.generateBatch(refillCount, gameState.unlockedRanks, gameState.wordStats, this.flowModel.targetWpm, this.flowModel.momentum, this.bigramLedger, textModOpts)
+        : this.wordsModel.generateClassicBatch(refillCount, this.wordDifficulty, textModOpts);
       this.sessionModel.appendWords(more);
       this.stageView.appendWords(more);
     }
@@ -1947,7 +2090,7 @@ class GameController {
       this._onMouseMove = null;
       this._boundMouseMoveDoc = null;
     }
-    this._resetZenMouseTracker();
+    this.deactivateZenFocus();
     if (this._onWindowResize && typeof window !== 'undefined') {
       window.removeEventListener('resize', this._onWindowResize);
       this._onWindowResize = null;
@@ -1968,6 +2111,9 @@ class GameController {
     if (this.physicsAnimFrame && typeof window !== 'undefined' && window.cancelAnimationFrame) {
       window.cancelAnimationFrame(this.physicsAnimFrame);
       this.physicsAnimFrame = null;
+    }
+    if (this.hudView && typeof this.hudView.destroy === 'function') {
+      this.hudView.destroy();
     }
     if (this.keyboardController) {
       this.keyboardController.detach(typeof window !== 'undefined' ? window : null);
