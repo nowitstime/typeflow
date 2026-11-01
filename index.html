@@ -1607,9 +1607,11 @@ main {
 .history-table td {
   color: var(--text-color);
 }
+.classic-history-row,
 .flow-history-row {
   transition: background 0.15s ease;
 }
+.classic-history-row:hover,
 .flow-history-row:hover {
   background: color-mix(in srgb, var(--main-color) 10%, transparent);
 }
@@ -3448,7 +3450,7 @@ header .header-actions,
                   </div>
                 </div>
                 <div class="history-table-wrap">
-                  <div class="history-table-title">Recent Tests</div>
+                  <div class="history-table-title">⏱️ Recent Tests <span style="font-weight: 400; font-size: 11px; color: var(--sub-color); margin-left: 6px;">(Click a row to inspect timeline graph)</span></div>
                   <table class="history-table">
                     <thead>
                       <tr>
@@ -7010,7 +7012,8 @@ const DEFAULT_CLASSIC_STATS = {
   totalWords: 0,
   totalKeystrokes: 0,
   totalTimeSeconds: 0,
-  recentHistory: []
+  recentHistory: [],
+  lastClassicTest: null
 };
 const DEFAULT_GAME_SAVE = {
   level: 1,
@@ -7096,29 +7099,73 @@ class StorageService {
       return JSON.parse(JSON.stringify(DEFAULT_CLASSIC_STATS));
     }
   }
-  recordClassicTest(duration, wpm, rawWpm, acc, consistency, keystrokes, wordsCount) {
+  recordClassicTest(duration, wpm, rawWpm, acc, consistency, keystrokes, wordsCount, details = null) {
     try {
       const stats = this.getClassicStats();
+      let dur = duration;
+      let w = wpm;
+      let raw = rawWpm;
+      let accuracy = acc;
+      let cons = consistency;
+      let keys = keystrokes;
+      let words = wordsCount;
+      let extra = details;
+      if (typeof duration === 'object' && duration !== null) {
+        dur = duration.duration;
+        w = duration.wpm;
+        raw = duration.rawWpm ?? duration.wpm;
+        accuracy = duration.accuracy ?? duration.acc;
+        cons = duration.consistency;
+        keys = duration.keystrokes ?? ((duration.correctChars || 0) + (duration.incorrectChars || 0));
+        words = duration.wordsCount ?? duration.words;
+        extra = duration;
+      }
       stats.totalTests += 1;
-      stats.totalKeystrokes += (keystrokes || 0);
-      stats.totalWords += (wordsCount || 0);
-      stats.totalTimeSeconds += (duration || 30);
-      const durKey = duration.toString();
-      if (!stats.personalBests[durKey] || wpm > stats.personalBests[durKey].wpm) {
+      stats.totalKeystrokes += (keys || 0);
+      stats.totalWords += (words || 0);
+      stats.totalTimeSeconds += (dur || 30);
+      const durKey = (dur || 30).toString();
+      if (!stats.personalBests[durKey] || w > stats.personalBests[durKey].wpm) {
         stats.personalBests[durKey] = {
-          wpm,
-          acc,
+          wpm: w,
+          acc: accuracy ?? 100,
           date: new Date().toISOString()
         };
       }
-      stats.recentHistory.unshift({
+      const wpmHistoryClone = (extra && Array.isArray(extra.wpmHistory))
+        ? JSON.parse(JSON.stringify(extra.wpmHistory))
+        : [];
+      const entry = Object.assign({
+        id: Date.now(),
         date: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-        duration,
-        wpm,
-        rawWpm,
-        acc,
-        consistency
+        mode: 'classic',
+        duration: dur || 30,
+        wpm: w || 0,
+        rawWpm: raw ?? w ?? 0,
+        accuracy: accuracy ?? 100,
+        acc: accuracy ?? 100,
+        consistency: cons ?? 100,
+        correctChars: (extra && extra.correctChars !== undefined) ? extra.correctChars : (keys || 0),
+        incorrectChars: (extra && extra.incorrectChars !== undefined) ? extra.incorrectChars : 0,
+        extraChars: (extra && extra.extraChars !== undefined) ? extra.extraChars : 0,
+        missedChars: (extra && extra.missedChars !== undefined) ? extra.missedChars : 0,
+        fixedErrors: (extra && extra.fixedErrors !== undefined) ? extra.fixedErrors : 0,
+        wordsCount: words || 0,
+        wpmHistory: wpmHistoryClone
+      }, extra || {}, {
+        duration: dur || 30,
+        wpm: w || 0,
+        rawWpm: raw ?? w ?? 0,
+        accuracy: accuracy ?? 100,
+        acc: accuracy ?? 100,
+        consistency: cons ?? 100,
+        wpmHistory: wpmHistoryClone
       });
+      stats.lastClassicTest = entry;
+      if (!Array.isArray(stats.recentHistory)) {
+        stats.recentHistory = [];
+      }
+      stats.recentHistory.unshift(entry);
       if (stats.recentHistory.length > 15) {
         stats.recentHistory.pop();
       }
@@ -7847,6 +7894,20 @@ class StorageService {
   getFlowHistory() {
     const save = this.getGameSave();
     return Array.isArray(save.flowHistory) ? save.flowHistory : [];
+  }
+  getLastClassicTest() {
+    const stats = this.getClassicStats();
+    if (stats.lastClassicTest && typeof stats.lastClassicTest === 'object') {
+      return stats.lastClassicTest;
+    }
+    if (Array.isArray(stats.recentHistory) && stats.recentHistory.length > 0) {
+      return stats.recentHistory[0];
+    }
+    return null;
+  }
+  getClassicHistory() {
+    const stats = this.getClassicStats();
+    return Array.isArray(stats.recentHistory) ? stats.recentHistory : [];
   }
 }
 const storageService = new StorageService();
@@ -9855,6 +9916,7 @@ class ModalView {
     this.classicHistoryTable = elements.classicHistoryTable || (typeof document !== 'undefined' ? document.getElementById('classic-history-table') : null);
     this.classicHistoryTbody = elements.classicHistoryTbody || (typeof document !== 'undefined' ? (document.getElementById('stats-history-tbody') || (this.classicHistoryTable ? this.classicHistoryTable.querySelector('tbody') : null)) : null);
     this.flowHistoryTbody = elements.flowHistoryTbody || (typeof document !== 'undefined' ? document.getElementById('flow-history-tbody') : null);
+    this.onSelectClassicTest = null;
     this.nextTestBtnLabel = elements.nextTestBtnLabel || (typeof document !== 'undefined' ? document.getElementById('next-test-btn-label') : null);
     this.nextTestBtnHint = elements.nextTestBtnHint || (typeof document !== 'undefined' ? document.getElementById('next-test-btn-hint') : null);
   }
@@ -9875,7 +9937,17 @@ class ModalView {
     if (this.resAccEl) this.resAccEl.textContent = `${stats.accuracy ?? stats.acc ?? 100}%`;
     if (this.resRawEl) this.resRawEl.textContent = stats.rawWpm ?? stats.wpm;
     if (this.resCharsEl) {
-      this.resCharsEl.textContent = `${stats.correctChars || 0}/${stats.incorrectChars || 0}/${stats.extraChars || 0}/${stats.missedChars || 0}`;
+      let correct = stats.correctChars;
+      let incorrect = stats.incorrectChars;
+      let extra = stats.extraChars || 0;
+      let missed = stats.missedChars || 0;
+      if (correct === undefined && (stats.keystrokes || stats.wpm)) {
+        const total = stats.keystrokes || Math.round((stats.rawWpm || stats.wpm || 0) * 5 * ((stats.duration || 30) / 60));
+        const acc = (stats.accuracy ?? stats.acc ?? 100) / 100;
+        correct = Math.round(total * acc);
+        incorrect = Math.max(0, total - correct);
+      }
+      this.resCharsEl.textContent = `${correct || 0}/${incorrect || 0}/${extra}/${missed}`;
     }
     if (this.resFixedEl) this.resFixedEl.textContent = stats.fixedErrors || 0;
     if (this.resFixedDetailEl) {
@@ -9884,7 +9956,9 @@ class ModalView {
     }
     if (this.resConsistencyEl) this.resConsistencyEl.textContent = `${stats.consistency ?? 100}%`;
     if (this.resTimeEl) this.resTimeEl.textContent = `${stats.duration}s`;
-    if (this.resTimeDetailEl) this.resTimeDetailEl.textContent = 'standard mode';
+    if (this.resTimeDetailEl) {
+      this.resTimeDetailEl.textContent = stats.date ? `classic test • ${stats.date}` : 'standard mode';
+    }
     if (this.nextTestBtnLabel) this.nextTestBtnLabel.textContent = 'Next Test';
     if (this.nextTestBtnHint) this.nextTestBtnHint.textContent = 'tab';
   }
@@ -10238,7 +10312,10 @@ class ModalView {
       this.deckWordsScroll.appendChild(chip);
     });
   }
-  renderClassicStats(stats) {
+  renderClassicStats(stats, onSelectClassicTest = null) {
+    if (onSelectClassicTest) {
+      this.onSelectClassicTest = onSelectClassicTest;
+    }
     if (!stats) return;
     if (this.pb15s && this.pb15sDate) {
       const pb = stats.personalBests['15'];
@@ -10273,13 +10350,22 @@ class ModalView {
       } else {
         history.forEach(item => {
           const tr = doc.createElement('tr');
+          tr.className = 'classic-history-row';
+          tr.style.cursor = 'pointer';
+          tr.title = 'Click to inspect this Classic Test on the timeline graph';
+          const acc = item.accuracy ?? item.acc ?? 100;
           tr.innerHTML = `
-            <td>${item.date}</td>
-            <td>${item.duration}s</td>
-            <td>${item.wpm} WPM</td>
-            <td>${item.rawWpm || item.wpm}</td>
-            <td>${item.acc}%</td>
+            <td>${item.date || '--'}</td>
+            <td>${item.duration || 0}s</td>
+            <td style="color: var(--main-color); font-weight: 700;">${item.wpm || 0} WPM</td>
+            <td>${item.rawWpm ?? item.wpm ?? 0}</td>
+            <td>${acc}%</td>
           `;
+          tr.addEventListener('click', () => {
+            if (this.onSelectClassicTest) {
+              this.onSelectClassicTest(item);
+            }
+          });
           tbody.appendChild(tr);
         });
       }
@@ -10497,7 +10583,8 @@ class KeyboardController {
       return;
     }
     const isHatching = this.handlers.isHatching ? this.handlers.isHatching() : false;
-    const isTestFinished = this.handlers.isTestFinished ? this.handlers.isTestFinished() : false;
+    const isClassicRecapOpen = this.handlers.isClassicRecapOpen ? this.handlers.isClassicRecapOpen() : false;
+    const isTestFinished = (this.handlers.isTestFinished ? this.handlers.isTestFinished() : false) || isClassicRecapOpen;
     const isFlowRecapOpen = this.handlers.isFlowRecapOpen ? this.handlers.isFlowRecapOpen() : false;
     if (e.key === 'Tab') {
       e.preventDefault();
@@ -10764,7 +10851,9 @@ class GameController {
     this.lastTestFinishedTime = 0;
     this.currentMode = 'flow';
     this.isFlowRecapVisible = false;
+    this.isClassicRecapVisible = false;
     this.activeRecapRun = null;
+    this.activeClassicRecapRun = null;
     this.lastFlowRunEndTime = 0;
     this.afkRecapTriggered = false;
     this.lastFlowTickTime = 0;
@@ -10803,6 +10892,7 @@ class GameController {
         onFlowRecapToggle: () => this.toggleFlowRecap(),
         onDismissFlowRecap: (isTypingWake) => this.dismissFlowRecap(isTypingWake),
         isFlowRecapOpen: () => this.isFlowRecapVisible,
+        isClassicRecapOpen: () => this.isClassicRecapVisible,
         isHatching: () => this.eggNestModel.isHatching(),
         isTestFinished: () => this.sessionModel.isFinished,
         isStatsOpen: () => this.isStatsModalOpen(),
@@ -10910,6 +11000,10 @@ class GameController {
     });
     this.modalView.bindEvents({
       onNextTest: () => {
+        if (this.isClassicRecapVisible) {
+          this.dismissClassicRecap();
+          return;
+        }
         if (this.isFlowRecapVisible) {
           this.dismissFlowRecap(false);
           return;
@@ -10952,7 +11046,7 @@ class GameController {
       onResetClassic: () => {
         if (window.confirm('Clear all Classic Mode Personal Bests and test history?')) {
           this.storageService.resetClassicStats();
-          this.modalView.renderClassicStats(this.storageService.getClassicStats());
+          this.modalView.renderClassicStats(this.storageService.getClassicStats(), this.modalView.onSelectClassicTest);
         }
       },
       onSelectTrophiesTab: () => {
@@ -10967,7 +11061,13 @@ class GameController {
     this.chartView.bindEvents();
     if (typeof window !== 'undefined') {
       this._onWindowResize = () => {
-        if (this.isFlowRecapVisible) {
+        if (this.isClassicRecapVisible) {
+          const run = this.activeClassicRecapRun || (this.storageService.getLastClassicTest ? this.storageService.getLastClassicTest() : null);
+          const history = run ? ((Array.isArray(run.wpmHistory) && run.wpmHistory.length > 0) ? run.wpmHistory : this._generateFallbackWpmHistory(run)) : [];
+          if (history.length > 0) {
+            this.chartView.render(history, this.chartView.hoveredPointIndex);
+          }
+        } else if (this.isFlowRecapVisible) {
           const run = this.activeRecapRun || (this.storageService.getLastFlowRun ? this.storageService.getLastFlowRun() : null);
           if (run && Array.isArray(run.wpmHistory)) {
             this.chartView.render(run.wpmHistory, this.chartView.hoveredPointIndex);
@@ -11337,6 +11437,8 @@ class GameController {
     }
     this._finalizeActiveFlowRun();
     this.isFlowRecapVisible = false;
+    this.isClassicRecapVisible = false;
+    this.activeClassicRecapRun = null;
     this.lastFlowRunEndTime = 0;
     this.afkRecapTriggered = false;
     this.stopGhostPacer(true);
@@ -11430,15 +11532,21 @@ class GameController {
     if (this.stageView.setGhostVisible) {
       this.stageView.setGhostVisible(false);
     }
-    this.storageService.recordClassicTest(
+    const saved = this.storageService.recordClassicTest(
       this.sessionModel.duration,
       stats.wpm,
       stats.rawWpm,
       stats.accuracy,
       stats.consistency,
       stats.correctChars + stats.incorrectChars,
-      this.sessionModel.currentWordIdx
+      this.sessionModel.currentWordIdx,
+      stats
     );
+    this.activeClassicRecapRun = (saved && saved.lastClassicTest) || Object.assign({}, stats, {
+      duration: this.sessionModel.duration,
+      wordsCount: this.sessionModel.currentWordIdx,
+      date: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    });
     if (this.bigramLedger) {
       this.storageService.saveBigramLedger(this.bigramLedger.toJSON());
     }
@@ -11957,6 +12065,10 @@ class GameController {
       this.closeStats();
       return;
     }
+    if (this.isClassicRecapVisible) {
+      this.dismissClassicRecap();
+      return;
+    }
     if (this.isFlowRecapVisible) {
       this.dismissFlowRecap(false);
       return;
@@ -12026,6 +12138,59 @@ class GameController {
       return this.dismissFlowRecap(false);
     }
     return this.openFlowRecap(false);
+  }
+  openClassicRecap(customRun = null) {
+    if (this.currentMode !== 'classic' && !customRun) return false;
+    const runToDisplay = customRun
+      || this.activeClassicRecapRun
+      || (this.storageService && this.storageService.getLastClassicTest ? this.storageService.getLastClassicTest() : null);
+    if (!runToDisplay) return false;
+    this.activeClassicRecapRun = runToDisplay;
+    this.isClassicRecapVisible = true;
+    this.stopGhostPacer(false);
+    if (this.stageView && this.stageView.setGhostVisible) {
+      this.stageView.setGhostVisible(false);
+    }
+    if (this.modalView && this.modalView.showClassicResults) {
+      this.modalView.showClassicResults(runToDisplay);
+    }
+    const history = (Array.isArray(runToDisplay.wpmHistory) && runToDisplay.wpmHistory.length > 0)
+      ? runToDisplay.wpmHistory
+      : this._generateFallbackWpmHistory(runToDisplay);
+    if (this.chartView && history.length > 0) {
+      this.chartView.render(history);
+    }
+    return true;
+  }
+  dismissClassicRecap() {
+    if (!this.isClassicRecapVisible) return false;
+    this.isClassicRecapVisible = false;
+    this.activeClassicRecapRun = null;
+    if (this.modalView && this.modalView.hideClassicResults) {
+      this.modalView.hideClassicResults();
+    }
+    this.resetTest();
+    return true;
+  }
+  _generateFallbackWpmHistory(item) {
+    if (!item) return [];
+    const dur = Math.max(1, item.duration || 30);
+    const w = item.wpm || 0;
+    const raw = item.rawWpm ?? w;
+    const fallback = [];
+    for (let s = 1; s <= dur; s++) {
+      fallback.push({
+        second: s,
+        time: s,
+        wpm: w,
+        rawWpm: raw,
+        raw: raw,
+        burstWpm: w,
+        errors: 0,
+        fixed: 0
+      });
+    }
+    return fallback;
   }
   _getDoc() {
     const inputDoc = (this.stageView && this.stageView.typingInput && this.stageView.typingInput.ownerDocument);
@@ -12141,7 +12306,16 @@ class GameController {
         this.openFlowRecap(false, runItem);
       }
     );
-    this.modalView.renderClassicStats(this.storageService.getClassicStats());
+    this.modalView.renderClassicStats(
+      this.storageService.getClassicStats(),
+      (testItem) => {
+        this.closeStats();
+        if (this.currentMode !== 'classic') {
+          this.switchMode('classic');
+        }
+        this.openClassicRecap(testItem);
+      }
+    );
     if (this.achievementsModel && this.modalView.renderTrophies) {
       this.modalView.renderTrophies(this.achievementsModel, this.storageService);
     }

@@ -66,7 +66,8 @@ class KeyboardController {
     }
 
     const isHatching = this.handlers.isHatching ? this.handlers.isHatching() : false;
-    const isTestFinished = this.handlers.isTestFinished ? this.handlers.isTestFinished() : false;
+    const isClassicRecapOpen = this.handlers.isClassicRecapOpen ? this.handlers.isClassicRecapOpen() : false;
+    const isTestFinished = (this.handlers.isTestFinished ? this.handlers.isTestFinished() : false) || isClassicRecapOpen;
     const isFlowRecapOpen = this.handlers.isFlowRecapOpen ? this.handlers.isFlowRecapOpen() : false;
 
     // 1. Tab Navigation / Chord Handling

@@ -119,9 +119,11 @@ class GameController {
     this.lastTestFinishedTime = 0;
     this.currentMode = 'flow';
 
-    // Flow State Performance Recap state
+    // Flow & Classic Performance Recap state
     this.isFlowRecapVisible = false;
+    this.isClassicRecapVisible = false;
     this.activeRecapRun = null;
+    this.activeClassicRecapRun = null;
     this.lastFlowRunEndTime = 0;
     this.afkRecapTriggered = false;
     this.lastFlowTickTime = 0;
@@ -165,6 +167,7 @@ class GameController {
         onFlowRecapToggle: () => this.toggleFlowRecap(),
         onDismissFlowRecap: (isTypingWake) => this.dismissFlowRecap(isTypingWake),
         isFlowRecapOpen: () => this.isFlowRecapVisible,
+        isClassicRecapOpen: () => this.isClassicRecapVisible,
         isHatching: () => this.eggNestModel.isHatching(),
         isTestFinished: () => this.sessionModel.isFinished,
         isStatsOpen: () => this.isStatsModalOpen(),
@@ -295,6 +298,10 @@ class GameController {
     // 4. Modal View events (stats modal, filters, reset RPG/classic)
     this.modalView.bindEvents({
       onNextTest: () => {
+        if (this.isClassicRecapVisible) {
+          this.dismissClassicRecap();
+          return;
+        }
         if (this.isFlowRecapVisible) {
           this.dismissFlowRecap(false);
           return;
@@ -337,7 +344,7 @@ class GameController {
       onResetClassic: () => {
         if (window.confirm('Clear all Classic Mode Personal Bests and test history?')) {
           this.storageService.resetClassicStats();
-          this.modalView.renderClassicStats(this.storageService.getClassicStats());
+          this.modalView.renderClassicStats(this.storageService.getClassicStats(), this.modalView.onSelectClassicTest);
         }
       },
       onSelectTrophiesTab: () => {
@@ -356,7 +363,13 @@ class GameController {
     // 6. Window resize handler
     if (typeof window !== 'undefined') {
       this._onWindowResize = () => {
-        if (this.isFlowRecapVisible) {
+        if (this.isClassicRecapVisible) {
+          const run = this.activeClassicRecapRun || (this.storageService.getLastClassicTest ? this.storageService.getLastClassicTest() : null);
+          const history = run ? ((Array.isArray(run.wpmHistory) && run.wpmHistory.length > 0) ? run.wpmHistory : this._generateFallbackWpmHistory(run)) : [];
+          if (history.length > 0) {
+            this.chartView.render(history, this.chartView.hoveredPointIndex);
+          }
+        } else if (this.isFlowRecapVisible) {
           const run = this.activeRecapRun || (this.storageService.getLastFlowRun ? this.storageService.getLastFlowRun() : null);
           if (run && Array.isArray(run.wpmHistory)) {
             this.chartView.render(run.wpmHistory, this.chartView.hoveredPointIndex);
@@ -771,6 +784,8 @@ class GameController {
     // Finalize any active qualifying Flow Run before resetting session
     this._finalizeActiveFlowRun();
     this.isFlowRecapVisible = false;
+    this.isClassicRecapVisible = false;
+    this.activeClassicRecapRun = null;
     this.lastFlowRunEndTime = 0;
     this.afkRecapTriggered = false;
 
@@ -879,15 +894,21 @@ class GameController {
       this.stageView.setGhostVisible(false);
     }
 
-    this.storageService.recordClassicTest(
+    const saved = this.storageService.recordClassicTest(
       this.sessionModel.duration,
       stats.wpm,
       stats.rawWpm,
       stats.accuracy,
       stats.consistency,
       stats.correctChars + stats.incorrectChars,
-      this.sessionModel.currentWordIdx
+      this.sessionModel.currentWordIdx,
+      stats
     );
+    this.activeClassicRecapRun = (saved && saved.lastClassicTest) || Object.assign({}, stats, {
+      duration: this.sessionModel.duration,
+      wordsCount: this.sessionModel.currentWordIdx,
+      date: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    });
 
     if (this.bigramLedger) {
       this.storageService.saveBigramLedger(this.bigramLedger.toJSON());
@@ -1496,6 +1517,10 @@ class GameController {
       this.closeStats();
       return;
     }
+    if (this.isClassicRecapVisible) {
+      this.dismissClassicRecap();
+      return;
+    }
     if (this.isFlowRecapVisible) {
       this.dismissFlowRecap(false);
       return;
@@ -1571,6 +1596,63 @@ class GameController {
       return this.dismissFlowRecap(false);
     }
     return this.openFlowRecap(false);
+  }
+
+  openClassicRecap(customRun = null) {
+    if (this.currentMode !== 'classic' && !customRun) return false;
+    const runToDisplay = customRun
+      || this.activeClassicRecapRun
+      || (this.storageService && this.storageService.getLastClassicTest ? this.storageService.getLastClassicTest() : null);
+    if (!runToDisplay) return false;
+
+    this.activeClassicRecapRun = runToDisplay;
+    this.isClassicRecapVisible = true;
+    this.stopGhostPacer(false);
+    if (this.stageView && this.stageView.setGhostVisible) {
+      this.stageView.setGhostVisible(false);
+    }
+    if (this.modalView && this.modalView.showClassicResults) {
+      this.modalView.showClassicResults(runToDisplay);
+    }
+    const history = (Array.isArray(runToDisplay.wpmHistory) && runToDisplay.wpmHistory.length > 0)
+      ? runToDisplay.wpmHistory
+      : this._generateFallbackWpmHistory(runToDisplay);
+    if (this.chartView && history.length > 0) {
+      this.chartView.render(history);
+    }
+    return true;
+  }
+
+  dismissClassicRecap() {
+    if (!this.isClassicRecapVisible) return false;
+    this.isClassicRecapVisible = false;
+    this.activeClassicRecapRun = null;
+    if (this.modalView && this.modalView.hideClassicResults) {
+      this.modalView.hideClassicResults();
+    }
+    this.resetTest();
+    return true;
+  }
+
+  _generateFallbackWpmHistory(item) {
+    if (!item) return [];
+    const dur = Math.max(1, item.duration || 30);
+    const w = item.wpm || 0;
+    const raw = item.rawWpm ?? w;
+    const fallback = [];
+    for (let s = 1; s <= dur; s++) {
+      fallback.push({
+        second: s,
+        time: s,
+        wpm: w,
+        rawWpm: raw,
+        raw: raw,
+        burstWpm: w,
+        errors: 0,
+        fixed: 0
+      });
+    }
+    return fallback;
   }
 
   _getDoc() {
@@ -1707,7 +1789,16 @@ class GameController {
         this.openFlowRecap(false, runItem);
       }
     );
-    this.modalView.renderClassicStats(this.storageService.getClassicStats());
+    this.modalView.renderClassicStats(
+      this.storageService.getClassicStats(),
+      (testItem) => {
+        this.closeStats();
+        if (this.currentMode !== 'classic') {
+          this.switchMode('classic');
+        }
+        this.openClassicRecap(testItem);
+      }
+    );
     if (this.achievementsModel && this.modalView.renderTrophies) {
       this.modalView.renderTrophies(this.achievementsModel, this.storageService);
     }

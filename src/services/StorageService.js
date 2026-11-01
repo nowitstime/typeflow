@@ -25,7 +25,8 @@ const DEFAULT_CLASSIC_STATS = {
   totalWords: 0,
   totalKeystrokes: 0,
   totalTimeSeconds: 0,
-  recentHistory: []
+  recentHistory: [],
+  lastClassicTest: null
 };
 
 const DEFAULT_GAME_SAVE = {
@@ -120,31 +121,79 @@ class StorageService {
   }
 
   // Record a completed classic test
-  recordClassicTest(duration, wpm, rawWpm, acc, consistency, keystrokes, wordsCount) {
+  recordClassicTest(duration, wpm, rawWpm, acc, consistency, keystrokes, wordsCount, details = null) {
     try {
       const stats = this.getClassicStats();
-      stats.totalTests += 1;
-      stats.totalKeystrokes += (keystrokes || 0);
-      stats.totalWords += (wordsCount || 0);
-      stats.totalTimeSeconds += (duration || 30);
+      let dur = duration;
+      let w = wpm;
+      let raw = rawWpm;
+      let accuracy = acc;
+      let cons = consistency;
+      let keys = keystrokes;
+      let words = wordsCount;
+      let extra = details;
 
-      const durKey = duration.toString();
-      if (!stats.personalBests[durKey] || wpm > stats.personalBests[durKey].wpm) {
+      if (typeof duration === 'object' && duration !== null) {
+        dur = duration.duration;
+        w = duration.wpm;
+        raw = duration.rawWpm ?? duration.wpm;
+        accuracy = duration.accuracy ?? duration.acc;
+        cons = duration.consistency;
+        keys = duration.keystrokes ?? ((duration.correctChars || 0) + (duration.incorrectChars || 0));
+        words = duration.wordsCount ?? duration.words;
+        extra = duration;
+      }
+
+      stats.totalTests += 1;
+      stats.totalKeystrokes += (keys || 0);
+      stats.totalWords += (words || 0);
+      stats.totalTimeSeconds += (dur || 30);
+
+      const durKey = (dur || 30).toString();
+      if (!stats.personalBests[durKey] || w > stats.personalBests[durKey].wpm) {
         stats.personalBests[durKey] = {
-          wpm,
-          acc,
+          wpm: w,
+          acc: accuracy ?? 100,
           date: new Date().toISOString()
         };
       }
 
-      stats.recentHistory.unshift({
+      const wpmHistoryClone = (extra && Array.isArray(extra.wpmHistory))
+        ? JSON.parse(JSON.stringify(extra.wpmHistory))
+        : [];
+
+      const entry = Object.assign({
+        id: Date.now(),
         date: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-        duration,
-        wpm,
-        rawWpm,
-        acc,
-        consistency
+        mode: 'classic',
+        duration: dur || 30,
+        wpm: w || 0,
+        rawWpm: raw ?? w ?? 0,
+        accuracy: accuracy ?? 100,
+        acc: accuracy ?? 100,
+        consistency: cons ?? 100,
+        correctChars: (extra && extra.correctChars !== undefined) ? extra.correctChars : (keys || 0),
+        incorrectChars: (extra && extra.incorrectChars !== undefined) ? extra.incorrectChars : 0,
+        extraChars: (extra && extra.extraChars !== undefined) ? extra.extraChars : 0,
+        missedChars: (extra && extra.missedChars !== undefined) ? extra.missedChars : 0,
+        fixedErrors: (extra && extra.fixedErrors !== undefined) ? extra.fixedErrors : 0,
+        wordsCount: words || 0,
+        wpmHistory: wpmHistoryClone
+      }, extra || {}, {
+        duration: dur || 30,
+        wpm: w || 0,
+        rawWpm: raw ?? w ?? 0,
+        accuracy: accuracy ?? 100,
+        acc: accuracy ?? 100,
+        consistency: cons ?? 100,
+        wpmHistory: wpmHistoryClone
       });
+
+      stats.lastClassicTest = entry;
+      if (!Array.isArray(stats.recentHistory)) {
+        stats.recentHistory = [];
+      }
+      stats.recentHistory.unshift(entry);
       if (stats.recentHistory.length > 15) {
         stats.recentHistory.pop();
       }
@@ -954,6 +1003,22 @@ class StorageService {
   getFlowHistory() {
     const save = this.getGameSave();
     return Array.isArray(save.flowHistory) ? save.flowHistory : [];
+  }
+
+  getLastClassicTest() {
+    const stats = this.getClassicStats();
+    if (stats.lastClassicTest && typeof stats.lastClassicTest === 'object') {
+      return stats.lastClassicTest;
+    }
+    if (Array.isArray(stats.recentHistory) && stats.recentHistory.length > 0) {
+      return stats.recentHistory[0];
+    }
+    return null;
+  }
+
+  getClassicHistory() {
+    const stats = this.getClassicStats();
+    return Array.isArray(stats.recentHistory) ? stats.recentHistory : [];
   }
 }
 

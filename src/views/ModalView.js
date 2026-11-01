@@ -98,6 +98,7 @@ class ModalView {
     this.classicHistoryTable = elements.classicHistoryTable || (typeof document !== 'undefined' ? document.getElementById('classic-history-table') : null);
     this.classicHistoryTbody = elements.classicHistoryTbody || (typeof document !== 'undefined' ? (document.getElementById('stats-history-tbody') || (this.classicHistoryTable ? this.classicHistoryTable.querySelector('tbody') : null)) : null);
     this.flowHistoryTbody = elements.flowHistoryTbody || (typeof document !== 'undefined' ? document.getElementById('flow-history-tbody') : null);
+    this.onSelectClassicTest = null;
     this.nextTestBtnLabel = elements.nextTestBtnLabel || (typeof document !== 'undefined' ? document.getElementById('next-test-btn-label') : null);
     this.nextTestBtnHint = elements.nextTestBtnHint || (typeof document !== 'undefined' ? document.getElementById('next-test-btn-hint') : null);
   }
@@ -121,7 +122,17 @@ class ModalView {
     if (this.resAccEl) this.resAccEl.textContent = `${stats.accuracy ?? stats.acc ?? 100}%`;
     if (this.resRawEl) this.resRawEl.textContent = stats.rawWpm ?? stats.wpm;
     if (this.resCharsEl) {
-      this.resCharsEl.textContent = `${stats.correctChars || 0}/${stats.incorrectChars || 0}/${stats.extraChars || 0}/${stats.missedChars || 0}`;
+      let correct = stats.correctChars;
+      let incorrect = stats.incorrectChars;
+      let extra = stats.extraChars || 0;
+      let missed = stats.missedChars || 0;
+      if (correct === undefined && (stats.keystrokes || stats.wpm)) {
+        const total = stats.keystrokes || Math.round((stats.rawWpm || stats.wpm || 0) * 5 * ((stats.duration || 30) / 60));
+        const acc = (stats.accuracy ?? stats.acc ?? 100) / 100;
+        correct = Math.round(total * acc);
+        incorrect = Math.max(0, total - correct);
+      }
+      this.resCharsEl.textContent = `${correct || 0}/${incorrect || 0}/${extra}/${missed}`;
     }
     if (this.resFixedEl) this.resFixedEl.textContent = stats.fixedErrors || 0;
     if (this.resFixedDetailEl) {
@@ -130,7 +141,9 @@ class ModalView {
     }
     if (this.resConsistencyEl) this.resConsistencyEl.textContent = `${stats.consistency ?? 100}%`;
     if (this.resTimeEl) this.resTimeEl.textContent = `${stats.duration}s`;
-    if (this.resTimeDetailEl) this.resTimeDetailEl.textContent = 'standard mode';
+    if (this.resTimeDetailEl) {
+      this.resTimeDetailEl.textContent = stats.date ? `classic test • ${stats.date}` : 'standard mode';
+    }
     if (this.nextTestBtnLabel) this.nextTestBtnLabel.textContent = 'Next Test';
     if (this.nextTestBtnHint) this.nextTestBtnHint.textContent = 'tab';
   }
@@ -524,7 +537,10 @@ class ModalView {
     });
   }
 
-  renderClassicStats(stats) {
+  renderClassicStats(stats, onSelectClassicTest = null) {
+    if (onSelectClassicTest) {
+      this.onSelectClassicTest = onSelectClassicTest;
+    }
     if (!stats) return;
 
     if (this.pb15s && this.pb15sDate) {
@@ -564,13 +580,22 @@ class ModalView {
       } else {
         history.forEach(item => {
           const tr = doc.createElement('tr');
+          tr.className = 'classic-history-row';
+          tr.style.cursor = 'pointer';
+          tr.title = 'Click to inspect this Classic Test on the timeline graph';
+          const acc = item.accuracy ?? item.acc ?? 100;
           tr.innerHTML = `
-            <td>${item.date}</td>
-            <td>${item.duration}s</td>
-            <td>${item.wpm} WPM</td>
-            <td>${item.rawWpm || item.wpm}</td>
-            <td>${item.acc}%</td>
+            <td>${item.date || '--'}</td>
+            <td>${item.duration || 0}s</td>
+            <td style="color: var(--main-color); font-weight: 700;">${item.wpm || 0} WPM</td>
+            <td>${item.rawWpm ?? item.wpm ?? 0}</td>
+            <td>${acc}%</td>
           `;
+          tr.addEventListener('click', () => {
+            if (this.onSelectClassicTest) {
+              this.onSelectClassicTest(item);
+            }
+          });
           tbody.appendChild(tr);
         });
       }

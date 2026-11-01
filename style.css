@@ -1864,10 +1864,12 @@ main {
   color: var(--text-color);
 }
 
+.classic-history-row,
 .flow-history-row {
   transition: background 0.15s ease;
 }
 
+.classic-history-row:hover,
 .flow-history-row:hover {
   background: color-mix(in srgb, var(--main-color) 10%, transparent);
 }

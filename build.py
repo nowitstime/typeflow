@@ -663,7 +663,7 @@ def build():
                 </div>
 
                 <div class="history-table-wrap">
-                  <div class="history-table-title">Recent Tests</div>
+                  <div class="history-table-title">⏱️ Recent Tests <span style="font-weight: 400; font-size: 11px; color: var(--sub-color); margin-left: 6px;">(Click a row to inspect timeline graph)</span></div>
                   <table class="history-table">
                     <thead>
                       <tr>
