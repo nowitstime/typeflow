@@ -1865,6 +1865,79 @@ main {
   background: color-mix(in srgb, var(--main-color) 10%, transparent);
 }
 
+/* Active Modifier Badges (Results Chart View & History Lists) */
+.res-mods-badges {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.res-mods-badges:empty {
+  display: none;
+}
+
+.history-mode-cell {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.history-mods-wrap {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.mod-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  padding: 1px 5px;
+  border: 1px solid var(--border-color);
+  background: var(--sub-alt-color);
+  color: var(--text-color);
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.mod-badge-easy {
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.45);
+  background: rgba(52, 211, 153, 0.1);
+}
+
+.mod-badge-hard {
+  color: #fb7185;
+  border-color: rgba(251, 113, 133, 0.45);
+  background: rgba(251, 113, 133, 0.1);
+}
+
+.mod-badge-punct,
+.mod-badge-caps {
+  color: var(--main-color);
+  border-color: color-mix(in srgb, var(--main-color) 45%, transparent);
+  background: color-mix(in srgb, var(--main-color) 10%, transparent);
+}
+
+.mod-badge-hd {
+  color: #c084fc;
+  border-color: rgba(192, 132, 252, 0.45);
+  background: rgba(192, 132, 252, 0.1);
+}
+
+.mod-badge-ghost {
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.45);
+  background: rgba(56, 189, 248, 0.1);
+}
+
 /* Flow RPG & Keybr Motor Mastery Styles */
 .stats-modal-tabs {
   display: flex;
@@ -2124,20 +2197,6 @@ main {
   font-weight: 700;
   color: var(--text-color);
   font-family: var(--font-mono);
-}
-
-.deck-explorer-section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.deck-explorer-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
 }
 
 .deck-filters {
@@ -3229,12 +3288,131 @@ header .header-left,
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 24px rgba(52, 211, 153, 0.3);
 }
 
+/* Armory Equipped Loadout Bar */
+.armory-summary-bar {
+  margin-bottom: 10px;
+}
+
+.armory-loadout-wrap {
+  background: var(--bg-secondary, #0a0a0c);
+  border: 1px solid var(--border-color, #1a1a20);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.armory-loadout-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.armory-loadout-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--main-color);
+  text-transform: uppercase;
+}
+
+.armory-loadout-hint {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--sub-color);
+}
+
+.armory-loadout-bar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@media (max-width: 720px) {
+  .armory-loadout-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.armory-loadout-slot {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color, #1a1a20);
+  padding: 7px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-radius: 0px;
+}
+
+.armory-loadout-slot:hover {
+  border-color: color-mix(in srgb, var(--main-color) 55%, var(--border-color));
+  background: color-mix(in srgb, var(--main-color) 6%, transparent);
+}
+
+.armory-loadout-slot.active-filter {
+  border-color: var(--main-color);
+  background: color-mix(in srgb, var(--main-color) 12%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--main-color) 20%, transparent);
+}
+
+.loadout-slot-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+
+.loadout-slot-cat {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--sub-color);
+  text-transform: uppercase;
+}
+
+.armory-loadout-slot.active-filter .loadout-slot-cat {
+  color: var(--main-color);
+}
+
+.loadout-swatches .theme-swatch-dot {
+  width: 8px;
+  height: 8px;
+}
+
+.loadout-slot-main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.loadout-slot-icon {
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.loadout-slot-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Armory Scroll & Sections */
 .armory-scroll-container {
   display: flex;
   flex-direction: column;
   gap: 18px;
-  max-height: 430px;
+  max-height: 360px;
   overflow-y: auto;
   padding-right: 4px;
 }
@@ -3245,6 +3423,14 @@ header .header-left,
   gap: 10px;
 }
 
+.armory-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
 .armory-section-title {
   font-family: 'Inter', sans-serif;
   font-size: 12px;
@@ -3252,6 +3438,13 @@ header .header-left,
   text-transform: uppercase;
   letter-spacing: 0.6px;
   color: var(--text-color);
+}
+
+.armory-section-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--sub-color);
 }
 
 .armory-grid {
@@ -3467,5 +3660,380 @@ header .header-left,
   box-shadow: 0 0 12px rgba(244, 63, 94, 0.35);
   border-radius: 3px;
 }
+
+/* ==========================================================================
+   [05] LEXICON: Word Compendium & Pop-up Word Inspector
+   ========================================================================== */
+
+.lexicon-pane {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lexicon-summary-bar {
+  margin-bottom: 4px;
+}
+
+.lexicon-summary-title-group {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.lexicon-view-toggle {
+  display: inline-flex;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-color);
+}
+
+.lexicon-mode-btn {
+  background: transparent;
+  border: none;
+  color: var(--sub-color);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.lexicon-mode-btn:hover {
+  color: var(--text-color);
+}
+
+.lexicon-mode-btn.active {
+  background: color-mix(in srgb, var(--main-color) 18%, transparent);
+  color: var(--main-color);
+  box-shadow: inset 0 0 0 1px var(--main-color);
+}
+
+.lexicon-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.lexicon-search-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.lexicon-search-icon {
+  position: absolute;
+  left: 10px;
+  font-size: 13px;
+  color: var(--sub-color);
+  pointer-events: none;
+}
+
+.lexicon-search-input {
+  width: 100%;
+  background: var(--bg-secondary, #0a0a0c);
+  border: 1px solid var(--border-color, #1a1a20);
+  color: var(--text-color);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 6px 10px 6px 28px;
+  border-radius: 0px;
+  outline: none;
+}
+
+.lexicon-search-input:focus {
+  border-color: var(--main-color);
+}
+
+.lexicon-sort-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lexicon-sort-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--sub-color);
+}
+
+.lexicon-sort-select {
+  background: var(--bg-secondary, #0a0a0c);
+  border: 1px solid var(--border-color, #1a1a20);
+  color: var(--text-color);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 5px 8px;
+  border-radius: 0px;
+  cursor: pointer;
+  outline: none;
+}
+
+.lexicon-sort-select:focus {
+  border-color: var(--main-color);
+}
+
+.lexicon-filter-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lexicon-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+
+.lexicon-filter-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--sub-color);
+  min-width: 58px;
+  letter-spacing: 0.05em;
+}
+
+.lexicon-words-grid {
+  max-height: 310px;
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  align-content: flex-start;
+  padding: 4px 2px;
+}
+
+.lexicon-word-card {
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease;
+  user-select: none;
+}
+
+.lexicon-word-card:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.lexicon-word-card.undiscovered {
+  opacity: 0.65;
+  border-style: dashed;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.lexicon-word-card.undiscovered:hover {
+  opacity: 0.95;
+}
+
+.lexicon-chip-rank {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--sub-color);
+}
+
+.lexicon-chip-mystery {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--sub-color);
+}
+
+.lexicon-chip-stat {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--main-color);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1px 5px;
+}
+
+.lexicon-chip-stat.unseen {
+  color: var(--sub-color);
+}
+
+/* Pop-up Word Inspector Modal inside Lexicon Pane */
+.lexicon-word-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 6, 10, 0.82);
+  backdrop-filter: blur(5px);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.lexicon-word-modal-card {
+  width: 100%;
+  max-width: 520px;
+  background: var(--bg-secondary, #0b0f14);
+  border: 1px solid var(--main-color);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.8), 0 0 24px color-mix(in srgb, var(--main-color) 20%, transparent);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lexicon-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+}
+
+.lexicon-modal-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lexicon-modal-word {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-color);
+}
+
+.lexicon-modal-rank {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--sub-color);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 6px;
+}
+
+.lexicon-modal-tier-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border: 1px solid var(--main-color);
+}
+
+.lexicon-modal-srs-badge {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-color);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 8px;
+}
+
+.lexicon-stats-section-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--main-color);
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.lexicon-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@media (max-width: 600px) {
+  .lexicon-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.lexicon-stat-box {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.lexicon-stat-box.highlight {
+  border-color: color-mix(in srgb, var(--main-color) 45%, var(--border-color));
+  background: color-mix(in srgb, var(--main-color) 6%, transparent);
+}
+
+.lexicon-stat-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: var(--sub-color);
+}
+
+.lexicon-stat-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.lexicon-breakdown-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.lexicon-breakdown-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-color);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  padding: 3px 8px;
+}
+
+.lexicon-bigrams-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.lexicon-bigram-chip {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-color);
+  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+}
+
+.lexicon-bigram-pair {
+  color: var(--text-color);
+  font-weight: 700;
+}
+
+.lexicon-mystery-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lexicon-mystery-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--main-color);
+}
+
+.lexicon-mystery-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--sub-color);
+}
+
 
 

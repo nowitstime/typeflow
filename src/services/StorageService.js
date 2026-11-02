@@ -42,6 +42,7 @@ const DEFAULT_GAME_SAVE = {
   wordStats: {},      // SRS telemetry: { [rank]: { seen, unfixedErr, fixedErr, avgWpm, streak } }
   bigramLedger: {},   // Rolling EMA bigram mastery ledger: { [bg]: mastery }
   lifetimeWords: 0,
+  flowTimeSeconds: 0,
   highStreak: 0,
   hiddenMode: false,
   hiddenMethod: 'word',
@@ -311,6 +312,14 @@ class StorageService {
     if (!Array.isArray(state.flowHistory)) {
       state.flowHistory = [];
     }
+    if (typeof state.flowTimeSeconds !== 'number' || isNaN(state.flowTimeSeconds) || state.flowTimeSeconds < 0) {
+      state.flowTimeSeconds = 0;
+    }
+    if (state.flowTimeSeconds === 0 && (state.lifetimeWords > 0 || state.flowHistory.length > 0)) {
+      const historySum = state.flowHistory.reduce((acc, r) => acc + (Number(r && r.duration) || 0), 0);
+      const wordEst = Math.round((state.lifetimeWords || 0) * (60 / Math.max(20, state.targetWpm || 40)));
+      state.flowTimeSeconds = Math.max(historySum, wordEst);
+    }
     return state;
   }
 
@@ -488,7 +497,7 @@ class StorageService {
   }
 
   // Update SRS telemetry for a word
-  updateWordStat(rank, hasUnfixedError, hadBackspace = false, wordWpm = 0, targetWpm = 40) {
+  updateWordStat(rank, hasUnfixedError, hadBackspace = false, wordWpm = 0, targetWpm = 40, activeWordSeconds = 0) {
     const save = this.getGameSave();
     if (!save.wordStats) save.wordStats = {};
     if (!save.wordStats[rank]) {
@@ -496,8 +505,12 @@ class StorageService {
         seen: 0,
         unfixedErr: 0,
         fixedErr: 0,
+        totalUnfixedErr: 0,
+        totalFixedErr: 0,
         avgWpm: wordWpm || targetWpm,
+        bestWpm: 0,
         streak: 0,
+        bestStreak: 0,
         timesSeen: 0,
         errorCount: 0,
         cleanHits: 0,
@@ -510,25 +523,35 @@ class StorageService {
     st.timesSeen = st.seen;
     st.unfixedErr = st.unfixedErr ?? st.errorCount ?? 0;
     st.fixedErr = st.fixedErr ?? 0;
+    st.totalUnfixedErr = st.totalUnfixedErr ?? Math.round(st.unfixedErr || 0);
+    st.totalFixedErr = st.totalFixedErr ?? Math.round(st.fixedErr || 0);
     st.streak = st.streak ?? st.cleanHits ?? 0;
+    st.bestStreak = st.bestStreak ?? st.streak ?? 0;
     st.avgWpm = st.avgWpm ?? st.lastWpm ?? targetWpm;
+    st.bestWpm = st.bestWpm ?? Math.round(st.avgWpm || 0);
 
     const wpm = wordWpm || 0;
     st.lastWpm = wpm;
     st.avgWpm = Math.round(((st.avgWpm * 0.7) + (wpm * 0.3)) * 10) / 10;
+    if (!hasUnfixedError && wpm > 0) {
+      st.bestWpm = Math.max(st.bestWpm || 0, Math.round(wpm));
+    }
 
     if (hasUnfixedError) {
       st.unfixedErr += 1.0;
+      st.totalUnfixedErr += 1;
       st.streak = 0;
       st.cleanHits = 0;
     } else {
       if (hadBackspace) {
         st.fixedErr += 1.0;
+        st.totalFixedErr += 1;
         st.streak = 0;
         st.cleanHits = 0;
       } else if (wpm >= targetWpm) {
         st.streak += 1;
         st.cleanHits = st.streak;
+        st.bestStreak = Math.max(st.bestStreak || 0, st.streak);
         st.unfixedErr = Math.max(0.0, Math.round((st.unfixedErr - 0.25) * 100) / 100);
         st.fixedErr = Math.max(0.0, Math.round((st.fixedErr - 0.35) * 100) / 100);
       } else {
@@ -539,6 +562,10 @@ class StorageService {
     st.errorCount = Math.round(st.unfixedErr + st.fixedErr);
 
     save.lifetimeWords += 1;
+    const wordSec = (typeof activeWordSeconds === 'number' && activeWordSeconds > 0)
+      ? Math.min(15, activeWordSeconds)
+      : Math.max(0.2, Math.min(10, 60 / Math.max(20, wpm || targetWpm || 40)));
+    save.flowTimeSeconds = Math.round(((save.flowTimeSeconds || 0) + wordSec) * 10) / 10;
     this.saveGameSave(save);
     return save;
   }
@@ -666,6 +693,30 @@ class StorageService {
       return fresh;
     } catch (e) {
       return DEFAULT_CLASSIC_STATS;
+    }
+  }
+
+  resetAll() {
+    try {
+      const s = this._getStorage();
+      if (s) {
+        s.removeItem(STORAGE_KEYS.HIDDEN_MODE);
+        s.removeItem(STORAGE_KEYS.HIDDEN_METHOD);
+        s.removeItem(STORAGE_KEYS.HIDDEN_WORD_DIST);
+        s.removeItem(STORAGE_KEYS.GHOST_CURSOR);
+        s.removeItem(STORAGE_KEYS.GHOST_SPEED);
+        s.removeItem(STORAGE_KEYS.WORD_DIFFICULTY);
+        s.removeItem(STORAGE_KEYS.PUNCTUATION_MODE);
+        s.removeItem(STORAGE_KEYS.CAPITALS_MODE);
+      }
+      const gameSave = this.resetGameSave(true);
+      const classicStats = this.resetClassicStats();
+      return { gameSave, classicStats };
+    } catch (e) {
+      return {
+        gameSave: JSON.parse(JSON.stringify(DEFAULT_GAME_SAVE)),
+        classicStats: JSON.parse(JSON.stringify(DEFAULT_CLASSIC_STATS))
+      };
     }
   }
 

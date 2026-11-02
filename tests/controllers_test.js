@@ -95,6 +95,7 @@ function createTestHarness() {
         <span id="res-consistency"></span>
         <span id="res-time"></span>
         <span id="res-time-detail"></span>
+        <div id="res-mods-badges"></div>
         <button id="next-test-btn"><span id="next-test-btn-label">Next Test</span><span id="next-test-btn-hint">tab</span></button>
       </div>
       <button id="hd-btn"></button>
@@ -103,7 +104,10 @@ function createTestHarness() {
       <button id="mods-close-btn"></button>
       <button id="restart-btn"><span id="restart-btn-label">tab</span></button>
       <div id="stats-modal" style="display: none;">
+        <span id="stats-rpg-flow-time"></span>
+        <button id="reset-all-stats-btn"></button>
         <table><tbody id="flow-history-tbody"></tbody></table>
+        <table><tbody id="stats-history-tbody"></tbody></table>
       </div>
     </body>
     </html>
@@ -183,10 +187,13 @@ function createTestHarness() {
     resConsistency: document.getElementById('res-consistency'),
     resTime: document.getElementById('res-time'),
     resTimeDetail: document.getElementById('res-time-detail'),
+    resModsBadges: document.getElementById('res-mods-badges'),
     nextTestBtn: document.getElementById('next-test-btn'),
     nextTestBtnLabel: document.getElementById('next-test-btn-label'),
     nextTestBtnHint: document.getElementById('next-test-btn-hint'),
-    flowHistoryTbody: document.getElementById('flow-history-tbody')
+    statsRpgFlowTime: document.getElementById('stats-rpg-flow-time'),
+    flowHistoryTbody: document.getElementById('flow-history-tbody'),
+    classicHistoryTbody: document.getElementById('stats-history-tbody')
   });
 
   const controller = new GameController({
@@ -1242,6 +1249,118 @@ it('GameController manages Word Difficulty (Easy/Normal/Hard in Classic Mode), P
   controller.handleSpace();
   assert.strictEqual(sessionModel.currentWordIdx, 1);
   assert.strictEqual(sessionModel.incorrectKeystrokes, 0);
+  controller.destroy();
+});
+
+it('GameController & ModalView: Active modifier badges render on in-depth chart view and history lists (Difficulty only for easy/hard)', () => {
+  const { controller, modalView } = createTestHarness();
+  controller.init();
+
+  // 1. Classic Mode with Normal difficulty and no mods -> 0 badges
+  controller.switchMode('classic');
+  assert.strictEqual(controller.wordDifficulty, 'normal');
+  controller.endClassicTest();
+  const badgesEl = modalView.resModsBadgesEl;
+  assert.strictEqual(badgesEl.innerHTML, '', 'Normal difficulty with no active mods should render no badges');
+
+  // 2. Classic Mode with Hard difficulty, Punctuation, Capitals, Hidden, and Ghost -> 5 badges
+  controller.setWordDifficulty('hard');
+  controller.togglePunctuationMode();
+  controller.toggleCapitalsMode();
+  controller.toggleHiddenMode();
+  controller.toggleGhostCursor();
+  controller.updateGhostSpeed(75);
+  controller.endClassicTest();
+
+  assert.ok(badgesEl.innerHTML.includes('HARD'), 'Chart view should show HARD badge');
+  assert.ok(badgesEl.innerHTML.includes('@! PUNCT'), 'Chart view should show @! PUNCT badge');
+  assert.ok(badgesEl.innerHTML.includes('Aa CAPS'), 'Chart view should show Aa CAPS badge');
+  assert.ok(badgesEl.innerHTML.includes('HD'), 'Chart view should show HD badge');
+  assert.ok(badgesEl.innerHTML.includes('👻 75'), 'Chart view should show Ghost speed badge');
+
+  // 3. Classic Mode with Easy difficulty -> EASY badge
+  controller.setWordDifficulty('easy');
+  controller.endClassicTest();
+  assert.ok(badgesEl.innerHTML.includes('EASY'), 'Chart view should show EASY badge');
+
+  // 4. Flow Run with active mods -> renders badges in Flow Recap chart view and Flow History table (without difficulty badge)
+  controller.switchMode('flow');
+  controller.handleFlowRunCompleted({
+    duration: 20,
+    wpm: 88,
+    rawWpm: 92,
+    peakWpm: 105,
+    accuracy: 99,
+    consistency: 94,
+    unlockedWords: 25,
+    wpmHistory: [{ second: 1, wpm: 88, rawWpm: 92, burstWpm: 95 }]
+  });
+  controller.openFlowRecap(false);
+  assert.ok(!badgesEl.innerHTML.includes('EASY') && !badgesEl.innerHTML.includes('HARD'), 'Flow recap should not show difficulty badge');
+  assert.ok(badgesEl.innerHTML.includes('@! PUNCT'), 'Flow recap chart view should show @! PUNCT badge');
+  assert.ok(badgesEl.innerHTML.includes('Aa CAPS'), 'Flow recap chart view should show Aa CAPS badge');
+  assert.ok(badgesEl.innerHTML.includes('HD'), 'Flow recap chart view should show HD badge');
+  assert.ok(badgesEl.innerHTML.includes('👻 75'), 'Flow recap chart view should show Ghost badge');
+
+  // 5. Open Stats Modal -> verify badges appear in both Classic History and Flow History list views
+  controller.openStats('classic');
+  const classicHistoryHtml = modalView.classicHistoryTbody.innerHTML;
+  const flowHistoryHtml = modalView.flowHistoryTbody.innerHTML;
+  assert.ok(classicHistoryHtml.includes('EASY'), 'Classic history list view should include EASY badge');
+  assert.ok(classicHistoryHtml.includes('HARD'), 'Classic history list view should include HARD badge');
+  assert.ok(classicHistoryHtml.includes('@! PUNCT'), 'Classic history list view should include @! PUNCT badge');
+  assert.ok(flowHistoryHtml.includes('@! PUNCT'), 'Flow history list view should include @! PUNCT badge');
+  assert.ok(flowHistoryHtml.includes('👻 75'), 'Flow history list view should include Ghost badge');
+
+  controller.destroy();
+});
+
+it('Phase 1: Tracks Total Time Typing in Flow Mode and Reset All performs complete factory wipe', () => {
+  const { dom, controller, storageService, modalView } = createTestHarness();
+  controller.init();
+
+  // 1. Type 3 words in Flow Mode and verify flowTimeSeconds accumulates
+  for (let w = 0; w < 3; w++) {
+    const wordText = controller.sessionModel.getCurrentWordText();
+    for (const ch of wordText) {
+      controller.handleChar(ch);
+    }
+    controller.handleSpace();
+  }
+  const saveAfterWords = storageService.getGameSave();
+  assert.ok(saveAfterWords.flowTimeSeconds > 0, 'flowTimeSeconds should accumulate as words are typed in Flow Mode');
+
+  // Open stats and check #stats-rpg-flow-time rendering
+  controller.openStats('flow');
+  assert.ok(modalView.statsRpgFlowTime.textContent.includes('m '), 'statsRpgFlowTime should render formatted minutes & seconds');
+
+  // 2. Enable mods, unlock an achievement, and record a classic test
+  controller.setWordDifficulty('hard');
+  controller.togglePunctuationMode();
+  controller.toggleCapitalsMode();
+  controller.toggleHiddenMode();
+  controller.toggleGhostCursor();
+  storageService.unlockAchievement('first_stride', Date.now());
+  storageService.recordClassicTest(30, 95, 98, 99, 92, 240, 48);
+
+  // 3. Trigger Reset All via StorageService & ModalView handler
+  const resetAllBtn = dom.window.document.getElementById('reset-all-stats-btn');
+  resetAllBtn.click();
+
+  const wipedSave = storageService.getGameSave();
+  const wipedClassic = storageService.getClassicStats();
+  assert.strictEqual(wipedSave.level, 1);
+  assert.strictEqual(wipedSave.flowTimeSeconds, 0);
+  assert.strictEqual(wipedSave.unlockedRanks.length, 1);
+  assert.strictEqual(Object.keys(wipedSave.achievements || {}).length, 0, 'Achievements should be wiped on Reset All');
+  assert.strictEqual(wipedClassic.totalTests, 0, 'Classic stats should be wiped on Reset All');
+  assert.strictEqual(controller.wordDifficulty, 'normal', 'Word difficulty should reset to normal');
+  assert.strictEqual(controller.punctuationEnabled, false, 'Punctuation mod should reset to false');
+  assert.strictEqual(controller.capitalsEnabled, false, 'Capitals mod should reset to false');
+  assert.strictEqual(controller.ghostEnabled, false, 'Ghost pacer should reset to false');
+  assert.strictEqual(storageService.getHiddenMode(), false, 'Hidden mode should reset to false');
+  assert.strictEqual(modalView.statsRpgFlowTime.textContent, '0m 0s', 'Flow time UI should reset to 0m 0s');
+
   controller.destroy();
 });
 

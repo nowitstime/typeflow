@@ -352,6 +352,7 @@
           <div class="chart-header">
             <div class="chart-header-left">
               <span>WPM Timeline</span>
+              <div class="res-mods-badges" id="res-mods-badges"></div>
               <div class="chart-legend">
                 <div class="legend-item"><span class="legend-color avg"></span> Avg WPM</div>
                 <div class="legend-item"><span class="legend-color pace"></span> Pace (3s)</div>
@@ -415,12 +416,16 @@
                 <span class="nav-idx">[04]</span>
                 <span class="nav-label">RECORDS</span>
               </button>
-              <button type="button" class="stats-tab drawer-nav-btn" id="tab-stats-motor" data-tab="motor">
+              <button type="button" class="stats-tab drawer-nav-btn" id="tab-stats-lexicon" data-tab="lexicon">
                 <span class="nav-idx">[05]</span>
+                <span class="nav-label">LEXICON</span>
+              </button>
+              <button type="button" class="stats-tab drawer-nav-btn" id="tab-stats-motor" data-tab="motor">
+                <span class="nav-idx">[06]</span>
                 <span class="nav-label">MOTOR</span>
               </button>
               <button type="button" class="stats-tab drawer-nav-btn" id="tab-stats-config" data-tab="config">
-                <span class="nav-idx">[06]</span>
+                <span class="nav-idx">[07]</span>
                 <span class="nav-label">CONFIG</span>
               </button>
             </div>
@@ -475,6 +480,10 @@
                       <span class="rpg-sub-label">Best Flow Streak</span>
                       <span class="rpg-sub-val" id="stats-rpg-high-streak">0 words</span>
                     </div>
+                    <div class="rpg-sub-stat">
+                      <span class="rpg-sub-label">Time in Flow</span>
+                      <span class="rpg-sub-val" id="stats-rpg-flow-time">0m 0s</span>
+                    </div>
                   </div>
                 </div>
 
@@ -501,7 +510,7 @@
 
               <!-- [02] ARMORY: Cosmetic Repository Pane -->
               <div class="stats-pane" id="pane-stats-armory" style="display: none;">
-                <div class="trophy-summary-bar">
+                <div class="trophy-summary-bar armory-summary-bar">
                   <div class="trophy-summary-left">
                     <span class="trophy-summary-title">Cosmetic Armory</span>
                     <span class="trophy-summary-count" id="armory-count">6 / 34 unlocked (18%)</span>
@@ -511,8 +520,19 @@
                   </div>
                 </div>
 
+                <!-- Equipped Loadout Bar (6 Active Slots) -->
+                <div class="armory-loadout-wrap">
+                  <div class="armory-loadout-header">
+                    <span class="armory-loadout-title">// ACTIVE LOADOUT</span>
+                    <span class="armory-loadout-hint">Click a slot to filter category</span>
+                  </div>
+                  <div class="armory-loadout-bar" id="armory-loadout-bar">
+                    <!-- Dynamically populated 6 equipped slot cards -->
+                  </div>
+                </div>
+
                 <div class="trophy-filters armory-filters" id="armory-filters">
-                  <button class="trophy-filter-btn armory-filter-btn active" data-filter="all">All</button>
+                  <button class="trophy-filter-btn armory-filter-btn active" data-filter="all">All Categories</button>
                   <button class="trophy-filter-btn armory-filter-btn" data-filter="theme">🎨 Themes</button>
                   <button class="trophy-filter-btn armory-filter-btn" data-filter="flowFx">🌌 Flow FX</button>
                   <button class="trophy-filter-btn armory-filter-btn" data-filter="caret">│ Caret Shapes</button>
@@ -523,32 +543,50 @@
 
                 <div class="armory-scroll-container">
                   <div class="armory-section" data-armory-section="theme">
-                    <div class="armory-section-title">🎨 OLED Stage Themes</div>
+                    <div class="armory-section-header">
+                      <div class="armory-section-title">🎨 OLED Stage Themes</div>
+                      <span class="armory-section-count" data-armory-count="theme"></span>
+                    </div>
                     <div class="armory-grid" id="armory-themes-grid"></div>
                   </div>
 
                   <div class="armory-section" data-armory-section="flowFx">
-                    <div class="armory-section-title">🌌 Flow State Atmospheres (Flow FX)</div>
+                    <div class="armory-section-header">
+                      <div class="armory-section-title">🌌 Flow State Atmospheres (Flow FX)</div>
+                      <span class="armory-section-count" data-armory-count="flowFx"></span>
+                    </div>
                     <div class="armory-grid" id="armory-flowfx-grid"></div>
                   </div>
 
                   <div class="armory-section" data-armory-section="caret">
-                    <div class="armory-section-title">│ Caret Geometries</div>
+                    <div class="armory-section-header">
+                      <div class="armory-section-title">│ Caret Geometries</div>
+                      <span class="armory-section-count" data-armory-count="caret"></span>
+                    </div>
                     <div class="armory-grid" id="armory-carets-grid"></div>
                   </div>
 
                   <div class="armory-section" data-armory-section="caretFx">
-                    <div class="armory-section-title">✨ Flow Caret Modifiers (Independent)</div>
+                    <div class="armory-section-header">
+                      <div class="armory-section-title">✨ Flow Caret Modifiers (Independent)</div>
+                      <span class="armory-section-count" data-armory-count="caretFx"></span>
+                    </div>
                     <div class="armory-grid" id="armory-caretfx-grid"></div>
                   </div>
 
                   <div class="armory-section" data-armory-section="ghostStyle">
-                    <div class="armory-section-title">👻 Ghost Cursor Pacer Styles</div>
+                    <div class="armory-section-header">
+                      <div class="armory-section-title">👻 Ghost Cursor Pacer Styles</div>
+                      <span class="armory-section-count" data-armory-count="ghostStyle"></span>
+                    </div>
                     <div class="armory-grid" id="armory-ghost-grid"></div>
                   </div>
 
                   <div class="armory-section" data-armory-section="sound">
-                    <div class="armory-section-title">🔊 Mechanical Switch Sound Packs</div>
+                    <div class="armory-section-header">
+                      <div class="armory-section-title">🔊 Mechanical Switch Sound Packs</div>
+                      <span class="armory-section-count" data-armory-count="sound"></span>
+                    </div>
                     <div class="armory-grid" id="armory-sounds-grid"></div>
                   </div>
                 </div>
@@ -640,7 +678,98 @@
                 </div>
               </div>
 
-              <!-- [05] MOTOR: Neuromuscular Mastery & Deck Explorer Pane -->
+              <!-- [05] LEXICON: Word Compendium & Encyclopedia Pane -->
+              <div class="stats-pane lexicon-pane" id="pane-stats-lexicon" style="display: none;">
+                <div class="trophy-summary-bar lexicon-summary-bar">
+                  <div class="trophy-summary-left">
+                    <div class="lexicon-summary-title-group">
+                      <span class="trophy-summary-title">Word Compendium</span>
+                      <span class="trophy-summary-count"><span id="deck-unlocked-count">1</span> / 1,000 Discovered (<span id="lexicon-discovered-pct">0.1%</span>)</span>
+                    </div>
+                    <div class="lexicon-view-toggle" id="lexicon-view-toggle">
+                      <button type="button" class="lexicon-mode-btn active" id="lexicon-mode-discovered" data-view-mode="discovered">Discovered</button>
+                      <button type="button" class="lexicon-mode-btn" id="lexicon-mode-all" data-view-mode="all">See All 1,000 (???)</button>
+                    </div>
+                  </div>
+                  <div class="trophy-summary-track">
+                    <div class="trophy-summary-fill" id="lexicon-progress-bar" style="width: 0.1%;"></div>
+                  </div>
+                </div>
+
+                <!-- Search & Sort Toolbar -->
+                <div class="lexicon-toolbar">
+                  <div class="lexicon-search-wrap">
+                    <span class="lexicon-search-icon">⌕</span>
+                    <input type="text" class="lexicon-search-input" id="lexicon-search-input" placeholder="Search word or #rank (e.g. the, #42)..." autocomplete="off" spellcheck="false" />
+                  </div>
+                  <div class="lexicon-sort-wrap">
+                    <label for="lexicon-sort-select" class="lexicon-sort-label">SORT:</label>
+                    <select class="lexicon-sort-select" id="lexicon-sort-select">
+                      <option value="rank">Rank (#1 → #1000)</option>
+                      <option value="wpm_desc">Fastest WPM</option>
+                      <option value="wpm_asc">Slowest WPM</option>
+                      <option value="acc_desc">Highest Accuracy</option>
+                      <option value="acc_asc">Lowest Accuracy</option>
+                      <option value="seen_desc">Most Seen</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Filter Rows: Rarity Tiers, Mastery Status & Motor Patterns -->
+                <div class="lexicon-filter-groups">
+                  <div class="lexicon-filter-row" id="lexicon-rarity-filters">
+                    <span class="lexicon-filter-tag">RARITY:</span>
+                    <button type="button" class="trophy-filter-btn lexicon-rarity-btn active" data-rarity="all">All Tiers</button>
+                    <button type="button" class="trophy-filter-btn lexicon-rarity-btn" data-rarity="STARTER">Starter (#1–40)</button>
+                    <button type="button" class="trophy-filter-btn lexicon-rarity-btn" data-rarity="COMMON">Common (#41–300)</button>
+                    <button type="button" class="trophy-filter-btn lexicon-rarity-btn" data-rarity="UNCOMMON">Uncommon (#301–600)</button>
+                    <button type="button" class="trophy-filter-btn lexicon-rarity-btn" data-rarity="RARE">Rare (#601–850)</button>
+                    <button type="button" class="trophy-filter-btn lexicon-rarity-btn" data-rarity="EPIC">Epic (#851–1000)</button>
+                  </div>
+                  <div class="lexicon-filter-row" id="lexicon-mastery-filters">
+                    <span class="lexicon-filter-tag">MASTERY:</span>
+                    <button type="button" class="trophy-filter-btn lexicon-mastery-btn active" data-mastery="all">All</button>
+                    <button type="button" class="trophy-filter-btn lexicon-mastery-btn" data-mastery="mastered">⭐ Mastered</button>
+                    <button type="button" class="trophy-filter-btn lexicon-mastery-btn" data-mastery="flow">⚡ In Flow</button>
+                    <button type="button" class="trophy-filter-btn lexicon-mastery-btn" data-mastery="practicing">⚠️ Practicing</button>
+                    <button type="button" class="trophy-filter-btn lexicon-mastery-btn" data-mastery="new">🌱 New</button>
+                  </div>
+                  <div class="lexicon-filter-row deck-filters" id="deck-filters">
+                    <span class="lexicon-filter-tag">PATTERN:</span>
+                    <button type="button" class="deck-filter-btn active" data-filter="all">All</button>
+                    <button type="button" class="deck-filter-btn" data-filter="HOME_CORE">Home Core</button>
+                    <button type="button" class="deck-filter-btn" data-filter="ALTERNATING">Alternator</button>
+                    <button type="button" class="deck-filter-btn" data-filter="SUFFIX_CURL">Suffixes</button>
+                    <button type="button" class="deck-filter-btn" data-filter="REACH_PINKY">Reaches</button>
+                    <button type="button" class="deck-filter-btn" data-filter="DOUBLE_BOUNCE">Bounces</button>
+                  </div>
+                </div>
+
+                <!-- Compendium Word Grid -->
+                <div class="deck-words-scroll lexicon-words-grid" id="deck-words-scroll">
+                  <!-- Dynamically populated word cards -->
+                </div>
+
+                <!-- Pop-up Overlay Card inside Lexicon Pane -->
+                <div class="lexicon-word-modal-backdrop" id="lexicon-word-modal" style="display: none;">
+                  <div class="lexicon-word-modal-card" id="lexicon-word-modal-card">
+                    <div class="lexicon-modal-header">
+                      <div class="lexicon-modal-title-row">
+                        <span class="lexicon-modal-word" id="lexicon-modal-word">the</span>
+                        <span class="lexicon-modal-rank" id="lexicon-modal-rank">#1</span>
+                        <span class="lexicon-modal-tier-badge" id="lexicon-modal-tier">STARTER</span>
+                        <span class="lexicon-modal-srs-badge" id="lexicon-modal-srs">⭐ Mastered</span>
+                      </div>
+                      <button type="button" class="icon-btn lexicon-modal-close" id="lexicon-modal-close-btn" title="Close Word Inspector">✕</button>
+                    </div>
+                    <div class="lexicon-modal-body" id="lexicon-modal-body">
+                      <!-- Dynamically populated Lifetime Stats & Word Breakdown -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- [06] MOTOR: Neuromuscular Mastery Pane -->
               <div class="stats-pane" id="pane-stats-motor" style="display: none;">
                 <div class="motor-mastery-section">
                   <div class="section-heading-wrap">
@@ -651,29 +780,9 @@
                     <!-- Dynamically populated 5 motor cards -->
                   </div>
                 </div>
-
-                <div class="deck-explorer-section">
-                  <div class="deck-explorer-header">
-                    <div>
-                      <span class="section-title">Active Deck Words (<span id="deck-unlocked-count">1</span>)</span>
-                      <div class="section-subtitle">Spaced repetition memory and burst speeds</div>
-                    </div>
-                    <div class="deck-filters" id="deck-filters">
-                      <button class="deck-filter-btn active" data-filter="all">All</button>
-                      <button class="deck-filter-btn" data-filter="HOME_CORE">Home Core</button>
-                      <button class="deck-filter-btn" data-filter="ALTERNATING">Alternator</button>
-                      <button class="deck-filter-btn" data-filter="SUFFIX_CURL">Suffixes</button>
-                      <button class="deck-filter-btn" data-filter="REACH_PINKY">Reaches</button>
-                      <button class="deck-filter-btn" data-filter="DOUBLE_BOUNCE">Bounces</button>
-                    </div>
-                  </div>
-                  <div class="deck-words-scroll" id="deck-words-scroll">
-                    <!-- Dynamically populated word chips -->
-                  </div>
-                </div>
               </div>
 
-              <!-- [06] CONFIG: System Parameters & Ground Zero Pane -->
+              <!-- [07] CONFIG: System Parameters & Ground Zero Pane -->
               <div class="stats-pane" id="pane-stats-config" style="display: none;">
                 <div class="config-section">
                   <div class="config-section-title">// DATA MANAGEMENT</div>
@@ -690,6 +799,13 @@
                       <span class="config-desc">Clear 15s, 30s, 60s benchmark history and personal bests.</span>
                     </div>
                     <button class="btn-secondary" id="reset-classic-stats-btn" style="font-size: 12px; padding: 7px 14px;" title="Reset Classic Mode Personal Bests & Records">Clear Records</button>
+                  </div>
+                  <div class="config-card">
+                    <div class="config-info">
+                      <span class="config-label">Complete Factory Reset (Reset All)</span>
+                      <span class="config-desc">Wipe all Flow RPG progress, Classic records, Trophies, unlocked Armory items, and active Mods.</span>
+                    </div>
+                    <button class="btn-danger-outline" id="reset-all-stats-btn" title="Factory Reset: Wipe all Flow RPG, Classic Records, Trophies, Armory, and Mod settings">Reset All ✕</button>
                   </div>
                 </div>
 
@@ -727,7 +843,6 @@
                   <div class="config-section-title">// SYSTEM TELEMETRY</div>
                   <div class="config-card" style="font-family: var(--font-mono); font-size: 11px; color: var(--sub-color); justify-content: space-between;">
                     <div>ENGINE: TypeFlow v4.0 (Flow RPG Core)</div>
-                    <div>CHASSIS: Teenage Engineering Tactical</div>
                   </div>
                 </div>
               </div>

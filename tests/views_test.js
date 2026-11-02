@@ -739,6 +739,127 @@ it('ModalView manages command drawer, tabs, and breadcrumb navigation', () => {
   assert.ok(!modal.statsModal.classList.contains('open'));
 });
 
+it('ModalView Lexicon Compendium supports Discovered vs See All 1,000 (???), rarity/mastery filters, sorting, search, and Word Inspector pop-up overlay', () => {
+  const dom = new JSDOM(`
+    <div id="stats-modal" style="display: none;">
+      <div id="tab-stats-lexicon"></div>
+      <div id="pane-stats-lexicon" style="display: none;">
+        <span id="deck-unlocked-count"></span>
+        <span id="lexicon-discovered-pct"></span>
+        <div id="lexicon-progress-bar"></div>
+        <button id="lexicon-mode-discovered" class="active"></button>
+        <button id="lexicon-mode-all"></button>
+        <input id="lexicon-search-input" value="" />
+        <select id="lexicon-sort-select">
+          <option value="rank">Rank</option>
+          <option value="wpm_desc">WPM Desc</option>
+          <option value="acc_asc">Acc Asc</option>
+          <option value="seen_desc">Seen Desc</option>
+        </select>
+        <button class="lexicon-rarity-btn active" data-rarity="all"></button>
+        <button class="lexicon-rarity-btn" data-rarity="EPIC"></button>
+        <button class="lexicon-mastery-btn active" data-mastery="all"></button>
+        <button class="lexicon-mastery-btn" data-mastery="mastered"></button>
+        <div id="deck-words-scroll"></div>
+        <div id="lexicon-word-modal" style="display: none;">
+          <span id="lexicon-modal-word"></span>
+          <span id="lexicon-modal-rank"></span>
+          <span id="lexicon-modal-tier"></span>
+          <span id="lexicon-modal-srs"></span>
+          <div id="lexicon-modal-body"></div>
+          <button id="lexicon-modal-close-btn"></button>
+        </div>
+      </div>
+      <div id="drawer-active-title"></div>
+    </div>
+  `);
+  const doc = dom.window.document;
+  const modal = new ModalView({
+    statsModal: doc.getElementById('stats-modal'),
+    tabStatsLexicon: doc.getElementById('tab-stats-lexicon'),
+    paneStatsLexicon: doc.getElementById('pane-stats-lexicon'),
+    deckUnlockedCount: doc.getElementById('deck-unlocked-count'),
+    lexiconDiscoveredPct: doc.getElementById('lexicon-discovered-pct'),
+    lexiconProgressBar: doc.getElementById('lexicon-progress-bar'),
+    lexiconModeDiscoveredBtn: doc.getElementById('lexicon-mode-discovered'),
+    lexiconModeAllBtn: doc.getElementById('lexicon-mode-all'),
+    lexiconSearchInput: doc.getElementById('lexicon-search-input'),
+    lexiconSortSelect: doc.getElementById('lexicon-sort-select'),
+    lexiconRarityBtns: doc.querySelectorAll('.lexicon-rarity-btn'),
+    lexiconMasteryBtns: doc.querySelectorAll('.lexicon-mastery-btn'),
+    deckWordsScroll: doc.getElementById('deck-words-scroll'),
+    lexiconWordModal: doc.getElementById('lexicon-word-modal'),
+    lexiconModalWord: doc.getElementById('lexicon-modal-word'),
+    lexiconModalRank: doc.getElementById('lexicon-modal-rank'),
+    lexiconModalTier: doc.getElementById('lexicon-modal-tier'),
+    lexiconModalSrs: doc.getElementById('lexicon-modal-srs'),
+    lexiconModalBody: doc.getElementById('lexicon-modal-body'),
+    lexiconModalCloseBtn: doc.getElementById('lexicon-modal-close-btn'),
+    drawerActiveTitle: doc.getElementById('drawer-active-title')
+  });
+  modal.bindEvents({});
+
+  modal.switchStatsTab('lexicon');
+  assert.ok(modal.tabStatsLexicon.classList.contains('active'));
+  assert.strictEqual(modal.paneStatsLexicon.style.display, 'flex');
+  assert.strictEqual(modal.drawerActiveTitle.textContent, 'LEXICON // WORD COMPENDIUM');
+
+  const fakeMeta = (rank) => ({
+    rank,
+    word: rank === 1 ? 'the' : rank === 2 ? 'their' : `word${rank}`,
+    tier: rank <= 40 ? 'STARTER' : rank <= 300 ? 'COMMON' : rank <= 600 ? 'UNCOMMON' : rank <= 850 ? 'RARE' : 'EPIC',
+    tierName: rank <= 40 ? 'Starter' : rank <= 300 ? 'Common' : rank <= 600 ? 'Uncommon' : rank <= 850 ? 'Rare' : 'Epic',
+    tierColor: '#38bdf8',
+    bucketId: 'HOME_CORE',
+    bucketName: 'Home Core',
+    bucketTag: 'Home Core Flow',
+    bucketColor: '#38bdf8',
+    reward: 8,
+    tags: ['HOME_CORE']
+  });
+
+  const gameState = {
+    targetWpm: 40,
+    unlockedRanks: [1, 2],
+    wordStats: {
+      1: { seen: 10, avgWpm: 82, lastWpm: 88, bestWpm: 95, streak: 6, bestStreak: 8, totalFixedErr: 1, totalUnfixedErr: 0, fixedErr: 0, unfixedErr: 0 },
+      2: { seen: 4, avgWpm: 45, lastWpm: 50, bestWpm: 54, streak: 1, bestStreak: 2, totalFixedErr: 1, totalUnfixedErr: 1, fixedErr: 0, unfixedErr: 0 }
+    },
+    bigramLedger: { th: 0.88, he: 0.79 }
+  };
+
+  // Default: Discovered mode renders only the 2 unlocked words
+  modal.currentGameState = gameState;
+  modal.renderDeckExplorer(gameState, 'all', fakeMeta);
+  assert.strictEqual(modal.deckWordsScroll.children.length, 2);
+  assert.strictEqual(modal.deckUnlockedCount.textContent, '2');
+  assert.strictEqual(modal.lexiconDiscoveredPct.textContent, '0.2%');
+
+  // Click word #1 ("the") to open the Pop-up Word Inspector
+  modal.deckWordsScroll.children[0].click();
+  assert.strictEqual(modal.lexiconWordModal.style.display, 'flex');
+  assert.strictEqual(modal.lexiconModalWord.textContent, 'the');
+  assert.strictEqual(modal.lexiconModalRank.textContent, '#1');
+  assert.ok(modal.lexiconModalBody.innerHTML.includes('95 WPM'), 'Should display Personal Best WPM');
+  assert.ok(modal.lexiconModalBody.innerHTML.includes('82 WPM'), 'Should display Avg WPM');
+  assert.ok(modal.lexiconModalBody.innerHTML.includes('t→h'), 'Should display bigram breakdown');
+  assert.ok(modal.lexiconModalBody.innerHTML.includes('88% Strong'), 'Should read mastery from bigramLedger');
+  assert.strictEqual(modal.isLexiconWordModalOpen(), true);
+
+  // Close the Pop-up Word Inspector
+  doc.getElementById('lexicon-modal-close-btn').click();
+  assert.strictEqual(modal.lexiconWordModal.style.display, 'none');
+
+  // Switch to "See All 1,000 (???)" mode and filter by EPIC rarity (#851-1000 = 150 words)
+  doc.getElementById('lexicon-mode-all').click();
+  const epicBtn = doc.querySelector('.lexicon-rarity-btn[data-rarity="EPIC"]');
+  epicBtn.click();
+  assert.strictEqual(modal.deckWordsScroll.children.length, 150);
+  assert.ok(modal.deckWordsScroll.children[0].classList.contains('undiscovered'));
+  assert.ok(modal.deckWordsScroll.children[0].innerHTML.includes('???'));
+  assert.ok(modal.deckWordsScroll.children[0].innerHTML.includes('#851'));
+});
+
 // 5. ChartView Tests
 console.log('\n--- 5. ChartView ---');
 

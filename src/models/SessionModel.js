@@ -559,6 +559,10 @@ class SessionModel extends _SessionEmitterBase {
       lastWordEndTime: savedLastWordEndTime
     };
 
+    const wordDurationSec = savedWordStartTime > 0
+      ? Math.max(0.1, Math.min(15, (now - savedWordStartTime) / 1000))
+      : 0;
+
     this.currentWordCharCorrect = [];
     this.lastWordEndTime = now;
     this.hadBackspaceOnCurrentWord = false;
@@ -576,6 +580,7 @@ class SessionModel extends _SessionEmitterBase {
       missedLetters,
       extraLetters,
       wordStreak: this.wordStreak,
+      wordDurationSec,
       now
     });
 
@@ -587,7 +592,8 @@ class SessionModel extends _SessionEmitterBase {
       liveWpm,
       missedLetters,
       extraLetters,
-      wordStreak: this.wordStreak
+      wordStreak: this.wordStreak,
+      wordDurationSec
     };
   }
 

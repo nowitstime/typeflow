@@ -374,6 +374,88 @@ class GameController {
           this.modalView.renderClassicStats(this.storageService.getClassicStats(), this.modalView.onSelectClassicTest);
         }
       },
+      onResetAll: () => {
+        const confirmed = (typeof window !== 'undefined' && typeof window.confirm === 'function')
+          ? window.confirm('Factory Reset: Wipe ALL Flow RPG progress, Classic records, Trophies, unlocked Armory items, and Mod settings?')
+          : true;
+        if (confirmed) {
+          if (this.storageService.resetAll) {
+            this.storageService.resetAll();
+          } else {
+            this.storageService.resetGameSave(true);
+            this.storageService.resetClassicStats();
+          }
+          this.eggNestModel.syncBasket([]);
+          if (this.eggNestModel.clearRevealedSlots) {
+            this.eggNestModel.clearRevealedSlots();
+          }
+          this.flowModel.reset(false, true);
+          this.flowModel.setTargetWpm(40);
+          this.hudView.syncTargetWpm(40);
+          const BigramClass = typeof BigramLedger !== 'undefined' ? BigramLedger : (typeof require !== 'undefined' ? require('../models/BigramLedger.js').BigramLedger : null);
+          if (BigramClass) {
+            this.bigramLedger = new BigramClass({});
+          }
+          if (this.achievementsModel) {
+            this.achievementsModel.unlocked = {};
+          }
+          this.pendingHatchedWords = [];
+          this.pendingRareEpicUnlocks = [];
+          this.activeRecapRun = null;
+          this.activeClassicRecapRun = null;
+          this.lastFlowRunEndTime = 0;
+          this.afkRecapTriggered = false;
+          if (this.nestView && this.nestView.updateFlowRecapPill) {
+            this.nestView.updateFlowRecapPill(null);
+          }
+
+          // Reset all modifiers to default
+          this.wordDifficulty = 'normal';
+          this.punctuationEnabled = false;
+          this.capitalsEnabled = false;
+          this.ghostEnabled = false;
+          this.ghostSpeed = 50;
+          if (this.ghostPacerModel) {
+            this.ghostPacerModel.setEnabled(false);
+            this.ghostPacerModel.setSpeed(50);
+          }
+          this.sessionModel.setHiddenMode(false);
+          this.sessionModel.setHiddenMethod('word');
+          this.sessionModel.setHiddenWordDistance(1);
+          this.stageView.setHiddenMode(false);
+          this.stageView.setHiddenMethod('word');
+          this.stageView.setHiddenWordDistance(1);
+          if (this.hudView.updateHiddenModeState) {
+            this.hudView.updateHiddenModeState(false, 'word', 1);
+          }
+          if (this.hudView.updateGhostState) {
+            this.hudView.updateGhostState(false, 50);
+          }
+          if (this.hudView.updateWordDifficultyState) {
+            this.hudView.updateWordDifficultyState('normal');
+          }
+          if (this.hudView.updatePunctuationState) {
+            this.hudView.updatePunctuationState(false);
+          }
+          if (this.hudView.updateCapitalsState) {
+            this.hudView.updateCapitalsState(false);
+          }
+          this.applyEquippedCosmetics();
+          this.updateLevelHud();
+          this.nestView.render(this.eggNestModel);
+          this.resetTest();
+
+          const freshSave = this.storageService.getGameSave();
+          const bucketStats = this.storageService.getBucketStats(freshSave);
+          this.modalView.renderFlowStats(freshSave, bucketStats, (r) => this.wordsModel.getWord(r), this.storageService);
+          this.modalView.renderClassicStats(this.storageService.getClassicStats(), this.modalView.onSelectClassicTest);
+          if (this.achievementsModel && this.modalView.renderTrophies) {
+            this.modalView.renderTrophies(this.achievementsModel, this.storageService);
+          }
+          this.renderArmoryModal();
+          this.hudView.spawnXpToast('Factory Reset Complete!', 1.0, null, true);
+        }
+      },
       onSelectTrophiesTab: () => {
         if (this.achievementsModel) {
           this.modalView.renderTrophies(this.achievementsModel, this.storageService);
@@ -742,6 +824,29 @@ class GameController {
     };
   }
 
+  _getActiveModsSnapshot(mode = this.currentMode) {
+    const isHidden = Boolean(
+      (this.sessionModel && this.sessionModel.hiddenMode) ||
+      (this.storageService && this.storageService.getHiddenMode && this.storageService.getHiddenMode())
+    );
+    const hiddenMethod = (this.storageService && this.storageService.getHiddenMethod)
+      ? this.storageService.getHiddenMethod()
+      : ((this.sessionModel && this.sessionModel.hiddenMethod) || 'word');
+    const hiddenWordDistance = (this.storageService && this.storageService.getHiddenWordDistance)
+      ? this.storageService.getHiddenWordDistance()
+      : ((this.sessionModel && this.sessionModel.hiddenWordDistance) || 1);
+    return {
+      difficulty: mode === 'classic' ? (this.wordDifficulty || 'normal') : 'normal',
+      punctuation: Boolean(this.punctuationEnabled),
+      capitals: Boolean(this.capitalsEnabled),
+      hidden: isHidden,
+      hiddenMethod,
+      hiddenWordDistance,
+      ghost: Boolean(this.ghostEnabled),
+      ghostSpeed: this.ghostSpeed || 50
+    };
+  }
+
   setWordDifficulty(diff) {
     const clean = (diff === 'easy' || diff === 'hard') ? diff : 'normal';
     this.wordDifficulty = clean;
@@ -1041,6 +1146,9 @@ class GameController {
     this.deactivateZenFocus();
     this.lastTestFinishedTime = Date.now();
     const stats = this.sessionModel.calculateFinalStats();
+    const mods = this._getActiveModsSnapshot('classic');
+    stats.mods = mods;
+    stats.hiddenMode = mods.hidden;
 
     this.stopGhostPacer(true);
     if (this.stageView.setGhostVisible) {
@@ -1424,7 +1532,7 @@ class GameController {
       );
 
       // Update SRS telemetry
-      this.storageService.updateWordStat(wordMeta.rank, hasUncorrectedErrors, isHadBackspace, liveWpm, this.flowModel.targetWpm);
+      this.storageService.updateWordStat(wordMeta.rank, hasUncorrectedErrors, isHadBackspace, liveWpm, this.flowModel.targetWpm, res.wordDurationSec || 0);
       if (hasUncorrectedErrors) {
         this.wordsModel.recordPatternError(wordMeta.tags);
       } else {
@@ -1657,6 +1765,10 @@ class GameController {
       return;
     }
     if (this.isStatsModalOpen()) {
+      if (this.modalView && this.modalView.isLexiconWordModalOpen && this.modalView.isLexiconWordModalOpen()) {
+        this.modalView.closeLexiconWordModal();
+        return;
+      }
       this.closeStats();
       return;
     }
@@ -1684,6 +1796,9 @@ class GameController {
 
   handleFlowRunCompleted(completedRun) {
     if (!completedRun) return;
+    if (!completedRun.mods) {
+      completedRun.mods = this._getActiveModsSnapshot('flow');
+    }
     const saved = (this.storageService && this.storageService.recordFlowRun)
       ? this.storageService.recordFlowRun(completedRun)
       : completedRun;

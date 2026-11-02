@@ -1607,6 +1607,68 @@ main {
 .flow-history-row:hover {
   background: color-mix(in srgb, var(--main-color) 10%, transparent);
 }
+.res-mods-badges {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.res-mods-badges:empty {
+  display: none;
+}
+.history-mode-cell {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.history-mods-wrap {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.mod-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  padding: 1px 5px;
+  border: 1px solid var(--border-color);
+  background: var(--sub-alt-color);
+  color: var(--text-color);
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.mod-badge-easy {
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.45);
+  background: rgba(52, 211, 153, 0.1);
+}
+.mod-badge-hard {
+  color: #fb7185;
+  border-color: rgba(251, 113, 133, 0.45);
+  background: rgba(251, 113, 133, 0.1);
+}
+.mod-badge-punct,
+.mod-badge-caps {
+  color: var(--main-color);
+  border-color: color-mix(in srgb, var(--main-color) 45%, transparent);
+  background: color-mix(in srgb, var(--main-color) 10%, transparent);
+}
+.mod-badge-hd {
+  color: #c084fc;
+  border-color: rgba(192, 132, 252, 0.45);
+  background: rgba(192, 132, 252, 0.1);
+}
+.mod-badge-ghost {
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.45);
+  background: rgba(56, 189, 248, 0.1);
+}
 .stats-modal-tabs {
   display: flex;
   gap: 8px;
@@ -1830,18 +1892,6 @@ main {
   font-weight: 700;
   color: var(--text-color);
   font-family: var(--font-mono);
-}
-.deck-explorer-section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.deck-explorer-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
 }
 .deck-filters {
   display: flex;
@@ -2747,11 +2797,112 @@ header .header-left,
   border-color: rgba(52, 211, 153, 0.55);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 24px rgba(52, 211, 153, 0.3);
 }
+.armory-summary-bar {
+  margin-bottom: 10px;
+}
+.armory-loadout-wrap {
+  background: var(--bg-secondary, #0a0a0c);
+  border: 1px solid var(--border-color, #1a1a20);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.armory-loadout-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.armory-loadout-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--main-color);
+  text-transform: uppercase;
+}
+.armory-loadout-hint {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--sub-color);
+}
+.armory-loadout-bar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+@media (max-width: 720px) {
+  .armory-loadout-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.armory-loadout-slot {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color, #1a1a20);
+  padding: 7px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-radius: 0px;
+}
+.armory-loadout-slot:hover {
+  border-color: color-mix(in srgb, var(--main-color) 55%, var(--border-color));
+  background: color-mix(in srgb, var(--main-color) 6%, transparent);
+}
+.armory-loadout-slot.active-filter {
+  border-color: var(--main-color);
+  background: color-mix(in srgb, var(--main-color) 12%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--main-color) 20%, transparent);
+}
+.loadout-slot-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+.loadout-slot-cat {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--sub-color);
+  text-transform: uppercase;
+}
+.armory-loadout-slot.active-filter .loadout-slot-cat {
+  color: var(--main-color);
+}
+.loadout-swatches .theme-swatch-dot {
+  width: 8px;
+  height: 8px;
+}
+.loadout-slot-main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.loadout-slot-icon {
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.loadout-slot-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .armory-scroll-container {
   display: flex;
   flex-direction: column;
   gap: 18px;
-  max-height: 430px;
+  max-height: 360px;
   overflow-y: auto;
   padding-right: 4px;
 }
@@ -2760,6 +2911,13 @@ header .header-left,
   flex-direction: column;
   gap: 10px;
 }
+.armory-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
 .armory-section-title {
   font-family: 'Inter', sans-serif;
   font-size: 12px;
@@ -2767,6 +2925,12 @@ header .header-left,
   text-transform: uppercase;
   letter-spacing: 0.6px;
   color: var(--text-color);
+}
+.armory-section-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--sub-color);
 }
 .armory-grid {
   display: grid;
@@ -2952,6 +3116,324 @@ header .header-left,
   border-bottom: 2.5px solid rgba(244, 63, 94, 0.85);
   box-shadow: 0 0 12px rgba(244, 63, 94, 0.35);
   border-radius: 3px;
+}
+.lexicon-pane {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.lexicon-summary-bar {
+  margin-bottom: 4px;
+}
+.lexicon-summary-title-group {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.lexicon-view-toggle {
+  display: inline-flex;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-color);
+}
+.lexicon-mode-btn {
+  background: transparent;
+  border: none;
+  color: var(--sub-color);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.lexicon-mode-btn:hover {
+  color: var(--text-color);
+}
+.lexicon-mode-btn.active {
+  background: color-mix(in srgb, var(--main-color) 18%, transparent);
+  color: var(--main-color);
+  box-shadow: inset 0 0 0 1px var(--main-color);
+}
+.lexicon-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.lexicon-search-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+.lexicon-search-icon {
+  position: absolute;
+  left: 10px;
+  font-size: 13px;
+  color: var(--sub-color);
+  pointer-events: none;
+}
+.lexicon-search-input {
+  width: 100%;
+  background: var(--bg-secondary, #0a0a0c);
+  border: 1px solid var(--border-color, #1a1a20);
+  color: var(--text-color);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 6px 10px 6px 28px;
+  border-radius: 0px;
+  outline: none;
+}
+.lexicon-search-input:focus {
+  border-color: var(--main-color);
+}
+.lexicon-sort-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.lexicon-sort-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--sub-color);
+}
+.lexicon-sort-select {
+  background: var(--bg-secondary, #0a0a0c);
+  border: 1px solid var(--border-color, #1a1a20);
+  color: var(--text-color);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 5px 8px;
+  border-radius: 0px;
+  cursor: pointer;
+  outline: none;
+}
+.lexicon-sort-select:focus {
+  border-color: var(--main-color);
+}
+.lexicon-filter-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.lexicon-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+.lexicon-filter-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--sub-color);
+  min-width: 58px;
+  letter-spacing: 0.05em;
+}
+.lexicon-words-grid {
+  max-height: 310px;
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  align-content: flex-start;
+  padding: 4px 2px;
+}
+.lexicon-word-card {
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease;
+  user-select: none;
+}
+.lexicon-word-card:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.06);
+}
+.lexicon-word-card.undiscovered {
+  opacity: 0.65;
+  border-style: dashed;
+  background: rgba(0, 0, 0, 0.25);
+}
+.lexicon-word-card.undiscovered:hover {
+  opacity: 0.95;
+}
+.lexicon-chip-rank {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--sub-color);
+}
+.lexicon-chip-mystery {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--sub-color);
+}
+.lexicon-chip-stat {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--main-color);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1px 5px;
+}
+.lexicon-chip-stat.unseen {
+  color: var(--sub-color);
+}
+.lexicon-word-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 6, 10, 0.82);
+  backdrop-filter: blur(5px);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.lexicon-word-modal-card {
+  width: 100%;
+  max-width: 520px;
+  background: var(--bg-secondary, #0b0f14);
+  border: 1px solid var(--main-color);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.8), 0 0 24px color-mix(in srgb, var(--main-color) 20%, transparent);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.lexicon-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+}
+.lexicon-modal-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.lexicon-modal-word {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-color);
+}
+.lexicon-modal-rank {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--sub-color);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 6px;
+}
+.lexicon-modal-tier-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border: 1px solid var(--main-color);
+}
+.lexicon-modal-srs-badge {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-color);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 8px;
+}
+.lexicon-stats-section-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--main-color);
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+.lexicon-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+@media (max-width: 600px) {
+  .lexicon-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.lexicon-stat-box {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.lexicon-stat-box.highlight {
+  border-color: color-mix(in srgb, var(--main-color) 45%, var(--border-color));
+  background: color-mix(in srgb, var(--main-color) 6%, transparent);
+}
+.lexicon-stat-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: var(--sub-color);
+}
+.lexicon-stat-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+.lexicon-breakdown-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.lexicon-breakdown-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-color);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  padding: 3px 8px;
+}
+.lexicon-bigrams-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.lexicon-bigram-chip {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-color);
+  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+}
+.lexicon-bigram-pair {
+  color: var(--text-color);
+  font-weight: 700;
+}
+.lexicon-mystery-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lexicon-mystery-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--main-color);
+}
+.lexicon-mystery-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--sub-color);
 }
   </style>
 </head>
@@ -3240,6 +3722,7 @@ header .header-left,
           <div class="chart-header">
             <div class="chart-header-left">
               <span>WPM Timeline</span>
+              <div class="res-mods-badges" id="res-mods-badges"></div>
               <div class="chart-legend">
                 <div class="legend-item"><span class="legend-color avg"></span> Avg WPM</div>
                 <div class="legend-item"><span class="legend-color pace"></span> Pace (3s)</div>
@@ -3296,12 +3779,16 @@ header .header-left,
                 <span class="nav-idx">[04]</span>
                 <span class="nav-label">RECORDS</span>
               </button>
-              <button type="button" class="stats-tab drawer-nav-btn" id="tab-stats-motor" data-tab="motor">
+              <button type="button" class="stats-tab drawer-nav-btn" id="tab-stats-lexicon" data-tab="lexicon">
                 <span class="nav-idx">[05]</span>
+                <span class="nav-label">LEXICON</span>
+              </button>
+              <button type="button" class="stats-tab drawer-nav-btn" id="tab-stats-motor" data-tab="motor">
+                <span class="nav-idx">[06]</span>
                 <span class="nav-label">MOTOR</span>
               </button>
               <button type="button" class="stats-tab drawer-nav-btn" id="tab-stats-config" data-tab="config">
-                <span class="nav-idx">[06]</span>
+                <span class="nav-idx">[07]</span>
                 <span class="nav-label">CONFIG</span>
               </button>
             </div>
@@ -3349,6 +3836,10 @@ header .header-left,
                       <span class="rpg-sub-label">Best Flow Streak</span>
                       <span class="rpg-sub-val" id="stats-rpg-high-streak">0 words</span>
                     </div>
+                    <div class="rpg-sub-stat">
+                      <span class="rpg-sub-label">Time in Flow</span>
+                      <span class="rpg-sub-val" id="stats-rpg-flow-time">0m 0s</span>
+                    </div>
                   </div>
                 </div>
                 <div class="history-table-wrap" style="margin-bottom: 18px;">
@@ -3370,7 +3861,7 @@ header .header-left,
                 </div>
               </div>
               <div class="stats-pane" id="pane-stats-armory" style="display: none;">
-                <div class="trophy-summary-bar">
+                <div class="trophy-summary-bar armory-summary-bar">
                   <div class="trophy-summary-left">
                     <span class="trophy-summary-title">Cosmetic Armory</span>
                     <span class="trophy-summary-count" id="armory-count">6 / 34 unlocked (18%)</span>
@@ -3379,8 +3870,16 @@ header .header-left,
                     <div class="trophy-summary-fill" id="armory-progress-bar" style="width: 18%;"></div>
                   </div>
                 </div>
+                <div class="armory-loadout-wrap">
+                  <div class="armory-loadout-header">
+                    <span class="armory-loadout-title">// ACTIVE LOADOUT</span>
+                    <span class="armory-loadout-hint">Click a slot to filter category</span>
+                  </div>
+                  <div class="armory-loadout-bar" id="armory-loadout-bar">
+                  </div>
+                </div>
                 <div class="trophy-filters armory-filters" id="armory-filters">
-                  <button class="trophy-filter-btn armory-filter-btn active" data-filter="all">All</button>
+                  <button class="trophy-filter-btn armory-filter-btn active" data-filter="all">All Categories</button>
                   <button class="trophy-filter-btn armory-filter-btn" data-filter="theme">🎨 Themes</button>
                   <button class="trophy-filter-btn armory-filter-btn" data-filter="flowFx">🌌 Flow FX</button>
                   <button class="trophy-filter-btn armory-filter-btn" data-filter="caret">│ Caret Shapes</button>
@@ -3390,27 +3889,45 @@ header .header-left,
                 </div>
                 <div class="armory-scroll-container">
                   <div class="armory-section" data-armory-section="theme">
-                    <div class="armory-section-title">🎨 OLED Stage Themes</div>
+                    <div class="armory-section-header">
+                      <div class="armory-section-title">🎨 OLED Stage Themes</div>
+                      <span class="armory-section-count" data-armory-count="theme"></span>
+                    </div>
                     <div class="armory-grid" id="armory-themes-grid"></div>
                   </div>
                   <div class="armory-section" data-armory-section="flowFx">
-                    <div class="armory-section-title">🌌 Flow State Atmospheres (Flow FX)</div>
+                    <div class="armory-section-header">
+                      <div class="armory-section-title">🌌 Flow State Atmospheres (Flow FX)</div>
+                      <span class="armory-section-count" data-armory-count="flowFx"></span>
+                    </div>
                     <div class="armory-grid" id="armory-flowfx-grid"></div>
                   </div>
                   <div class="armory-section" data-armory-section="caret">
-                    <div class="armory-section-title">│ Caret Geometries</div>
+                    <div class="armory-section-header">
+                      <div class="armory-section-title">│ Caret Geometries</div>
+                      <span class="armory-section-count" data-armory-count="caret"></span>
+                    </div>
                     <div class="armory-grid" id="armory-carets-grid"></div>
                   </div>
                   <div class="armory-section" data-armory-section="caretFx">
-                    <div class="armory-section-title">✨ Flow Caret Modifiers (Independent)</div>
+                    <div class="armory-section-header">
+                      <div class="armory-section-title">✨ Flow Caret Modifiers (Independent)</div>
+                      <span class="armory-section-count" data-armory-count="caretFx"></span>
+                    </div>
                     <div class="armory-grid" id="armory-caretfx-grid"></div>
                   </div>
                   <div class="armory-section" data-armory-section="ghostStyle">
-                    <div class="armory-section-title">👻 Ghost Cursor Pacer Styles</div>
+                    <div class="armory-section-header">
+                      <div class="armory-section-title">👻 Ghost Cursor Pacer Styles</div>
+                      <span class="armory-section-count" data-armory-count="ghostStyle"></span>
+                    </div>
                     <div class="armory-grid" id="armory-ghost-grid"></div>
                   </div>
                   <div class="armory-section" data-armory-section="sound">
-                    <div class="armory-section-title">🔊 Mechanical Switch Sound Packs</div>
+                    <div class="armory-section-header">
+                      <div class="armory-section-title">🔊 Mechanical Switch Sound Packs</div>
+                      <span class="armory-section-count" data-armory-count="sound"></span>
+                    </div>
                     <div class="armory-grid" id="armory-sounds-grid"></div>
                   </div>
                 </div>
@@ -3491,6 +4008,85 @@ header .header-left,
                   </table>
                 </div>
               </div>
+              <div class="stats-pane lexicon-pane" id="pane-stats-lexicon" style="display: none;">
+                <div class="trophy-summary-bar lexicon-summary-bar">
+                  <div class="trophy-summary-left">
+                    <div class="lexicon-summary-title-group">
+                      <span class="trophy-summary-title">Word Compendium</span>
+                      <span class="trophy-summary-count"><span id="deck-unlocked-count">1</span> / 1,000 Discovered (<span id="lexicon-discovered-pct">0.1%</span>)</span>
+                    </div>
+                    <div class="lexicon-view-toggle" id="lexicon-view-toggle">
+                      <button type="button" class="lexicon-mode-btn active" id="lexicon-mode-discovered" data-view-mode="discovered">Discovered</button>
+                      <button type="button" class="lexicon-mode-btn" id="lexicon-mode-all" data-view-mode="all">See All 1,000 (???)</button>
+                    </div>
+                  </div>
+                  <div class="trophy-summary-track">
+                    <div class="trophy-summary-fill" id="lexicon-progress-bar" style="width: 0.1%;"></div>
+                  </div>
+                </div>
+                <div class="lexicon-toolbar">
+                  <div class="lexicon-search-wrap">
+                    <span class="lexicon-search-icon">⌕</span>
+                    <input type="text" class="lexicon-search-input" id="lexicon-search-input" placeholder="Search word or #rank (e.g. the, #42)..." autocomplete="off" spellcheck="false" />
+                  </div>
+                  <div class="lexicon-sort-wrap">
+                    <label for="lexicon-sort-select" class="lexicon-sort-label">SORT:</label>
+                    <select class="lexicon-sort-select" id="lexicon-sort-select">
+                      <option value="rank">Rank (#1 → #1000)</option>
+                      <option value="wpm_desc">Fastest WPM</option>
+                      <option value="wpm_asc">Slowest WPM</option>
+                      <option value="acc_desc">Highest Accuracy</option>
+                      <option value="acc_asc">Lowest Accuracy</option>
+                      <option value="seen_desc">Most Seen</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="lexicon-filter-groups">
+                  <div class="lexicon-filter-row" id="lexicon-rarity-filters">
+                    <span class="lexicon-filter-tag">RARITY:</span>
+                    <button type="button" class="trophy-filter-btn lexicon-rarity-btn active" data-rarity="all">All Tiers</button>
+                    <button type="button" class="trophy-filter-btn lexicon-rarity-btn" data-rarity="STARTER">Starter (#1–40)</button>
+                    <button type="button" class="trophy-filter-btn lexicon-rarity-btn" data-rarity="COMMON">Common (#41–300)</button>
+                    <button type="button" class="trophy-filter-btn lexicon-rarity-btn" data-rarity="UNCOMMON">Uncommon (#301–600)</button>
+                    <button type="button" class="trophy-filter-btn lexicon-rarity-btn" data-rarity="RARE">Rare (#601–850)</button>
+                    <button type="button" class="trophy-filter-btn lexicon-rarity-btn" data-rarity="EPIC">Epic (#851–1000)</button>
+                  </div>
+                  <div class="lexicon-filter-row" id="lexicon-mastery-filters">
+                    <span class="lexicon-filter-tag">MASTERY:</span>
+                    <button type="button" class="trophy-filter-btn lexicon-mastery-btn active" data-mastery="all">All</button>
+                    <button type="button" class="trophy-filter-btn lexicon-mastery-btn" data-mastery="mastered">⭐ Mastered</button>
+                    <button type="button" class="trophy-filter-btn lexicon-mastery-btn" data-mastery="flow">⚡ In Flow</button>
+                    <button type="button" class="trophy-filter-btn lexicon-mastery-btn" data-mastery="practicing">⚠️ Practicing</button>
+                    <button type="button" class="trophy-filter-btn lexicon-mastery-btn" data-mastery="new">🌱 New</button>
+                  </div>
+                  <div class="lexicon-filter-row deck-filters" id="deck-filters">
+                    <span class="lexicon-filter-tag">PATTERN:</span>
+                    <button type="button" class="deck-filter-btn active" data-filter="all">All</button>
+                    <button type="button" class="deck-filter-btn" data-filter="HOME_CORE">Home Core</button>
+                    <button type="button" class="deck-filter-btn" data-filter="ALTERNATING">Alternator</button>
+                    <button type="button" class="deck-filter-btn" data-filter="SUFFIX_CURL">Suffixes</button>
+                    <button type="button" class="deck-filter-btn" data-filter="REACH_PINKY">Reaches</button>
+                    <button type="button" class="deck-filter-btn" data-filter="DOUBLE_BOUNCE">Bounces</button>
+                  </div>
+                </div>
+                <div class="deck-words-scroll lexicon-words-grid" id="deck-words-scroll">
+                </div>
+                <div class="lexicon-word-modal-backdrop" id="lexicon-word-modal" style="display: none;">
+                  <div class="lexicon-word-modal-card" id="lexicon-word-modal-card">
+                    <div class="lexicon-modal-header">
+                      <div class="lexicon-modal-title-row">
+                        <span class="lexicon-modal-word" id="lexicon-modal-word">the</span>
+                        <span class="lexicon-modal-rank" id="lexicon-modal-rank">#1</span>
+                        <span class="lexicon-modal-tier-badge" id="lexicon-modal-tier">STARTER</span>
+                        <span class="lexicon-modal-srs-badge" id="lexicon-modal-srs">⭐ Mastered</span>
+                      </div>
+                      <button type="button" class="icon-btn lexicon-modal-close" id="lexicon-modal-close-btn" title="Close Word Inspector">✕</button>
+                    </div>
+                    <div class="lexicon-modal-body" id="lexicon-modal-body">
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div class="stats-pane" id="pane-stats-motor" style="display: none;">
                 <div class="motor-mastery-section">
                   <div class="section-heading-wrap">
@@ -3498,24 +4094,6 @@ header .header-left,
                     <div class="section-subtitle">Physical finger mechanics & proficiency tracking across your deck</div>
                   </div>
                   <div class="motor-grid" id="motor-grid">
-                  </div>
-                </div>
-                <div class="deck-explorer-section">
-                  <div class="deck-explorer-header">
-                    <div>
-                      <span class="section-title">Active Deck Words (<span id="deck-unlocked-count">1</span>)</span>
-                      <div class="section-subtitle">Spaced repetition memory and burst speeds</div>
-                    </div>
-                    <div class="deck-filters" id="deck-filters">
-                      <button class="deck-filter-btn active" data-filter="all">All</button>
-                      <button class="deck-filter-btn" data-filter="HOME_CORE">Home Core</button>
-                      <button class="deck-filter-btn" data-filter="ALTERNATING">Alternator</button>
-                      <button class="deck-filter-btn" data-filter="SUFFIX_CURL">Suffixes</button>
-                      <button class="deck-filter-btn" data-filter="REACH_PINKY">Reaches</button>
-                      <button class="deck-filter-btn" data-filter="DOUBLE_BOUNCE">Bounces</button>
-                    </div>
-                  </div>
-                  <div class="deck-words-scroll" id="deck-words-scroll">
                   </div>
                 </div>
               </div>
@@ -3535,6 +4113,13 @@ header .header-left,
                       <span class="config-desc">Clear 15s, 30s, 60s benchmark history and personal bests.</span>
                     </div>
                     <button class="btn-secondary" id="reset-classic-stats-btn" style="font-size: 12px; padding: 7px 14px;" title="Reset Classic Mode Personal Bests & Records">Clear Records</button>
+                  </div>
+                  <div class="config-card">
+                    <div class="config-info">
+                      <span class="config-label">Complete Factory Reset (Reset All)</span>
+                      <span class="config-desc">Wipe all Flow RPG progress, Classic records, Trophies, unlocked Armory items, and active Mods.</span>
+                    </div>
+                    <button class="btn-danger-outline" id="reset-all-stats-btn" title="Factory Reset: Wipe all Flow RPG, Classic Records, Trophies, Armory, and Mod settings">Reset All ✕</button>
                   </div>
                 </div>
                 <div class="config-section">
@@ -3570,7 +4155,6 @@ header .header-left,
                   <div class="config-section-title">// SYSTEM TELEMETRY</div>
                   <div class="config-card" style="font-family: var(--font-mono); font-size: 11px; color: var(--sub-color); justify-content: space-between;">
                     <div>ENGINE: TypeFlow v4.0 (Flow RPG Core)</div>
-                    <div>CHASSIS: Teenage Engineering Tactical</div>
                   </div>
                 </div>
               </div>
@@ -5412,6 +5996,9 @@ class SessionModel extends _SessionEmitterBase {
       wordStartTime: savedWordStartTime,
       lastWordEndTime: savedLastWordEndTime
     };
+    const wordDurationSec = savedWordStartTime > 0
+      ? Math.max(0.1, Math.min(15, (now - savedWordStartTime) / 1000))
+      : 0;
     this.currentWordCharCorrect = [];
     this.lastWordEndTime = now;
     this.hadBackspaceOnCurrentWord = false;
@@ -5428,6 +6015,7 @@ class SessionModel extends _SessionEmitterBase {
       missedLetters,
       extraLetters,
       wordStreak: this.wordStreak,
+      wordDurationSec,
       now
     });
     return {
@@ -5438,7 +6026,8 @@ class SessionModel extends _SessionEmitterBase {
       liveWpm,
       missedLetters,
       extraLetters,
-      wordStreak: this.wordStreak
+      wordStreak: this.wordStreak,
+      wordDurationSec
     };
   }
   revertToPreviousWord() {
@@ -7291,6 +7880,7 @@ const DEFAULT_GAME_SAVE = {
   wordStats: {},
   bigramLedger: {},
   lifetimeWords: 0,
+  flowTimeSeconds: 0,
   highStreak: 0,
   hiddenMode: false,
   hiddenMethod: 'word',
@@ -7534,6 +8124,14 @@ class StorageService {
     if (!Array.isArray(state.flowHistory)) {
       state.flowHistory = [];
     }
+    if (typeof state.flowTimeSeconds !== 'number' || isNaN(state.flowTimeSeconds) || state.flowTimeSeconds < 0) {
+      state.flowTimeSeconds = 0;
+    }
+    if (state.flowTimeSeconds === 0 && (state.lifetimeWords > 0 || state.flowHistory.length > 0)) {
+      const historySum = state.flowHistory.reduce((acc, r) => acc + (Number(r && r.duration) || 0), 0);
+      const wordEst = Math.round((state.lifetimeWords || 0) * (60 / Math.max(20, state.targetWpm || 40)));
+      state.flowTimeSeconds = Math.max(historySum, wordEst);
+    }
     return state;
   }
   getGameSave() {
@@ -7682,7 +8280,7 @@ class StorageService {
     this.saveGameSave(save);
     return { success: true, egg, save };
   }
-  updateWordStat(rank, hasUnfixedError, hadBackspace = false, wordWpm = 0, targetWpm = 40) {
+  updateWordStat(rank, hasUnfixedError, hadBackspace = false, wordWpm = 0, targetWpm = 40, activeWordSeconds = 0) {
     const save = this.getGameSave();
     if (!save.wordStats) save.wordStats = {};
     if (!save.wordStats[rank]) {
@@ -7690,8 +8288,12 @@ class StorageService {
         seen: 0,
         unfixedErr: 0,
         fixedErr: 0,
+        totalUnfixedErr: 0,
+        totalFixedErr: 0,
         avgWpm: wordWpm || targetWpm,
+        bestWpm: 0,
         streak: 0,
+        bestStreak: 0,
         timesSeen: 0,
         errorCount: 0,
         cleanHits: 0,
@@ -7703,23 +8305,33 @@ class StorageService {
     st.timesSeen = st.seen;
     st.unfixedErr = st.unfixedErr ?? st.errorCount ?? 0;
     st.fixedErr = st.fixedErr ?? 0;
+    st.totalUnfixedErr = st.totalUnfixedErr ?? Math.round(st.unfixedErr || 0);
+    st.totalFixedErr = st.totalFixedErr ?? Math.round(st.fixedErr || 0);
     st.streak = st.streak ?? st.cleanHits ?? 0;
+    st.bestStreak = st.bestStreak ?? st.streak ?? 0;
     st.avgWpm = st.avgWpm ?? st.lastWpm ?? targetWpm;
+    st.bestWpm = st.bestWpm ?? Math.round(st.avgWpm || 0);
     const wpm = wordWpm || 0;
     st.lastWpm = wpm;
     st.avgWpm = Math.round(((st.avgWpm * 0.7) + (wpm * 0.3)) * 10) / 10;
+    if (!hasUnfixedError && wpm > 0) {
+      st.bestWpm = Math.max(st.bestWpm || 0, Math.round(wpm));
+    }
     if (hasUnfixedError) {
       st.unfixedErr += 1.0;
+      st.totalUnfixedErr += 1;
       st.streak = 0;
       st.cleanHits = 0;
     } else {
       if (hadBackspace) {
         st.fixedErr += 1.0;
+        st.totalFixedErr += 1;
         st.streak = 0;
         st.cleanHits = 0;
       } else if (wpm >= targetWpm) {
         st.streak += 1;
         st.cleanHits = st.streak;
+        st.bestStreak = Math.max(st.bestStreak || 0, st.streak);
         st.unfixedErr = Math.max(0.0, Math.round((st.unfixedErr - 0.25) * 100) / 100);
         st.fixedErr = Math.max(0.0, Math.round((st.fixedErr - 0.35) * 100) / 100);
       } else {
@@ -7729,6 +8341,10 @@ class StorageService {
     }
     st.errorCount = Math.round(st.unfixedErr + st.fixedErr);
     save.lifetimeWords += 1;
+    const wordSec = (typeof activeWordSeconds === 'number' && activeWordSeconds > 0)
+      ? Math.min(15, activeWordSeconds)
+      : Math.max(0.2, Math.min(10, 60 / Math.max(20, wpm || targetWpm || 40)));
+    save.flowTimeSeconds = Math.round(((save.flowTimeSeconds || 0) + wordSec) * 10) / 10;
     this.saveGameSave(save);
     return save;
   }
@@ -7845,6 +8461,29 @@ class StorageService {
       return fresh;
     } catch (e) {
       return DEFAULT_CLASSIC_STATS;
+    }
+  }
+  resetAll() {
+    try {
+      const s = this._getStorage();
+      if (s) {
+        s.removeItem(STORAGE_KEYS.HIDDEN_MODE);
+        s.removeItem(STORAGE_KEYS.HIDDEN_METHOD);
+        s.removeItem(STORAGE_KEYS.HIDDEN_WORD_DIST);
+        s.removeItem(STORAGE_KEYS.GHOST_CURSOR);
+        s.removeItem(STORAGE_KEYS.GHOST_SPEED);
+        s.removeItem(STORAGE_KEYS.WORD_DIFFICULTY);
+        s.removeItem(STORAGE_KEYS.PUNCTUATION_MODE);
+        s.removeItem(STORAGE_KEYS.CAPITALS_MODE);
+      }
+      const gameSave = this.resetGameSave(true);
+      const classicStats = this.resetClassicStats();
+      return { gameSave, classicStats };
+    } catch (e) {
+      return {
+        gameSave: JSON.parse(JSON.stringify(DEFAULT_GAME_SAVE)),
+        classicStats: JSON.parse(JSON.stringify(DEFAULT_CLASSIC_STATS))
+      };
     }
   }
   getActiveMode() {
@@ -10294,17 +10933,21 @@ class ModalView {
     this.resTime = this.resTimeEl;
     this.resTimeDetailEl = elements.resTimeDetailEl || elements.resTimeDetail || (typeof document !== 'undefined' ? document.getElementById('res-time-detail') : null);
     this.resTimeDetail = this.resTimeDetailEl;
+    this.resModsBadgesEl = elements.resModsBadgesEl || elements.resModsBadges || (typeof document !== 'undefined' ? document.getElementById('res-mods-badges') : null);
+    this.resModsBadges = this.resModsBadgesEl;
     this.statsModal = elements.statsModal || (typeof document !== 'undefined' ? document.getElementById('stats-modal') : null);
     this.tabStatsFlow = elements.tabStatsFlow || (typeof document !== 'undefined' ? document.getElementById('tab-stats-flow') : null);
     this.tabStatsClassic = elements.tabStatsClassic || (typeof document !== 'undefined' ? document.getElementById('tab-stats-classic') : null);
     this.tabStatsTrophies = elements.tabStatsTrophies || (typeof document !== 'undefined' ? document.getElementById('tab-stats-trophies') : null);
     this.tabStatsArmory = elements.tabStatsArmory || (typeof document !== 'undefined' ? document.getElementById('tab-stats-armory') : null);
+    this.tabStatsLexicon = elements.tabStatsLexicon || (typeof document !== 'undefined' ? document.getElementById('tab-stats-lexicon') : null);
     this.tabStatsMotor = elements.tabStatsMotor || (typeof document !== 'undefined' ? document.getElementById('tab-stats-motor') : null);
     this.tabStatsConfig = elements.tabStatsConfig || (typeof document !== 'undefined' ? document.getElementById('tab-stats-config') : null);
     this.paneStatsFlow = elements.paneStatsFlow || (typeof document !== 'undefined' ? document.getElementById('pane-stats-flow') : null);
     this.paneStatsClassic = elements.paneStatsClassic || (typeof document !== 'undefined' ? document.getElementById('pane-stats-classic') : null);
     this.paneStatsTrophies = elements.paneStatsTrophies || (typeof document !== 'undefined' ? document.getElementById('pane-stats-trophies') : null);
     this.paneStatsArmory = elements.paneStatsArmory || (typeof document !== 'undefined' ? document.getElementById('pane-stats-armory') : null);
+    this.paneStatsLexicon = elements.paneStatsLexicon || (typeof document !== 'undefined' ? document.getElementById('pane-stats-lexicon') : null);
     this.paneStatsMotor = elements.paneStatsMotor || (typeof document !== 'undefined' ? document.getElementById('pane-stats-motor') : null);
     this.paneStatsConfig = elements.paneStatsConfig || (typeof document !== 'undefined' ? document.getElementById('pane-stats-config') : null);
     this.drawerActiveTitle = elements.drawerActiveTitle || (typeof document !== 'undefined' ? document.getElementById('drawer-active-title') : null);
@@ -10317,6 +10960,7 @@ class ModalView {
     this.currentStorageService = null;
     this.armoryCountEl = elements.armoryCountEl || (typeof document !== 'undefined' ? document.getElementById('armory-count') : null);
     this.armoryProgressBar = elements.armoryProgressBar || (typeof document !== 'undefined' ? document.getElementById('armory-progress-bar') : null);
+    this.armoryLoadoutBar = elements.armoryLoadoutBar || (typeof document !== 'undefined' ? document.getElementById('armory-loadout-bar') : null);
     this.armoryThemesGrid = elements.armoryThemesGrid || (typeof document !== 'undefined' ? document.getElementById('armory-themes-grid') : null);
     this.armoryFlowFxGrid = elements.armoryFlowFxGrid || (typeof document !== 'undefined' ? document.getElementById('armory-flowfx-grid') : null);
     this.armoryCaretsGrid = elements.armoryCaretsGrid || (typeof document !== 'undefined' ? document.getElementById('armory-carets-grid') : null);
@@ -10332,12 +10976,33 @@ class ModalView {
     this.statsRpgWordsCount = elements.statsRpgWordsCount || (typeof document !== 'undefined' ? document.getElementById('stats-rpg-words-count') : null);
     this.statsRpgEggsCount = elements.statsRpgEggsCount || (typeof document !== 'undefined' ? document.getElementById('stats-rpg-eggs-count') : null);
     this.statsRpgHighStreak = elements.statsRpgHighStreak || (typeof document !== 'undefined' ? document.getElementById('stats-rpg-high-streak') : null);
+    this.statsRpgFlowTime = elements.statsRpgFlowTime || (typeof document !== 'undefined' ? document.getElementById('stats-rpg-flow-time') : null);
     this.motorGrid = elements.motorGrid || (typeof document !== 'undefined' ? document.getElementById('motor-grid') : null);
     this.deckUnlockedCount = elements.deckUnlockedCount || (typeof document !== 'undefined' ? document.getElementById('deck-unlocked-count') : null);
+    this.lexiconDiscoveredPct = elements.lexiconDiscoveredPct || (typeof document !== 'undefined' ? document.getElementById('lexicon-discovered-pct') : null);
+    this.lexiconProgressBar = elements.lexiconProgressBar || (typeof document !== 'undefined' ? document.getElementById('lexicon-progress-bar') : null);
+    this.lexiconModeDiscoveredBtn = elements.lexiconModeDiscoveredBtn || (typeof document !== 'undefined' ? document.getElementById('lexicon-mode-discovered') : null);
+    this.lexiconModeAllBtn = elements.lexiconModeAllBtn || (typeof document !== 'undefined' ? document.getElementById('lexicon-mode-all') : null);
+    this.lexiconSearchInput = elements.lexiconSearchInput || (typeof document !== 'undefined' ? document.getElementById('lexicon-search-input') : null);
+    this.lexiconSortSelect = elements.lexiconSortSelect || (typeof document !== 'undefined' ? document.getElementById('lexicon-sort-select') : null);
+    this.lexiconRarityBtns = elements.lexiconRarityBtns || (typeof document !== 'undefined' ? document.querySelectorAll('.lexicon-rarity-btn') : []);
+    this.lexiconMasteryBtns = elements.lexiconMasteryBtns || (typeof document !== 'undefined' ? document.querySelectorAll('.lexicon-mastery-btn') : []);
+    this.lexiconWordModal = elements.lexiconWordModal || (typeof document !== 'undefined' ? document.getElementById('lexicon-word-modal') : null);
+    this.lexiconModalWord = elements.lexiconModalWord || (typeof document !== 'undefined' ? document.getElementById('lexicon-modal-word') : null);
+    this.lexiconModalRank = elements.lexiconModalRank || (typeof document !== 'undefined' ? document.getElementById('lexicon-modal-rank') : null);
+    this.lexiconModalTier = elements.lexiconModalTier || (typeof document !== 'undefined' ? document.getElementById('lexicon-modal-tier') : null);
+    this.lexiconModalSrs = elements.lexiconModalSrs || (typeof document !== 'undefined' ? document.getElementById('lexicon-modal-srs') : null);
+    this.lexiconModalBody = elements.lexiconModalBody || (typeof document !== 'undefined' ? document.getElementById('lexicon-modal-body') : null);
+    this.lexiconModalCloseBtn = elements.lexiconModalCloseBtn || (typeof document !== 'undefined' ? document.getElementById('lexicon-modal-close-btn') : null);
     this.deckWordsScroll = elements.deckWordsScroll || (typeof document !== 'undefined' ? document.getElementById('deck-words-scroll') : null);
     this.deckFilters = elements.deckFilters || (typeof document !== 'undefined' ? document.getElementById('deck-filters') : null);
     this.deckFilterBtns = elements.deckFilterBtns || (typeof document !== 'undefined' ? document.querySelectorAll('.deck-filter-btn') : []);
     this.currentDeckFilter = 'all';
+    this.lexiconViewMode = 'discovered';
+    this.lexiconSearchQuery = '';
+    this.lexiconSortBy = 'rank';
+    this.lexiconRarityFilter = 'all';
+    this.lexiconMasteryFilter = 'all';
     this.currentGameState = null;
     this.getWordMetaFn = null;
     this.pb15s = elements.pb15s || (typeof document !== 'undefined' ? document.getElementById('pb-15s') : null);
@@ -10358,11 +11023,80 @@ class ModalView {
     this.nextTestBtnHint = elements.nextTestBtnHint || (typeof document !== 'undefined' ? document.getElementById('next-test-btn-hint') : null);
   }
   _getDoc() {
-    return (this.statsModal && this.statsModal.ownerDocument)
-      ? this.statsModal.ownerDocument
-      : (this.resultsSection && this.resultsSection.ownerDocument
-        ? this.resultsSection.ownerDocument
-        : ((typeof document !== 'undefined') ? document : null));
+    if (this.statsModal && this.statsModal.ownerDocument) return this.statsModal.ownerDocument;
+    if (this.resultsSection && this.resultsSection.ownerDocument) return this.resultsSection.ownerDocument;
+    if (this.armoryLoadoutBar && this.armoryLoadoutBar.ownerDocument) return this.armoryLoadoutBar.ownerDocument;
+    if (this.armoryThemesGrid && this.armoryThemesGrid.ownerDocument) return this.armoryThemesGrid.ownerDocument;
+    return (typeof document !== 'undefined') ? document : null;
+  }
+  getModBadgesList(item) {
+    if (!item || typeof item !== 'object') return [];
+    const mods = (item.mods && typeof item.mods === 'object') ? item.mods : item;
+    const badges = [];
+    const difficulty = mods.difficulty || item.wordDifficulty || item.difficulty || 'normal';
+    if (difficulty === 'easy') {
+      badges.push({
+        key: 'easy',
+        label: 'EASY',
+        cls: 'mod-badge-easy',
+        title: 'Word Difficulty: Easy (Top 200 short & common words)'
+      });
+    } else if (difficulty === 'hard') {
+      badges.push({
+        key: 'hard',
+        label: 'HARD',
+        cls: 'mod-badge-hard',
+        title: 'Word Difficulty: Hard (Longer & complex words)'
+      });
+    }
+    const punctuation = Boolean(mods.punctuation ?? item.punctuationMode ?? item.punctuation);
+    if (punctuation) {
+      badges.push({
+        key: 'punct',
+        label: '@! PUNCT',
+        cls: 'mod-badge-punct',
+        title: 'Punctuation Enabled'
+      });
+    }
+    const capitals = Boolean(mods.capitals ?? item.capitalsMode ?? item.capitals);
+    if (capitals) {
+      badges.push({
+        key: 'caps',
+        label: 'Aa CAPS',
+        cls: 'mod-badge-caps',
+        title: 'Capital Letters Enabled'
+      });
+    }
+    const hidden = Boolean(mods.hidden ?? item.hiddenMode ?? item.hidden);
+    if (hidden) {
+      const method = mods.hiddenMethod || item.hiddenMethod || 'word';
+      const dist = mods.hiddenWordDistance || item.hiddenWordDistance || 1;
+      const detail = method === 'char' ? 'Char Fade' : `Word Vanish (${dist}w)`;
+      badges.push({
+        key: 'hd',
+        label: 'HD',
+        cls: 'mod-badge-hd',
+        title: `Hidden Horizon (${detail})`
+      });
+    }
+    const ghost = Boolean(mods.ghost ?? item.ghostCursor ?? item.ghost);
+    if (ghost) {
+      const speed = mods.ghostSpeed || item.ghostSpeed || 50;
+      badges.push({
+        key: 'ghost',
+        label: `👻 ${speed}`,
+        cls: 'mod-badge-ghost',
+        title: `Ghost Pacer (${speed} WPM)`
+      });
+    }
+    return badges;
+  }
+  renderModBadgesHtml(item) {
+    const badges = this.getModBadgesList(item);
+    if (badges.length === 0) return '';
+    return badges
+      .map(b => `<span class="mod-badge ${b.cls}" title="${b.title}">${b.label}</span>`)
+      .join('');
   }
   showClassicResults(stats) {
     if (this.testSection) this.testSection.style.display = 'none';
@@ -10396,6 +11130,9 @@ class ModalView {
     if (this.resTimeDetailEl) {
       this.resTimeDetailEl.textContent = stats.date ? `classic test • ${stats.date}` : 'standard mode';
     }
+    if (this.resModsBadgesEl) {
+      this.resModsBadgesEl.innerHTML = this.renderModBadgesHtml(stats);
+    }
     if (this.nextTestBtnLabel) this.nextTestBtnLabel.textContent = 'Next Test';
     if (this.nextTestBtnHint) this.nextTestBtnHint.textContent = 'tab';
   }
@@ -10427,28 +11164,33 @@ class ModalView {
     this.switchStatsTab(defaultTab);
   }
   closeStatsModal() {
+    this.closeLexiconWordModal();
     if (this.statsModal) {
       this.statsModal.classList.remove('open');
       this.statsModal.style.display = 'none';
     }
   }
   switchStatsTab(tabName) {
+    this.closeLexiconWordModal();
     const isFlow = tabName === 'flow';
     const isClassic = tabName === 'classic';
     const isTrophies = tabName === 'trophies';
     const isArmory = tabName === 'armory';
+    const isLexicon = tabName === 'lexicon';
     const isMotor = tabName === 'motor';
     const isConfig = tabName === 'config';
     if (this.tabStatsFlow) this.tabStatsFlow.classList.toggle('active', isFlow);
     if (this.tabStatsClassic) this.tabStatsClassic.classList.toggle('active', isClassic);
     if (this.tabStatsTrophies) this.tabStatsTrophies.classList.toggle('active', isTrophies);
     if (this.tabStatsArmory) this.tabStatsArmory.classList.toggle('active', isArmory);
+    if (this.tabStatsLexicon) this.tabStatsLexicon.classList.toggle('active', isLexicon);
     if (this.tabStatsMotor) this.tabStatsMotor.classList.toggle('active', isMotor);
     if (this.tabStatsConfig) this.tabStatsConfig.classList.toggle('active', isConfig);
     if (this.paneStatsFlow) this.paneStatsFlow.style.display = isFlow ? 'flex' : 'none';
     if (this.paneStatsClassic) this.paneStatsClassic.style.display = isClassic ? 'flex' : 'none';
     if (this.paneStatsTrophies) this.paneStatsTrophies.style.display = isTrophies ? 'flex' : 'none';
     if (this.paneStatsArmory) this.paneStatsArmory.style.display = isArmory ? 'flex' : 'none';
+    if (this.paneStatsLexicon) this.paneStatsLexicon.style.display = isLexicon ? 'flex' : 'none';
     if (this.paneStatsMotor) this.paneStatsMotor.style.display = isMotor ? 'flex' : 'none';
     if (this.paneStatsConfig) this.paneStatsConfig.style.display = isConfig ? 'flex' : 'none';
     if (this.drawerActiveTitle) {
@@ -10457,6 +11199,7 @@ class ModalView {
         armory: 'ARMORY // COSMETIC REPOSITORY',
         trophies: 'TROPHIES // ACHIEVEMENTS CASE',
         classic: 'RECORDS // BENCHMARK ARCHIVE',
+        lexicon: 'LEXICON // WORD COMPENDIUM',
         motor: 'MOTOR // NEUROMUSCULAR PATTERNS',
         config: 'CONFIG // SYSTEM PARAMETERS'
       };
@@ -10480,6 +11223,12 @@ class ModalView {
       this.tabStatsArmory.addEventListener('click', () => {
         this.switchStatsTab('armory');
         if (handlers.onSelectArmoryTab) handlers.onSelectArmoryTab();
+      });
+    }
+    if (this.tabStatsLexicon) {
+      this.tabStatsLexicon.addEventListener('click', () => {
+        this.switchStatsTab('lexicon');
+        if (handlers.onSelectLexiconTab) handlers.onSelectLexiconTab();
       });
     }
     if (this.tabStatsMotor) {
@@ -10530,8 +11279,10 @@ class ModalView {
         if (handlers.onOpenStats) handlers.onOpenStats('flow');
       });
     }
-    const resetRpgStatsBtn = (typeof document !== 'undefined') ? document.getElementById('reset-rpg-stats-btn') : null;
-    const resetClassicStatsBtn = (typeof document !== 'undefined') ? document.getElementById('reset-classic-stats-btn') : null;
+    const doc = this._getDoc();
+    const resetRpgStatsBtn = doc ? doc.getElementById('reset-rpg-stats-btn') : null;
+    const resetClassicStatsBtn = doc ? doc.getElementById('reset-classic-stats-btn') : null;
+    const resetAllStatsBtn = doc ? doc.getElementById('reset-all-stats-btn') : null;
     if (resetRpgStatsBtn) {
       resetRpgStatsBtn.addEventListener('click', () => {
         if (handlers.onResetRpg) handlers.onResetRpg();
@@ -10542,19 +11293,23 @@ class ModalView {
         if (handlers.onResetClassic) handlers.onResetClassic();
       });
     }
+    if (resetAllStatsBtn) {
+      resetAllStatsBtn.addEventListener('click', () => {
+        if (handlers.onResetAll) handlers.onResetAll();
+      });
+    }
     this.setupDeckFilters();
     this.setupTrophyFilters();
     this.setupArmoryFilters();
   }
   setupArmoryFilters() {
+    const doc = this._getDoc();
     const btns = (this.armoryFilterBtns && this.armoryFilterBtns.length > 0)
       ? this.armoryFilterBtns
-      : (typeof document !== 'undefined' ? document.querySelectorAll('.armory-filter-btn') : []);
+      : (doc && typeof doc.querySelectorAll === 'function' ? doc.querySelectorAll('.armory-filter-btn') : []);
     if (btns && btns.length > 0) {
       btns.forEach(btn => {
         btn.addEventListener('click', () => {
-          btns.forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
           this.currentArmoryFilter = btn.dataset.filter || 'all';
           this.filterArmorySections(this.currentArmoryFilter);
         });
@@ -10563,7 +11318,26 @@ class ModalView {
   }
   filterArmorySections(filter = 'all') {
     this.currentArmoryFilter = filter || 'all';
-    const sections = (typeof document !== 'undefined') ? document.querySelectorAll('.armory-section[data-armory-section]') : [];
+    const doc = this._getDoc();
+    const btns = (this.armoryFilterBtns && this.armoryFilterBtns.length > 0)
+      ? this.armoryFilterBtns
+      : (doc && typeof doc.querySelectorAll === 'function' ? doc.querySelectorAll('.armory-filter-btn') : []);
+    if (btns && btns.length > 0) {
+      btns.forEach(b => {
+        b.classList.toggle('active', (b.dataset.filter || 'all') === this.currentArmoryFilter);
+      });
+    }
+    const slots = (this.armoryLoadoutBar && Array.isArray(this.armoryLoadoutBar.children) && this.armoryLoadoutBar.children.length > 0)
+      ? this.armoryLoadoutBar.children
+      : (doc && typeof doc.querySelectorAll === 'function' ? doc.querySelectorAll('.armory-loadout-slot[data-slot-category]') : []);
+    if (slots && slots.length > 0) {
+      Array.from(slots).forEach(s => {
+        if (s && s.classList && s.dataset) {
+          s.classList.toggle('active-filter', s.dataset.slotCategory === this.currentArmoryFilter);
+        }
+      });
+    }
+    const sections = (doc && typeof doc.querySelectorAll === 'function') ? doc.querySelectorAll('.armory-section[data-armory-section]') : [];
     if (sections && sections.length > 0) {
       sections.forEach(sec => {
         const secKey = sec.dataset.armorySection;
@@ -10588,16 +11362,314 @@ class ModalView {
       });
     }
   }
+  isLexiconWordModalOpen() {
+    const doc = this._getDoc();
+    const modal = this.lexiconWordModal || (doc && typeof doc.getElementById === 'function' ? doc.getElementById('lexicon-word-modal') : null);
+    return Boolean(modal && modal.style.display === 'flex');
+  }
   setupDeckFilters() {
-    if (this.deckFilterBtns && this.deckFilterBtns.length > 0) {
-      this.deckFilterBtns.forEach(btn => {
+    const doc = this._getDoc();
+    const patternBtns = (this.deckFilterBtns && this.deckFilterBtns.length > 0)
+      ? this.deckFilterBtns
+      : (doc && typeof doc.querySelectorAll === 'function' ? doc.querySelectorAll('.deck-filter-btn') : []);
+    if (patternBtns && patternBtns.length > 0) {
+      patternBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-          this.deckFilterBtns.forEach(b => b.classList.remove('active'));
+          patternBtns.forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
           this.currentDeckFilter = btn.dataset.filter || 'all';
           this.renderDeckExplorer(this.currentGameState, this.currentDeckFilter, this.getWordMetaFn);
         });
       });
+    }
+    this.setupLexiconControls();
+  }
+  setupLexiconControls() {
+    const doc = this._getDoc();
+    const modeDiscovered = this.lexiconModeDiscoveredBtn || (doc && typeof doc.getElementById === 'function' ? doc.getElementById('lexicon-mode-discovered') : null);
+    const modeAll = this.lexiconModeAllBtn || (doc && typeof doc.getElementById === 'function' ? doc.getElementById('lexicon-mode-all') : null);
+    if (modeDiscovered) {
+      modeDiscovered.addEventListener('click', () => {
+        this.lexiconViewMode = 'discovered';
+        modeDiscovered.classList.add('active');
+        if (modeAll) modeAll.classList.remove('active');
+        this.renderDeckExplorer(this.currentGameState, this.currentDeckFilter, this.getWordMetaFn);
+      });
+    }
+    if (modeAll) {
+      modeAll.addEventListener('click', () => {
+        this.lexiconViewMode = 'all';
+        modeAll.classList.add('active');
+        if (modeDiscovered) modeDiscovered.classList.remove('active');
+        this.renderDeckExplorer(this.currentGameState, this.currentDeckFilter, this.getWordMetaFn);
+      });
+    }
+    const searchInput = this.lexiconSearchInput || (doc && typeof doc.getElementById === 'function' ? doc.getElementById('lexicon-search-input') : null);
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        this.lexiconSearchQuery = ((e && e.target && e.target.value) || searchInput.value || '').trim().toLowerCase();
+        if (this._lexiconSearchTimer) clearTimeout(this._lexiconSearchTimer);
+        this._lexiconSearchTimer = setTimeout(() => {
+          this._lexiconSearchTimer = null;
+          this.renderDeckExplorer(this.currentGameState, this.currentDeckFilter, this.getWordMetaFn);
+        }, 120);
+      });
+    }
+    const sortSelect = this.lexiconSortSelect || (doc && typeof doc.getElementById === 'function' ? doc.getElementById('lexicon-sort-select') : null);
+    if (sortSelect) {
+      sortSelect.addEventListener('change', (e) => {
+        this.lexiconSortBy = ((e && e.target && e.target.value) || sortSelect.value || 'rank');
+        this.renderDeckExplorer(this.currentGameState, this.currentDeckFilter, this.getWordMetaFn);
+      });
+    }
+    const rarityBtns = (this.lexiconRarityBtns && this.lexiconRarityBtns.length > 0)
+      ? this.lexiconRarityBtns
+      : (doc && typeof doc.querySelectorAll === 'function' ? doc.querySelectorAll('.lexicon-rarity-btn') : []);
+    if (rarityBtns && rarityBtns.length > 0) {
+      rarityBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          rarityBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          this.lexiconRarityFilter = btn.dataset.rarity || 'all';
+          this.renderDeckExplorer(this.currentGameState, this.currentDeckFilter, this.getWordMetaFn);
+        });
+      });
+    }
+    const masteryBtns = (this.lexiconMasteryBtns && this.lexiconMasteryBtns.length > 0)
+      ? this.lexiconMasteryBtns
+      : (doc && typeof doc.querySelectorAll === 'function' ? doc.querySelectorAll('.lexicon-mastery-btn') : []);
+    if (masteryBtns && masteryBtns.length > 0) {
+      masteryBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          masteryBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          this.lexiconMasteryFilter = btn.dataset.mastery || 'all';
+          this.renderDeckExplorer(this.currentGameState, this.currentDeckFilter, this.getWordMetaFn);
+        });
+      });
+    }
+    const closeBtn = this.lexiconModalCloseBtn || (doc && typeof doc.getElementById === 'function' ? doc.getElementById('lexicon-modal-close-btn') : null);
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => this.closeLexiconWordModal());
+    }
+    const wordModal = this.lexiconWordModal || (doc && typeof doc.getElementById === 'function' ? doc.getElementById('lexicon-word-modal') : null);
+    if (wordModal) {
+      wordModal.addEventListener('click', (e) => {
+        if (e.target === wordModal) {
+          this.closeLexiconWordModal();
+        }
+      });
+    }
+  }
+  _computeWordTelemetry(rank, meta, gameState, unlockedSet) {
+    const isDiscovered = unlockedSet ? unlockedSet.has(rank) : true;
+    const st = (gameState && gameState.wordStats && gameState.wordStats[rank]) || {};
+    const seen = st.seen ?? st.timesSeen ?? 0;
+    const avgWpm = Math.round(st.avgWpm ?? st.lastWpm ?? 0);
+    const lastWpm = Math.round(st.lastWpm ?? st.avgWpm ?? 0);
+    const bestWpm = Math.round(st.bestWpm ?? Math.max(avgWpm, lastWpm));
+    const cleanHits = st.streak ?? st.cleanHits ?? 0;
+    const bestStreak = Math.max(st.bestStreak || 0, cleanHits);
+    const fixedErr = st.totalFixedErr ?? Math.round(st.fixedErr || 0);
+    const unfixedErr = st.totalUnfixedErr ?? Math.round(st.unfixedErr || 0);
+    const activeErrWeight = (st.unfixedErr || 0) + (st.fixedErr || 0) || (st.errorCount || 0);
+    const totalErrors = fixedErr + unfixedErr;
+    const accuracy = seen > 0
+      ? Math.max(0, Math.min(100, Math.round(((seen - Math.min(seen, totalErrors)) / seen) * 100)))
+      : 100;
+    const targetWpm = (gameState && gameState.targetWpm) || 40;
+    let srsKey = 'new';
+    let srsBadge = '🌱';
+    let srsTitle = 'New Discovery';
+    if (activeErrWeight > 0 || (avgWpm > 0 && avgWpm < targetWpm)) {
+      srsKey = 'practicing';
+      srsBadge = '⚠️';
+      srsTitle = 'Practicing (Needs Rhythm)';
+    } else if (cleanHits >= 4) {
+      srsKey = 'mastered';
+      srsBadge = '⭐';
+      srsTitle = 'Mastered';
+    } else if (cleanHits >= 1) {
+      srsKey = 'flow';
+      srsBadge = '⚡';
+      srsTitle = 'In Flow';
+    }
+    const tierCode = (meta && meta.tier)
+      ? String(meta.tier).toUpperCase()
+      : (rank <= 40 ? 'STARTER' : rank <= 300 ? 'COMMON' : rank <= 600 ? 'UNCOMMON' : rank <= 850 ? 'RARE' : 'EPIC');
+    return {
+      rank,
+      isDiscovered,
+      seen,
+      avgWpm,
+      lastWpm,
+      bestWpm,
+      cleanHits,
+      bestStreak,
+      fixedErr,
+      unfixedErr,
+      totalErrors,
+      accuracy,
+      srsKey,
+      srsBadge,
+      srsTitle,
+      tierCode
+    };
+  }
+  openLexiconWordModal(rank, meta, tel, gameState) {
+    const doc = this._getDoc();
+    const modal = this.lexiconWordModal || (doc && typeof doc.getElementById === 'function' ? doc.getElementById('lexicon-word-modal') : null);
+    if (!modal || !meta || !tel) return;
+    const wordEl = this.lexiconModalWord || (doc && typeof doc.getElementById === 'function' ? doc.getElementById('lexicon-modal-word') : null);
+    const rankEl = this.lexiconModalRank || (doc && typeof doc.getElementById === 'function' ? doc.getElementById('lexicon-modal-rank') : null);
+    const tierEl = this.lexiconModalTier || (doc && typeof doc.getElementById === 'function' ? doc.getElementById('lexicon-modal-tier') : null);
+    const srsEl = this.lexiconModalSrs || (doc && typeof doc.getElementById === 'function' ? doc.getElementById('lexicon-modal-srs') : null);
+    const bodyEl = this.lexiconModalBody || (doc && typeof doc.getElementById === 'function' ? doc.getElementById('lexicon-modal-body') : null);
+    const tierName = meta.tierName || tel.tierCode;
+    const tierColor = meta.tierColor || 'var(--main-color)';
+    if (wordEl) {
+      wordEl.textContent = tel.isDiscovered ? meta.word : '???';
+      wordEl.style.color = tel.isDiscovered ? 'var(--text-color)' : 'var(--sub-color)';
+    }
+    if (rankEl) {
+      rankEl.textContent = `#${rank}`;
+    }
+    if (tierEl) {
+      tierEl.textContent = tierName;
+      tierEl.style.color = tierColor;
+      tierEl.style.borderColor = tierColor;
+    }
+    if (srsEl) {
+      srsEl.textContent = tel.isDiscovered ? `${tel.srsBadge} ${tel.srsTitle}` : '🔒 Undiscovered';
+    }
+    if (bodyEl) {
+      if (!tel.isDiscovered) {
+        bodyEl.innerHTML = `
+          <div class="lexicon-mystery-panel">
+            <div class="lexicon-mystery-title">🔒 UNDISCOVERED LEXICON ENTRY</div>
+            <div class="lexicon-mystery-desc">
+              This word sits at <strong>Rank #${rank}</strong> in the <strong>${tierName}</strong> tier (${meta.word ? meta.word.length : '?'} letters • ${meta.bucketName || 'Motor Pattern'}).
+              Build flow streaks in Flow Mode to incubate and hatch <strong>${tierName} Eggs</strong> to unlock it!
+            </div>
+            <div class="lexicon-stats-grid" style="margin-top: 10px;">
+              <div class="lexicon-stat-box">
+                <span class="lexicon-stat-label">Rarity Tier</span>
+                <span class="lexicon-stat-val" style="color: ${tierColor};">${tierName}</span>
+              </div>
+              <div class="lexicon-stat-box">
+                <span class="lexicon-stat-label">Progression Rank</span>
+                <span class="lexicon-stat-val">#${rank} / 1,000</span>
+              </div>
+              <div class="lexicon-stat-box">
+                <span class="lexicon-stat-label">Word Length</span>
+                <span class="lexicon-stat-val">${meta.word ? meta.word.length : '?'} Letters</span>
+              </div>
+              <div class="lexicon-stat-box">
+                <span class="lexicon-stat-label">Base XP Value</span>
+                <span class="lexicon-stat-val">+${meta.reward || 15} XP</span>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        const w = String(meta.word || '').toLowerCase();
+        const leftSet = new Set('qwertasdfgzxcvb'.split(''));
+        let leftCount = 0;
+        let rightCount = 0;
+        for (const ch of w) {
+          if (leftSet.has(ch)) leftCount++;
+          else if (/[a-z]/.test(ch)) rightCount++;
+        }
+        const ledgerMap = (gameState && gameState.bigramLedger && typeof gameState.bigramLedger === 'object')
+          ? gameState.bigramLedger
+          : {};
+        const bigramPills = [];
+        for (let i = 0; i < w.length - 1; i++) {
+          const bg = w.slice(i, i + 2);
+          const rawM = ledgerMap[bg];
+          const mVal = typeof rawM === 'number' ? rawM : (rawM && typeof rawM.m === 'number' ? rawM.m : null);
+          let bgColor = 'var(--sub-color)';
+          let bgStatus = 'Unseen';
+          if (mVal !== null) {
+            const pct = Math.round(mVal * 100);
+            if (mVal >= 0.75) {
+              bgColor = '#34d399';
+              bgStatus = `${pct}% Strong`;
+            } else if (mVal <= 0.45) {
+              bgColor = '#f43f5e';
+              bgStatus = `${pct}% Weak`;
+            } else {
+              bgColor = '#fbbf24';
+              bgStatus = `${pct}% Developing`;
+            }
+          }
+          bigramPills.push(`
+            <div class="lexicon-bigram-chip" style="border-color: ${bgColor};">
+              <span class="lexicon-bigram-pair">${w[i]}→${w[i + 1]}</span>
+              <span class="lexicon-bigram-score" style="color: ${bgColor};">${bgStatus}</span>
+            </div>
+          `);
+        }
+        bodyEl.innerHTML = `
+          <div class="lexicon-stats-section-title">// LIFETIME TELEMETRY</div>
+          <div class="lexicon-stats-grid">
+            <div class="lexicon-stat-box highlight">
+              <span class="lexicon-stat-label">Personal Best (Peak)</span>
+              <span class="lexicon-stat-val" style="color: var(--main-color);">${tel.seen > 0 ? `${tel.bestWpm} WPM` : '--'}</span>
+            </div>
+            <div class="lexicon-stat-box">
+              <span class="lexicon-stat-label">Average Pace</span>
+              <span class="lexicon-stat-val">${tel.seen > 0 ? `${tel.avgWpm} WPM` : '--'}</span>
+            </div>
+            <div class="lexicon-stat-box">
+              <span class="lexicon-stat-label">Last Pace</span>
+              <span class="lexicon-stat-val">${tel.seen > 0 ? `${tel.lastWpm} WPM` : '--'}</span>
+            </div>
+            <div class="lexicon-stat-box">
+              <span class="lexicon-stat-label">Word Accuracy</span>
+              <span class="lexicon-stat-val" style="color: ${tel.accuracy >= 95 ? '#34d399' : tel.accuracy >= 80 ? '#fbbf24' : '#f43f5e'};">${tel.seen > 0 ? `${tel.accuracy}%` : '100%'}</span>
+            </div>
+            <div class="lexicon-stat-box">
+              <span class="lexicon-stat-label">Times Seen</span>
+              <span class="lexicon-stat-val">${tel.seen}</span>
+            </div>
+            <div class="lexicon-stat-box">
+              <span class="lexicon-stat-label">Clean Streak</span>
+              <span class="lexicon-stat-val">${tel.cleanHits} <span style="font-size: 10px; color: var(--sub-color);">(Best: ${tel.bestStreak})</span></span>
+            </div>
+            <div class="lexicon-stat-box">
+              <span class="lexicon-stat-label">Fixed Errors</span>
+              <span class="lexicon-stat-val">${tel.fixedErr}</span>
+            </div>
+            <div class="lexicon-stat-box">
+              <span class="lexicon-stat-label">Unfixed Errors</span>
+              <span class="lexicon-stat-val" style="color: ${tel.unfixedErr > 0 ? '#f43f5e' : 'var(--text-color)'};">${tel.unfixedErr}</span>
+            </div>
+          </div>
+          <div class="lexicon-stats-section-title" style="margin-top: 12px;">// WORD BREAKDOWN & BIOMECHANICS</div>
+          <div class="lexicon-breakdown-row">
+            <span class="lexicon-breakdown-pill" style="border-color: ${meta.bucketColor || 'var(--border-color)'}; color: ${meta.bucketColor || 'var(--main-color)'};">
+              ${meta.bucketTag || meta.bucketName || 'Home Core'}
+            </span>
+            <span class="lexicon-breakdown-pill">Length: ${w.length} chars</span>
+            <span class="lexicon-breakdown-pill">Hands: ${leftCount}L / ${rightCount}R</span>
+            <span class="lexicon-breakdown-pill">Reward: +${meta.reward || 8} XP</span>
+          </div>
+          ${bigramPills.length > 0 ? `
+            <div class="lexicon-bigrams-wrap">
+              ${bigramPills.join('')}
+            </div>
+          ` : ''}
+        `;
+      }
+    }
+    modal.style.display = 'flex';
+  }
+  closeLexiconWordModal() {
+    const doc = this._getDoc();
+    const modal = this.lexiconWordModal || (doc && typeof doc.getElementById === 'function' ? doc.getElementById('lexicon-word-modal') : null);
+    if (modal) {
+      modal.style.display = 'none';
     }
   }
   renderFlowStats(gameState, bucketStats, getWordMetaFn, storageService = null, onSelectFlowRun = null) {
@@ -10619,12 +11691,24 @@ class ModalView {
       if (this.statsRpgXpBar) this.statsRpgXpBar.style.width = `${pct}%`;
     }
     const unlocked = gameState.unlockedRanks || [1];
+    const discoveredPctStr = `${((unlocked.length / 1000) * 100).toFixed(1)}%`;
     if (this.statsRpgWordsCount) {
-      this.statsRpgWordsCount.textContent = `${unlocked.length} / 1,000 (${((unlocked.length / 1000) * 100).toFixed(1)}%)`;
+      this.statsRpgWordsCount.textContent = `${unlocked.length} / 1,000 (${discoveredPctStr})`;
     }
     if (this.deckUnlockedCount) this.deckUnlockedCount.textContent = unlocked.length;
+    if (this.lexiconDiscoveredPct) this.lexiconDiscoveredPct.textContent = discoveredPctStr;
+    if (this.lexiconProgressBar) this.lexiconProgressBar.style.width = discoveredPctStr;
     if (this.statsRpgEggsCount) this.statsRpgEggsCount.textContent = Math.max(0, unlocked.length - 1);
     if (this.statsRpgHighStreak) this.statsRpgHighStreak.textContent = `${gameState.highStreak || 0} words`;
+    if (this.statsRpgFlowTime) {
+      const totalSec = Math.max(0, Math.round(gameState.flowTimeSeconds || 0));
+      const hrs = Math.floor(totalSec / 3600);
+      const mins = Math.floor((totalSec % 3600) / 60);
+      const secs = totalSec % 60;
+      this.statsRpgFlowTime.textContent = hrs > 0
+        ? `${hrs}h ${mins}m`
+        : `${mins}m ${secs}s`;
+    }
     const doc = this._getDoc();
     if (this.flowHistoryTbody && doc) {
       this.flowHistoryTbody.innerHTML = '';
@@ -10640,9 +11724,10 @@ class ModalView {
           const acc = item.accuracy ?? item.acc ?? 100;
           const peak = item.peakWpm || item.wpm || 0;
           const unlockedCount = item.unlockedWords || unlocked.length || 1;
+          const badgesHtml = this.renderModBadgesHtml(item);
           tr.innerHTML = `
             <td>${item.date || '--'}</td>
-            <td>${item.duration || 0}s</td>
+            <td><div class="history-mode-cell"><span>${item.duration || 0}s</span>${badgesHtml ? `<div class="history-mods-wrap">${badgesHtml}</div>` : ''}</div></td>
             <td style="color: var(--main-color); font-weight: 700;">${item.wpm || 0} WPM</td>
             <td>${peak} WPM</td>
             <td>${acc}%</td>
@@ -10702,50 +11787,133 @@ class ModalView {
   }
   renderDeckExplorer(gameState, filter = 'all', getWordMetaFn) {
     if (!this.deckWordsScroll || !gameState) return;
+    if (filter) this.currentDeckFilter = filter;
+    if (getWordMetaFn) this.getWordMetaFn = getWordMetaFn;
+    const metaFn = getWordMetaFn || this.getWordMetaFn;
     this.deckWordsScroll.innerHTML = '';
-    const unlocked = gameState.unlockedRanks || [1];
-    let filteredRanks = unlocked;
-    if (filter !== 'all' && getWordMetaFn) {
-      filteredRanks = unlocked.filter(rank => {
-        const meta = getWordMetaFn(rank);
-        return meta && (meta.bucketId === filter || (meta.tags && meta.tags.includes(filter)));
-      });
+    if (Array.isArray(this.deckWordsScroll.children)) {
+      this.deckWordsScroll.children.length = 0;
     }
-    if (filteredRanks.length === 0) {
-      this.deckWordsScroll.innerHTML = `<span style="color: var(--sub-color); font-size: 12px; padding: 10px;">No words unlocked in this motor pattern yet.</span>`;
+    const unlocked = gameState.unlockedRanks || [1];
+    const unlockedSet = new Set(unlocked);
+    const discoveredPctStr = `${((unlocked.length / 1000) * 100).toFixed(1)}%`;
+    if (this.deckUnlockedCount) this.deckUnlockedCount.textContent = unlocked.length;
+    if (this.lexiconDiscoveredPct) this.lexiconDiscoveredPct.textContent = discoveredPctStr;
+    if (this.lexiconProgressBar) this.lexiconProgressBar.style.width = discoveredPctStr;
+    let baseRanks;
+    if (this.lexiconViewMode === 'all') {
+      baseRanks = [];
+      for (let r = 1; r <= 1000; r++) baseRanks.push(r);
+    } else {
+      baseRanks = unlocked.slice();
+    }
+    const patternFilter = this.currentDeckFilter || 'all';
+    const rarityFilter = this.lexiconRarityFilter || 'all';
+    const masteryFilter = this.lexiconMasteryFilter || 'all';
+    const query = (this.lexiconSearchQuery || '').trim().toLowerCase();
+    const entries = [];
+    for (let i = 0; i < baseRanks.length; i++) {
+      const rank = baseRanks[i];
+      const meta = metaFn ? metaFn(rank) : null;
+      if (!meta) continue;
+      const tel = this._computeWordTelemetry(rank, meta, gameState, unlockedSet);
+      if (patternFilter !== 'all') {
+        const matchesPattern = meta.bucketId === patternFilter || (Array.isArray(meta.tags) && meta.tags.includes(patternFilter));
+        if (!matchesPattern) continue;
+      }
+      if (rarityFilter !== 'all') {
+        if (tel.tierCode !== rarityFilter && String(meta.tierName || '').toUpperCase() !== rarityFilter) {
+          continue;
+        }
+      }
+      if (masteryFilter !== 'all') {
+        if (!tel.isDiscovered || tel.srsKey !== masteryFilter) {
+          continue;
+        }
+      }
+      if (query) {
+        const rankStr = `#${rank}`;
+        const exactRankNum = String(rank) === query || rankStr === query;
+        if (tel.isDiscovered) {
+          const wordMatch = String(meta.word || '').toLowerCase().includes(query);
+          if (!wordMatch && !exactRankNum && !rankStr.includes(query)) continue;
+        } else {
+          const tierMatch = String(meta.tierName || tel.tierCode).toLowerCase().includes(query);
+          if (!exactRankNum && !rankStr.includes(query) && !tierMatch) continue;
+        }
+      }
+      entries.push({ rank, meta, tel });
+    }
+    const sortBy = this.lexiconSortBy || 'rank';
+    entries.sort((a, b) => {
+      if (sortBy === 'rank') {
+        return a.rank - b.rank;
+      }
+      if (a.tel.isDiscovered !== b.tel.isDiscovered) {
+        return a.tel.isDiscovered ? -1 : 1;
+      }
+      if (sortBy === 'wpm_desc') {
+        return (b.tel.avgWpm - a.tel.avgWpm) || (b.tel.bestWpm - a.tel.bestWpm) || (a.rank - b.rank);
+      }
+      if (sortBy === 'wpm_asc') {
+        const aSeen = a.tel.seen > 0 ? 1 : 0;
+        const bSeen = b.tel.seen > 0 ? 1 : 0;
+        if (aSeen !== bSeen) return bSeen - aSeen;
+        return (a.tel.avgWpm - b.tel.avgWpm) || (a.rank - b.rank);
+      }
+      if (sortBy === 'acc_desc') {
+        return (b.tel.accuracy - a.tel.accuracy) || (b.tel.seen - a.tel.seen) || (a.rank - b.rank);
+      }
+      if (sortBy === 'acc_asc') {
+        const aSeen = a.tel.seen > 0 ? 1 : 0;
+        const bSeen = b.tel.seen > 0 ? 1 : 0;
+        if (aSeen !== bSeen) return bSeen - aSeen;
+        return (a.tel.accuracy - b.tel.accuracy) || (b.tel.totalErrors - a.tel.totalErrors) || (a.rank - b.rank);
+      }
+      if (sortBy === 'seen_desc') {
+        return (b.tel.seen - a.tel.seen) || (a.rank - b.rank);
+      }
+      return a.rank - b.rank;
+    });
+    if (entries.length === 0) {
+      this.deckWordsScroll.innerHTML = `<span style="color: var(--sub-color); font-size: 12px; padding: 10px;">No words match the active Lexicon filters.</span>`;
       return;
     }
-    filteredRanks.forEach(rank => {
-      const meta = getWordMetaFn ? getWordMetaFn(rank) : null;
-      if (!meta) return;
-      const st = (gameState.wordStats && gameState.wordStats[rank]) || {};
-      const errors = (st.unfixedErr || 0) + (st.fixedErr || 0) || (st.errorCount || 0);
-      const wpm = Math.round(st.avgWpm ?? st.lastWpm ?? 0);
-      const cleanHits = st.streak ?? st.cleanHits ?? 0;
-      let srsBadge = '🌱';
-      let srsTitle = 'New Discovery';
-      if (errors > 0 || (wpm > 0 && wpm < (gameState.targetWpm || 40))) {
-        srsBadge = '⚠️';
-        srsTitle = 'Practicing (Needs Rhythm)';
-      } else if (cleanHits >= 4) {
-        srsBadge = '⭐';
-        srsTitle = 'Mastered';
-      } else if (cleanHits >= 1) {
-        srsBadge = '⚡';
-        srsTitle = 'In Flow';
-      }
-      const doc = this._getDoc();
-      if (!doc) return;
+    const doc = this._getDoc();
+    if (!doc) return;
+    entries.forEach(({ rank, meta, tel }) => {
       const chip = doc.createElement('div');
-      chip.className = 'deck-word-chip';
-      chip.style.borderColor = meta.bucketColor || 'var(--border-color)';
-      chip.title = `${meta.bucketName || 'Pattern'} (${meta.bucketTag || meta.bucketId || ''}) • ${meta.tierName || meta.tier || ''} • ${srsTitle} • Clean hits: ${cleanHits} • Avg: ${wpm} WPM`;
-      chip.innerHTML = `
-        <span class="deck-chip-srs">${srsBadge}</span>
-        <strong style="color: var(--text-color);">${meta.word}</strong>
-        <span class="deck-chip-tag" style="font-size: 10px; color: ${meta.bucketColor || 'var(--main-color)'}; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px;">${meta.bucketTag || meta.bucketId || ''}</span>
-        <span class="deck-chip-tier" style="font-size: 9px; color: ${meta.tierColor || 'var(--sub-color)'}; text-transform: uppercase;">${meta.tierName || meta.tier || ''}</span>
-      `;
+      chip.dataset.rank = String(rank);
+      const tierName = meta.tierName || tel.tierCode;
+      const tierColor = meta.tierColor || 'var(--sub-color)';
+      if (!tel.isDiscovered) {
+        chip.className = 'deck-word-chip lexicon-word-card undiscovered';
+        chip.style.borderColor = tierColor;
+        chip.title = `Rank #${rank} • ${tierName} Tier (Undiscovered — Click for Rarity Tier Hunt info)`;
+        chip.innerHTML = `
+          <span class="lexicon-chip-rank">#${rank}</span>
+          <strong class="lexicon-chip-mystery">???</strong>
+          <span class="deck-chip-tier" style="font-size: 9px; color: ${tierColor}; text-transform: uppercase; font-weight: 700;">${tierName}</span>
+        `;
+      } else {
+        chip.className = 'deck-word-chip lexicon-word-card discovered';
+        chip.style.borderColor = meta.bucketColor || 'var(--border-color)';
+        chip.title = `#${rank} ${meta.word} • ${tierName} • ${meta.bucketName || 'Pattern'} • ${tel.srsTitle} • Avg: ${tel.avgWpm} WPM • Acc: ${tel.accuracy}% • Seen: ${tel.seen}`;
+        const statPill = tel.seen > 0
+          ? `<span class="lexicon-chip-stat">${tel.avgWpm} WPM · ${tel.accuracy}%</span>`
+          : `<span class="lexicon-chip-stat unseen">Unseen</span>`;
+        chip.innerHTML = `
+          <span class="lexicon-chip-rank">#${rank}</span>
+          <span class="deck-chip-srs">${tel.srsBadge}</span>
+          <strong style="color: var(--text-color);">${meta.word}</strong>
+          <span class="deck-chip-tag" style="font-size: 10px; color: ${meta.bucketColor || 'var(--main-color)'}; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px;">${meta.bucketTag || meta.bucketId || ''}</span>
+          ${statPill}
+          <span class="deck-chip-tier" style="font-size: 9px; color: ${tierColor}; text-transform: uppercase; font-weight: 700;">${tierName}</span>
+        `;
+      }
+      chip.addEventListener('click', () => {
+        this.openLexiconWordModal(rank, meta, tel, gameState);
+      });
       this.deckWordsScroll.appendChild(chip);
     });
   }
@@ -10791,9 +11959,10 @@ class ModalView {
           tr.style.cursor = 'pointer';
           tr.title = 'Click to inspect this Classic Test on the timeline graph';
           const acc = item.accuracy ?? item.acc ?? 100;
+          const badgesHtml = this.renderModBadgesHtml(item);
           tr.innerHTML = `
             <td>${item.date || '--'}</td>
-            <td>${item.duration || 0}s</td>
+            <td><div class="history-mode-cell"><span>${item.duration || 0}s</span>${badgesHtml ? `<div class="history-mods-wrap">${badgesHtml}</div>` : ''}</div></td>
             <td style="color: var(--main-color); font-weight: 700;">${item.wpm || 0} WPM</td>
             <td>${item.rawWpm ?? item.wpm ?? 0}</td>
             <td>${acc}%</td>
@@ -10897,7 +12066,14 @@ class ModalView {
     const unlockedAchievements = gameSave.achievements || ((storageService && storageService.getAchievements) ? storageService.getAchievements() : {});
     const equipped = (storageService && storageService.getEquippedCosmetics)
       ? storageService.getEquippedCosmetics()
-      : { theme: 'oled_cyan', caret: 'line', sound: 'clicky_blue' };
+      : {
+          theme: 'oled_cyan',
+          flowFx: 'adaptive_resonance',
+          caret: 'line',
+          caretFx: 'rainbow_prism',
+          ghostStyle: 'phantom_line',
+          sound: 'clicky_blue'
+        };
     const totalCount = cosmeticsModel.getTotalCount();
     const unlockedCount = cosmeticsModel.getUnlockedCount(level, unlockedAchievements);
     const pct = totalCount > 0 ? Math.round((unlockedCount / totalCount) * 100) : 0;
@@ -10907,14 +12083,65 @@ class ModalView {
     if (this.armoryProgressBar) {
       this.armoryProgressBar.style.width = `${pct}%`;
     }
+    const rootDoc = this._getDoc();
+    const loadoutBar = this.armoryLoadoutBar || (rootDoc && typeof rootDoc.getElementById === 'function' ? rootDoc.getElementById('armory-loadout-bar') : null);
+    if (loadoutBar && rootDoc && typeof rootDoc.createElement === 'function') {
+      loadoutBar.innerHTML = '';
+      if (Array.isArray(loadoutBar.children)) loadoutBar.children.length = 0;
+      const slotDefs = [
+        { category: 'theme', label: 'STAGE THEME', item: cosmeticsModel.getTheme(equipped.theme) },
+        { category: 'flowFx', label: 'FLOW FX', item: cosmeticsModel.getFlowFx(equipped.flowFx) },
+        { category: 'caret', label: 'CARET SHAPE', item: cosmeticsModel.getCaret(equipped.caret) },
+        { category: 'caretFx', label: 'CARET FX', item: cosmeticsModel.getCaretFx(equipped.caretFx) },
+        { category: 'ghostStyle', label: 'GHOST PACER', item: cosmeticsModel.getGhostStyle(equipped.ghostStyle) },
+        { category: 'sound', label: 'SWITCH SOUND', item: cosmeticsModel.getSound(equipped.sound) }
+      ];
+      slotDefs.forEach(slot => {
+        const item = slot.item;
+        if (!item) return;
+        const slotEl = rootDoc.createElement('button');
+        slotEl.type = 'button';
+        slotEl.className = `armory-loadout-slot ${this.currentArmoryFilter === slot.category ? 'active-filter' : ''}`;
+        slotEl.dataset.slotCategory = slot.category;
+        slotEl.dataset.equippedId = item.id;
+        slotEl.title = `Equipped ${slot.label}: ${item.title} — Click to filter ${slot.label}`;
+        let swatchesHtml = '';
+        if (Array.isArray(item.swatches) && item.swatches.length > 0) {
+          const dots = item.swatches.slice(0, 4).map(c => `<span class="theme-swatch-dot" style="background: ${c};"></span>`).join('');
+          swatchesHtml = `<div class="theme-swatches loadout-swatches">${dots}</div>`;
+        }
+        slotEl.innerHTML = `
+          <div class="loadout-slot-top">
+            <span class="loadout-slot-cat">${slot.label}</span>
+            ${swatchesHtml}
+          </div>
+          <div class="loadout-slot-main">
+            <span class="loadout-slot-icon">${item.icon}</span>
+            <span class="loadout-slot-name">${item.title}</span>
+          </div>
+        `;
+        slotEl.addEventListener('click', () => {
+          const nextFilter = this.currentArmoryFilter === slot.category ? 'all' : slot.category;
+          this.filterArmorySections(nextFilter);
+        });
+        loadoutBar.appendChild(slotEl);
+      });
+    }
     const renderCategoryGrid = (gridEl, category) => {
       if (!gridEl) return;
       const doc = (gridEl && gridEl.ownerDocument)
         ? gridEl.ownerDocument
-        : ((typeof document !== 'undefined') ? document : null);
+        : rootDoc;
       if (!doc) return;
       gridEl.innerHTML = '';
       const items = cosmeticsModel.getAnnotatedItems(category, level, unlockedAchievements, equipped);
+      const catUnlocked = items.filter(i => i.unlocked).length;
+      const countBadge = (doc && typeof doc.querySelector === 'function')
+        ? doc.querySelector(`[data-armory-count="${category}"]`)
+        : null;
+      if (countBadge) {
+        countBadge.textContent = `${catUnlocked} / ${items.length} UNLOCKED`;
+      }
       items.forEach(item => {
         const card = doc.createElement('div');
         card.className = `armory-card ${item.unlocked ? 'unlocked' : 'locked'} ${item.equipped ? 'equipped' : ''}`;
@@ -11509,6 +12736,85 @@ class GameController {
           this.modalView.renderClassicStats(this.storageService.getClassicStats(), this.modalView.onSelectClassicTest);
         }
       },
+      onResetAll: () => {
+        const confirmed = (typeof window !== 'undefined' && typeof window.confirm === 'function')
+          ? window.confirm('Factory Reset: Wipe ALL Flow RPG progress, Classic records, Trophies, unlocked Armory items, and Mod settings?')
+          : true;
+        if (confirmed) {
+          if (this.storageService.resetAll) {
+            this.storageService.resetAll();
+          } else {
+            this.storageService.resetGameSave(true);
+            this.storageService.resetClassicStats();
+          }
+          this.eggNestModel.syncBasket([]);
+          if (this.eggNestModel.clearRevealedSlots) {
+            this.eggNestModel.clearRevealedSlots();
+          }
+          this.flowModel.reset(false, true);
+          this.flowModel.setTargetWpm(40);
+          this.hudView.syncTargetWpm(40);
+          const BigramClass = typeof BigramLedger !== 'undefined' ? BigramLedger : (typeof require !== 'undefined' ? require('../models/BigramLedger.js').BigramLedger : null);
+          if (BigramClass) {
+            this.bigramLedger = new BigramClass({});
+          }
+          if (this.achievementsModel) {
+            this.achievementsModel.unlocked = {};
+          }
+          this.pendingHatchedWords = [];
+          this.pendingRareEpicUnlocks = [];
+          this.activeRecapRun = null;
+          this.activeClassicRecapRun = null;
+          this.lastFlowRunEndTime = 0;
+          this.afkRecapTriggered = false;
+          if (this.nestView && this.nestView.updateFlowRecapPill) {
+            this.nestView.updateFlowRecapPill(null);
+          }
+          this.wordDifficulty = 'normal';
+          this.punctuationEnabled = false;
+          this.capitalsEnabled = false;
+          this.ghostEnabled = false;
+          this.ghostSpeed = 50;
+          if (this.ghostPacerModel) {
+            this.ghostPacerModel.setEnabled(false);
+            this.ghostPacerModel.setSpeed(50);
+          }
+          this.sessionModel.setHiddenMode(false);
+          this.sessionModel.setHiddenMethod('word');
+          this.sessionModel.setHiddenWordDistance(1);
+          this.stageView.setHiddenMode(false);
+          this.stageView.setHiddenMethod('word');
+          this.stageView.setHiddenWordDistance(1);
+          if (this.hudView.updateHiddenModeState) {
+            this.hudView.updateHiddenModeState(false, 'word', 1);
+          }
+          if (this.hudView.updateGhostState) {
+            this.hudView.updateGhostState(false, 50);
+          }
+          if (this.hudView.updateWordDifficultyState) {
+            this.hudView.updateWordDifficultyState('normal');
+          }
+          if (this.hudView.updatePunctuationState) {
+            this.hudView.updatePunctuationState(false);
+          }
+          if (this.hudView.updateCapitalsState) {
+            this.hudView.updateCapitalsState(false);
+          }
+          this.applyEquippedCosmetics();
+          this.updateLevelHud();
+          this.nestView.render(this.eggNestModel);
+          this.resetTest();
+          const freshSave = this.storageService.getGameSave();
+          const bucketStats = this.storageService.getBucketStats(freshSave);
+          this.modalView.renderFlowStats(freshSave, bucketStats, (r) => this.wordsModel.getWord(r), this.storageService);
+          this.modalView.renderClassicStats(this.storageService.getClassicStats(), this.modalView.onSelectClassicTest);
+          if (this.achievementsModel && this.modalView.renderTrophies) {
+            this.modalView.renderTrophies(this.achievementsModel, this.storageService);
+          }
+          this.renderArmoryModal();
+          this.hudView.spawnXpToast('Factory Reset Complete!', 1.0, null, true);
+        }
+      },
       onSelectTrophiesTab: () => {
         if (this.achievementsModel) {
           this.modalView.renderTrophies(this.achievementsModel, this.storageService);
@@ -11840,6 +13146,28 @@ class GameController {
       punctuation: Boolean(this.punctuationEnabled)
     };
   }
+  _getActiveModsSnapshot(mode = this.currentMode) {
+    const isHidden = Boolean(
+      (this.sessionModel && this.sessionModel.hiddenMode) ||
+      (this.storageService && this.storageService.getHiddenMode && this.storageService.getHiddenMode())
+    );
+    const hiddenMethod = (this.storageService && this.storageService.getHiddenMethod)
+      ? this.storageService.getHiddenMethod()
+      : ((this.sessionModel && this.sessionModel.hiddenMethod) || 'word');
+    const hiddenWordDistance = (this.storageService && this.storageService.getHiddenWordDistance)
+      ? this.storageService.getHiddenWordDistance()
+      : ((this.sessionModel && this.sessionModel.hiddenWordDistance) || 1);
+    return {
+      difficulty: mode === 'classic' ? (this.wordDifficulty || 'normal') : 'normal',
+      punctuation: Boolean(this.punctuationEnabled),
+      capitals: Boolean(this.capitalsEnabled),
+      hidden: isHidden,
+      hiddenMethod,
+      hiddenWordDistance,
+      ghost: Boolean(this.ghostEnabled),
+      ghostSpeed: this.ghostSpeed || 50
+    };
+  }
   setWordDifficulty(diff) {
     const clean = (diff === 'easy' || diff === 'hard') ? diff : 'normal';
     this.wordDifficulty = clean;
@@ -12103,6 +13431,9 @@ class GameController {
     this.deactivateZenFocus();
     this.lastTestFinishedTime = Date.now();
     const stats = this.sessionModel.calculateFinalStats();
+    const mods = this._getActiveModsSnapshot('classic');
+    stats.mods = mods;
+    stats.hiddenMode = mods.hidden;
     this.stopGhostPacer(true);
     if (this.stageView.setGhostVisible) {
       this.stageView.setGhostVisible(false);
@@ -12428,7 +13759,7 @@ class GameController {
         evalRes.comboTier,
         updatedBasket >= 3
       );
-      this.storageService.updateWordStat(wordMeta.rank, hasUncorrectedErrors, isHadBackspace, liveWpm, this.flowModel.targetWpm);
+      this.storageService.updateWordStat(wordMeta.rank, hasUncorrectedErrors, isHadBackspace, liveWpm, this.flowModel.targetWpm, res.wordDurationSec || 0);
       if (hasUncorrectedErrors) {
         this.wordsModel.recordPatternError(wordMeta.tags);
       } else {
@@ -12627,6 +13958,10 @@ class GameController {
       return;
     }
     if (this.isStatsModalOpen()) {
+      if (this.modalView && this.modalView.isLexiconWordModalOpen && this.modalView.isLexiconWordModalOpen()) {
+        this.modalView.closeLexiconWordModal();
+        return;
+      }
       this.closeStats();
       return;
     }
@@ -12652,6 +13987,9 @@ class GameController {
   }
   handleFlowRunCompleted(completedRun) {
     if (!completedRun) return;
+    if (!completedRun.mods) {
+      completedRun.mods = this._getActiveModsSnapshot('flow');
+    }
     const saved = (this.storageService && this.storageService.recordFlowRun)
       ? this.storageService.recordFlowRun(completedRun)
       : completedRun;

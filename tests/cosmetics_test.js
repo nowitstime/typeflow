@@ -408,6 +408,7 @@ test('8. ModalView.renderArmory populates all 6 category grids and triggers onEq
 
   const armoryCountEl = createMockElement('span');
   const armoryProgressBar = createMockElement('div');
+  const armoryLoadoutBar = createMockElement('div');
   const armoryThemesGrid = createMockElement('div');
   const armoryFlowFxGrid = createMockElement('div');
   const armoryCaretsGrid = createMockElement('div');
@@ -418,6 +419,7 @@ test('8. ModalView.renderArmory populates all 6 category grids and triggers onEq
   const modalView = new ModalView({
     armoryCountEl,
     armoryProgressBar,
+    armoryLoadoutBar,
     armoryThemesGrid,
     armoryFlowFxGrid,
     armoryCaretsGrid,
@@ -430,6 +432,18 @@ test('8. ModalView.renderArmory populates all 6 category grids and triggers onEq
   modalView.renderArmory(cosmeticsModel, storage, {
     onEquipCosmetic: (category, id) => { equippedCall = { category, id }; }
   });
+
+  assert.strictEqual(armoryLoadoutBar.children.length, 6, 'Expected 6 equipped slots in armoryLoadoutBar');
+  assert.strictEqual(armoryLoadoutBar.children[0].dataset.slotCategory, 'theme');
+  assert.strictEqual(armoryLoadoutBar.children[0].dataset.equippedId, 'oled_cyan');
+  assert.strictEqual(armoryLoadoutBar.children[5].dataset.slotCategory, 'sound');
+  assert.strictEqual(armoryLoadoutBar.children[5].dataset.equippedId, 'clicky_blue');
+
+  // Clicking a slot in the loadout bar filters to that category; clicking again resets to 'all'
+  armoryLoadoutBar.children[0].trigger('click');
+  assert.strictEqual(modalView.currentArmoryFilter, 'theme');
+  armoryLoadoutBar.children[0].trigger('click');
+  assert.strictEqual(modalView.currentArmoryFilter, 'all');
 
   assert.strictEqual(armoryThemesGrid.children.length, 6);
   assert.strictEqual(armoryFlowFxGrid.children.length, 6);
