@@ -35,6 +35,7 @@ class SessionModel extends _SessionEmitterBase {
     this.endTime = null;
     this.wordStartTime = null;
     this.lastWordEndTime = null;
+    this.wordTimeCreditedUntil = null;
     this.rollingKeystrokeTimestamps = [];
     this.wpmHistory = []; // Snapshots for charts/consistency
 
@@ -85,6 +86,7 @@ class SessionModel extends _SessionEmitterBase {
     this.endTime = null;
     this.wordStartTime = null;
     this.lastWordEndTime = null;
+    this.wordTimeCreditedUntil = null;
     this.rollingKeystrokeTimestamps = [];
     this.wpmHistory = [];
 
@@ -148,6 +150,7 @@ class SessionModel extends _SessionEmitterBase {
     this.startTime = now;
     this.wordStartTime = now;
     this.lastWordEndTime = now;
+    this.wordTimeCreditedUntil = now;
     this.emit('start', { mode: this.mode, startTime: now });
   }
 
@@ -559,9 +562,18 @@ class SessionModel extends _SessionEmitterBase {
       lastWordEndTime: savedLastWordEndTime
     };
 
-    const wordDurationSec = savedWordStartTime > 0
-      ? Math.max(0.1, Math.min(15, (now - savedWordStartTime) / 1000))
+    // Active time for this submission runs from the last credited moment (the previous
+    // submission, or session start) so the gap before a word's first keystroke is
+    // counted, and re-submitting a word after backspacing into it only adds the new time.
+    // The pre-keystroke gap is capped so an idle pause between words isn't credited.
+    const MAX_WORD_GAP_MS = 2000;
+    const durationStart = this.wordTimeCreditedUntil
+      ? Math.max(this.wordTimeCreditedUntil, savedWordStartTime - MAX_WORD_GAP_MS)
+      : savedWordStartTime;
+    const wordDurationSec = durationStart > 0
+      ? Math.max(0.1, Math.min(15, (now - durationStart) / 1000))
       : 0;
+    this.wordTimeCreditedUntil = now;
 
     this.currentWordCharCorrect = [];
     this.lastWordEndTime = now;
@@ -960,6 +972,7 @@ class SessionModel extends _SessionEmitterBase {
       maxMomentum: Math.round(run.maxMomentum),
       wpmHistory: run.wpmHistory
     };
+    if (run.mods) summary.mods = run.mods;
 
     this.lastCompletedFlowRun = summary;
     this.emit('flowRunCompleted', summary);

@@ -860,6 +860,40 @@ it('ModalView Lexicon Compendium supports Discovered vs See All 1,000 (???), rar
   assert.ok(modal.deckWordsScroll.children[0].innerHTML.includes('#851'));
 });
 
+it('Lexicon search: partial word queries do not flood results with ??? cards, and unset bestWpm falls back', () => {
+  const dom = new JSDOM(`<div id="deck-words-scroll"></div>`);
+  const doc = dom.window.document;
+  const modal = new ModalView({ deckWordsScroll: doc.getElementById('deck-words-scroll') });
+  const fakeMeta = (rank) => ({
+    rank,
+    word: rank === 1 ? 'the' : rank === 2 ? 'their' : `word${rank}`,
+    tier: rank <= 40 ? 'STARTER' : rank <= 300 ? 'COMMON' : rank <= 600 ? 'UNCOMMON' : rank <= 850 ? 'RARE' : 'EPIC',
+    tierName: rank <= 40 ? 'Starter' : rank <= 300 ? 'Common' : rank <= 600 ? 'Uncommon' : rank <= 850 ? 'Rare' : 'Epic',
+    bucketId: 'HOME_CORE',
+    tags: ['HOME_CORE']
+  });
+  const gameState = {
+    targetWpm: 40,
+    unlockedRanks: [1, 2],
+    wordStats: { 1: { seen: 1, avgWpm: 55, lastWpm: 55, bestWpm: 0 } }
+  };
+  modal.lexiconViewMode = 'all';
+  const count = (q) => {
+    modal.lexiconSearchQuery = q;
+    modal.renderDeckExplorer(gameState, 'all', fakeMeta);
+    return modal.deckWordsScroll.querySelectorAll('.deck-word-chip').length;
+  };
+
+  assert.strictEqual(count('e'), 2, 'Letter query should only match the discovered words containing it');
+  assert.strictEqual(count('#'), 0, 'A bare # should not match every rank');
+  assert.strictEqual(count('epic'), 150, 'A full tier name still lists that tier');
+  assert.strictEqual(count('#85'), 11, 'Rank queries match by prefix (#85, #850-#859)');
+  assert.strictEqual(count('1000'), 1);
+
+  const tel = modal._computeWordTelemetry(1, fakeMeta(1), gameState, new Set([1, 2]));
+  assert.strictEqual(tel.bestWpm, 55, 'bestWpm of 0 should fall back to the observed pace');
+});
+
 // 5. ChartView Tests
 console.log('\n--- 5. ChartView ---');
 

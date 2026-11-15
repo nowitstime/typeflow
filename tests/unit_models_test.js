@@ -1155,6 +1155,42 @@ it('applyTextModifiers applies capitalization, natural punctuation without semic
   assert.ok(punctCount >= 15, `Expected at least 15 punctuated words in 200, got ${punctCount}`);
 });
 
+it('wordDurationSec covers the gap since the previous submission and never double-counts a re-submitted word', () => {
+  const session = new SessionModel({ mode: 'flow', words: ['ab', 'cd', 'ef'] });
+  const t0 = 100000;
+  session.recordChar('a', true, t0);
+  session.recordChar('b', true, t0 + 200);
+  const first = session.submitWord(false, 0, 0, t0 + 400);
+  assert.strictEqual(first.wordDurationSec, 0.4);
+
+  // Second word: first keystroke lands 300ms after the previous space - that gap counts
+  session.recordChar('c', true, t0 + 700);
+  session.recordChar('d', true, t0 + 900);
+  const second = session.submitWord(false, 0, 0, t0 + 1100);
+  assert.strictEqual(second.wordDurationSec, 0.7);
+
+  // Backspace into the submitted word and re-submit: only the new time is added
+  session.revertToPreviousWord();
+  const resubmit = session.submitWord(false, 0, 0, t0 + 1600);
+  assert.strictEqual(resubmit.wordDurationSec, 0.5);
+
+  // An idle pause before the next word's first keystroke is capped at 2s
+  session.recordChar('e', true, t0 + 31600);
+  session.recordChar('f', true, t0 + 31800);
+  const third = session.submitWord(false, 0, 0, t0 + 32000);
+  assert.strictEqual(third.wordDurationSec, 2.4);
+});
+
+it('endFlowRun carries the mods recorded on the active run into the summary', () => {
+  const session = new SessionModel({ mode: 'flow', words: ['the'] });
+  const t0 = 100000;
+  session.startFlowRun(90, t0);
+  session.flowRun.mods = { punctuation: false, ghost: true };
+  session.flowRun.cleanWords = 5;
+  const summary = session.endFlowRun(10, t0 + 10000);
+  assert.deepStrictEqual(summary.mods, { punctuation: false, ghost: true });
+});
+
 console.log('\n========================================');
 console.log(`TEST RESULTS: ${passedTests} / ${totalTests} PASSED`);
 if (passedTests === totalTests) {

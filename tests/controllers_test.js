@@ -1315,6 +1315,42 @@ it('GameController & ModalView: Active modifier badges render on in-depth chart 
   controller.destroy();
 });
 
+it('Mod badges reflect the mods a run was started with, not the mods active when it is finalized', () => {
+  const { controller, storageService, sessionModel } = createTestHarness();
+  controller.init();
+  assert.strictEqual(controller.punctuationEnabled, false);
+
+  // Flow: build momentum so a Flow Run starts with Punctuation off
+  controller.flowModel.momentum = 95;
+  let guard = 0;
+  while (!sessionModel.flowRun && guard++ < 20) {
+    controller.flowModel.momentum = 95;
+    for (const ch of sessionModel.getCurrentWordText()) controller.handleChar(ch);
+    controller.handleSpace();
+  }
+  assert.ok(sessionModel.flowRun, 'Flow Run should have started');
+  assert.strictEqual(sessionModel.flowRun.mods.punctuation, false);
+  sessionModel.flowRun.cleanWords = 5;
+  sessionModel.flowRun.startTime -= 10000;
+
+  // Toggling the mod resets the session, which finalizes the run
+  controller.togglePunctuationMode();
+  const flowRun = storageService.getGameSave().flowHistory[0];
+  assert.ok(flowRun, 'Finalized run should be recorded');
+  assert.strictEqual(flowRun.mods.punctuation, false, 'Run typed without punctuation must not get a PUNCT badge');
+  controller.togglePunctuationMode();
+
+  // Classic: start a test with Hidden off, toggle it on mid-test, then finish
+  controller.switchMode('classic');
+  controller.handleChar(sessionModel.getCurrentWordText()[0]);
+  assert.ok(controller.classicRunMods, 'Classic mods should be captured when the test starts');
+  controller.toggleHiddenMode();
+  controller.endClassicTest();
+  assert.strictEqual(controller.activeClassicRecapRun.mods.hidden, false);
+  controller.toggleHiddenMode();
+  controller.destroy();
+});
+
 it('Phase 1: Tracks Total Time Typing in Flow Mode and Reset All performs complete factory wipe', () => {
   const { dom, controller, storageService, modalView } = createTestHarness();
   controller.init();

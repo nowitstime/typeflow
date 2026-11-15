@@ -1040,6 +1040,7 @@ class GameController {
 
     // Finalize any active qualifying Flow Run before resetting session
     this._finalizeActiveFlowRun();
+    this.classicRunMods = null;
     this.isFlowRecapVisible = false;
     this.isClassicRecapVisible = false;
     this.activeClassicRecapRun = null;
@@ -1124,6 +1125,8 @@ class GameController {
 
   startClassicTimer() {
     if (this.classicTimerInterval) return;
+    // Record the mods the test is started with, so toggling one mid-test can't relabel it
+    this.classicRunMods = this._getActiveModsSnapshot('classic');
     this.hudView.updateTimer(this.sessionModel.duration);
     this.hudView.updateLiveClassicStats(0, 100);
 
@@ -1146,7 +1149,8 @@ class GameController {
     this.deactivateZenFocus();
     this.lastTestFinishedTime = Date.now();
     const stats = this.sessionModel.calculateFinalStats();
-    const mods = this._getActiveModsSnapshot('classic');
+    const mods = this.classicRunMods || this._getActiveModsSnapshot('classic');
+    this.classicRunMods = null;
     stats.mods = mods;
     stats.hiddenMode = mods.hidden;
 
@@ -1381,6 +1385,8 @@ class GameController {
         ? this.sessionModel.recordFlowRunWord(isCleanWord, liveWpm, this.flowModel.momentum, unlockedRanksCount)
         : null;
       if (!wasFlowRunActive && this.sessionModel.flowRun) {
+        // Record the mods the run is started with, so toggling one mid-run can't relabel it
+        this.sessionModel.flowRun.mods = this._getActiveModsSnapshot('flow');
         this.lastFlowTickTime = Date.now();
         this.lastFlowRunEndTime = 0;
         this.afkRecapTriggered = false;

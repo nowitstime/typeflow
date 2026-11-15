@@ -614,7 +614,9 @@ class ModalView {
     const seen = st.seen ?? st.timesSeen ?? 0;
     const avgWpm = Math.round(st.avgWpm ?? st.lastWpm ?? 0);
     const lastWpm = Math.round(st.lastWpm ?? st.avgWpm ?? 0);
-    const bestWpm = Math.round(st.bestWpm ?? Math.max(avgWpm, lastWpm));
+    // bestWpm stays 0 until a word is submitted without an unfixed error; fall back
+    // to the observed pace so the card never reports a best below the average
+    const bestWpm = Math.round(st.bestWpm > 0 ? st.bestWpm : Math.max(avgWpm, lastWpm));
     const cleanHits = st.streak ?? st.cleanHits ?? 0;
     const bestStreak = Math.max(st.bestStreak || 0, cleanHits);
     const fixedErr = st.totalFixedErr ?? Math.round(st.fixedErr || 0);
@@ -1019,15 +1021,18 @@ class ModalView {
 
       // 4. Search query filter
       if (query) {
-        const rankStr = `#${rank}`;
-        const exactRankNum = String(rank) === query || rankStr === query;
+        // Rank search only applies to rank-shaped queries ("12" or "#12"), matched by prefix
+        const rankQuery = /^#?\d+$/.test(query) ? query.replace('#', '') : '';
+        const rankMatch = rankQuery !== '' && String(rank).startsWith(rankQuery);
         if (tel.isDiscovered) {
           const wordMatch = String(meta.word || '').toLowerCase().includes(query);
-          if (!wordMatch && !exactRankNum && !rankStr.includes(query)) continue;
+          if (!wordMatch && !rankMatch) continue;
         } else {
-          // Undiscovered words only match by #rank or tier name so ??? words aren't spoiled
-          const tierMatch = String(meta.tierName || tel.tierCode).toLowerCase().includes(query);
-          if (!exactRankNum && !rankStr.includes(query) && !tierMatch) continue;
+          // Undiscovered words only match by rank or a full tier name so ??? words aren't
+          // spoiled and partial word searches aren't flooded with unrelated ??? cards
+          const tierMatch = String(meta.tierName || '').toLowerCase() === query
+            || String(tel.tierCode || '').toLowerCase() === query;
+          if (!rankMatch && !tierMatch) continue;
         }
       }
 
