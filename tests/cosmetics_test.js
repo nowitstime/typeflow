@@ -77,7 +77,9 @@ function createMockElement(tag = 'div') {
       String(val || '').split(/\s+/).filter(Boolean).forEach(c => classes.add(c));
     },
     textContent: '',
-    innerHTML: '',
+    // Like a real element, assigning innerHTML replaces the existing children
+    get innerHTML() { return el._innerHTML || ''; },
+    set innerHTML(val) { el._innerHTML = String(val); children.length = 0; },
     children,
     classList: {
       add: (...cls) => cls.forEach(c => c && classes.add(c)),

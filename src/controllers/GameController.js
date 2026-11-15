@@ -221,36 +221,7 @@ class GameController {
       (gameState.eggBasket || []).length >= 3
     );
     this.hudView.updateSoundState(this.audioService.isEnabled());
-    const isHidden = this.storageService.getHiddenMode ? this.storageService.getHiddenMode() : false;
-    const hiddenMethod = this.storageService.getHiddenMethod ? this.storageService.getHiddenMethod() : 'word';
-    const hiddenWordDistance = this.storageService.getHiddenWordDistance ? this.storageService.getHiddenWordDistance() : 1;
-    this.sessionModel.setHiddenMode(isHidden);
-    this.sessionModel.setHiddenMethod(hiddenMethod);
-    this.sessionModel.setHiddenWordDistance(hiddenWordDistance);
-    this.stageView.setHiddenMode(isHidden);
-    this.stageView.setHiddenMethod(hiddenMethod);
-    this.stageView.setHiddenWordDistance(hiddenWordDistance);
-    if (this.hudView.updateHiddenModeState) {
-      this.hudView.updateHiddenModeState(isHidden, hiddenMethod, hiddenWordDistance);
-    }
-    this.ghostEnabled = this.storageService.getGhostCursor ? this.storageService.getGhostCursor() : false;
-    this.ghostSpeed = this.storageService.getGhostSpeed ? this.storageService.getGhostSpeed() : 50;
-    if (this.hudView.updateGhostState) {
-      this.hudView.updateGhostState(this.ghostEnabled, this.ghostSpeed);
-    }
-
-    this.wordDifficulty = this.storageService.getWordDifficulty ? this.storageService.getWordDifficulty() : 'normal';
-    this.punctuationEnabled = this.storageService.getPunctuationMode ? this.storageService.getPunctuationMode() : false;
-    this.capitalsEnabled = this.storageService.getCapitalsMode ? this.storageService.getCapitalsMode() : false;
-    if (this.hudView.updateWordDifficultyState) {
-      this.hudView.updateWordDifficultyState(this.wordDifficulty);
-    }
-    if (this.hudView.updatePunctuationState) {
-      this.hudView.updatePunctuationState(this.punctuationEnabled);
-    }
-    if (this.hudView.updateCapitalsState) {
-      this.hudView.updateCapitalsState(this.capitalsEnabled);
-    }
+    this._syncModsFromStorage();
 
     // 3. Attach keyboard controller
     this.keyboardController.attach(
@@ -341,30 +312,11 @@ class GameController {
       onResetRpg: () => {
         if (window.confirm('Reset Flow RPG progress back to Level 1 and 1 word ("the")?')) {
           this.storageService.resetGameSave();
-          this.eggNestModel.syncBasket([]);
-          if (this.eggNestModel.clearRevealedSlots) {
-            this.eggNestModel.clearRevealedSlots();
-          }
-          this.flowModel.reset(false, true);
-          this.flowModel.setTargetWpm(40);
-          this.hudView.syncTargetWpm(40);
-          const BigramClass = typeof BigramLedger !== 'undefined' ? BigramLedger : (typeof require !== 'undefined' ? require('../models/BigramLedger.js').BigramLedger : null);
-          if (BigramClass) {
-            this.bigramLedger = new BigramClass({});
-          }
-          this.pendingHatchedWords = [];
-          this.pendingRareEpicUnlocks = [];
-          this.activeRecapRun = null;
-          this.lastFlowRunEndTime = 0;
-          this.afkRecapTriggered = false;
-          if (this.nestView && this.nestView.updateFlowRecapPill) {
-            this.nestView.updateFlowRecapPill(null);
-          }
+          this._resetRpgRuntimeState();
           this.updateLevelHud();
           this.nestView.render(this.eggNestModel);
           this.resetTest();
-          const freshSave = this.storageService.getGameSave();
-          this.modalView.renderFlowStats(freshSave);
+          this._renderFlowStats();
           this.hudView.spawnXpToast('RPG Reset to Ground Zero!', 1.0, null, true);
         }
       },
@@ -385,69 +337,18 @@ class GameController {
             this.storageService.resetGameSave(true);
             this.storageService.resetClassicStats();
           }
-          this.eggNestModel.syncBasket([]);
-          if (this.eggNestModel.clearRevealedSlots) {
-            this.eggNestModel.clearRevealedSlots();
-          }
-          this.flowModel.reset(false, true);
-          this.flowModel.setTargetWpm(40);
-          this.hudView.syncTargetWpm(40);
-          const BigramClass = typeof BigramLedger !== 'undefined' ? BigramLedger : (typeof require !== 'undefined' ? require('../models/BigramLedger.js').BigramLedger : null);
-          if (BigramClass) {
-            this.bigramLedger = new BigramClass({});
-          }
+          this._resetRpgRuntimeState();
           if (this.achievementsModel) {
             this.achievementsModel.unlocked = {};
           }
-          this.pendingHatchedWords = [];
-          this.pendingRareEpicUnlocks = [];
-          this.activeRecapRun = null;
           this.activeClassicRecapRun = null;
-          this.lastFlowRunEndTime = 0;
-          this.afkRecapTriggered = false;
-          if (this.nestView && this.nestView.updateFlowRecapPill) {
-            this.nestView.updateFlowRecapPill(null);
-          }
-
-          // Reset all modifiers to default
-          this.wordDifficulty = 'normal';
-          this.punctuationEnabled = false;
-          this.capitalsEnabled = false;
-          this.ghostEnabled = false;
-          this.ghostSpeed = 50;
-          if (this.ghostPacerModel) {
-            this.ghostPacerModel.setEnabled(false);
-            this.ghostPacerModel.setSpeed(50);
-          }
-          this.sessionModel.setHiddenMode(false);
-          this.sessionModel.setHiddenMethod('word');
-          this.sessionModel.setHiddenWordDistance(1);
-          this.stageView.setHiddenMode(false);
-          this.stageView.setHiddenMethod('word');
-          this.stageView.setHiddenWordDistance(1);
-          if (this.hudView.updateHiddenModeState) {
-            this.hudView.updateHiddenModeState(false, 'word', 1);
-          }
-          if (this.hudView.updateGhostState) {
-            this.hudView.updateGhostState(false, 50);
-          }
-          if (this.hudView.updateWordDifficultyState) {
-            this.hudView.updateWordDifficultyState('normal');
-          }
-          if (this.hudView.updatePunctuationState) {
-            this.hudView.updatePunctuationState(false);
-          }
-          if (this.hudView.updateCapitalsState) {
-            this.hudView.updateCapitalsState(false);
-          }
+          // Stored mod settings were wiped above, so this restores every mod to its default
+          this._syncModsFromStorage();
           this.applyEquippedCosmetics();
           this.updateLevelHud();
           this.nestView.render(this.eggNestModel);
           this.resetTest();
-
-          const freshSave = this.storageService.getGameSave();
-          const bucketStats = this.storageService.getBucketStats(freshSave);
-          this.modalView.renderFlowStats(freshSave, bucketStats, (r) => this.wordsModel.getWord(r), this.storageService);
+          this._renderFlowStats();
           this.modalView.renderClassicStats(this.storageService.getClassicStats(), this.modalView.onSelectClassicTest);
           if (this.achievementsModel && this.modalView.renderTrophies) {
             this.modalView.renderTrophies(this.achievementsModel, this.storageService);
@@ -815,6 +716,83 @@ class GameController {
       this.hudView.updateGhostState(this.ghostEnabled, num);
     }
     return num;
+  }
+
+  // Loads every mod setting from storage into the models, stage and HUD
+  _syncModsFromStorage() {
+    const storage = this.storageService;
+    const isHidden = storage.getHiddenMode ? storage.getHiddenMode() : false;
+    const hiddenMethod = storage.getHiddenMethod ? storage.getHiddenMethod() : 'word';
+    const hiddenWordDistance = storage.getHiddenWordDistance ? storage.getHiddenWordDistance() : 1;
+    this.sessionModel.setHiddenMode(isHidden);
+    this.sessionModel.setHiddenMethod(hiddenMethod);
+    this.sessionModel.setHiddenWordDistance(hiddenWordDistance);
+    this.stageView.setHiddenMode(isHidden);
+    this.stageView.setHiddenMethod(hiddenMethod);
+    this.stageView.setHiddenWordDistance(hiddenWordDistance);
+    if (this.hudView.updateHiddenModeState) {
+      this.hudView.updateHiddenModeState(isHidden, hiddenMethod, hiddenWordDistance);
+    }
+    this.ghostEnabled = storage.getGhostCursor ? storage.getGhostCursor() : false;
+    this.ghostSpeed = storage.getGhostSpeed ? storage.getGhostSpeed() : 50;
+    if (this.hudView.updateGhostState) {
+      this.hudView.updateGhostState(this.ghostEnabled, this.ghostSpeed);
+    }
+
+    this.wordDifficulty = storage.getWordDifficulty ? storage.getWordDifficulty() : 'normal';
+    this.punctuationEnabled = storage.getPunctuationMode ? storage.getPunctuationMode() : false;
+    this.capitalsEnabled = storage.getCapitalsMode ? storage.getCapitalsMode() : false;
+    if (this.hudView.updateWordDifficultyState) {
+      this.hudView.updateWordDifficultyState(this.wordDifficulty);
+    }
+    if (this.hudView.updatePunctuationState) {
+      this.hudView.updatePunctuationState(this.punctuationEnabled);
+    }
+    if (this.hudView.updateCapitalsState) {
+      this.hudView.updateCapitalsState(this.capitalsEnabled);
+    }
+  }
+
+  // Clears in-memory Flow RPG state after the stored game save has been reset
+  _resetRpgRuntimeState() {
+    this.eggNestModel.syncBasket([]);
+    if (this.eggNestModel.clearRevealedSlots) {
+      this.eggNestModel.clearRevealedSlots();
+    }
+    this.flowModel.reset(false, true);
+    this.flowModel.setTargetWpm(40);
+    this.hudView.syncTargetWpm(40);
+    const BigramClass = typeof BigramLedger !== 'undefined' ? BigramLedger : (typeof require !== 'undefined' ? require('../models/BigramLedger.js').BigramLedger : null);
+    if (BigramClass) {
+      this.bigramLedger = new BigramClass({});
+    }
+    this.pendingHatchedWords = [];
+    this.pendingRareEpicUnlocks = [];
+    this.activeRecapRun = null;
+    this.lastFlowRunEndTime = 0;
+    this.afkRecapTriggered = false;
+    if (this.nestView && this.nestView.updateFlowRecapPill) {
+      this.nestView.updateFlowRecapPill(null);
+    }
+  }
+
+  // Renders the Flow stats pane from the current save and returns that save
+  _renderFlowStats() {
+    const gameState = this.storageService.getGameSave();
+    this.modalView.renderFlowStats(
+      gameState,
+      this.storageService.getBucketStats(gameState),
+      (r) => this.wordsModel.getWord(r),
+      this.storageService,
+      (runItem) => {
+        this.closeStats();
+        if (this.currentMode !== 'flow') {
+          this.switchMode('flow');
+        }
+        this.openFlowRecap(false, runItem);
+      }
+    );
+    return gameState;
   }
 
   _getTextModOptions() {
@@ -2036,23 +2014,8 @@ class GameController {
   openStats(tab = 'flow') {
     this.resetTest();
     this.stageView.blurInput();
-    const gameState = this.storageService.getGameSave();
-    const bucketStats = this.storageService.getBucketStats(gameState);
-
     this.modalView.openStatsModal(tab);
-    this.modalView.renderFlowStats(
-      gameState,
-      bucketStats,
-      (r) => this.wordsModel.getWord(r),
-      this.storageService,
-      (runItem) => {
-        this.closeStats();
-        if (this.currentMode !== 'flow') {
-          this.switchMode('flow');
-        }
-        this.openFlowRecap(false, runItem);
-      }
-    );
+    const gameState = this._renderFlowStats();
     this.modalView.renderClassicStats(
       this.storageService.getClassicStats(),
       (testItem) => {

@@ -462,7 +462,7 @@ class ModalView {
         b.classList.toggle('active', (b.dataset.filter || 'all') === this.currentArmoryFilter);
       });
     }
-    const slots = (this.armoryLoadoutBar && Array.isArray(this.armoryLoadoutBar.children) && this.armoryLoadoutBar.children.length > 0)
+    const slots = (this.armoryLoadoutBar && this.armoryLoadoutBar.children && this.armoryLoadoutBar.children.length > 0)
       ? this.armoryLoadoutBar.children
       : (doc && typeof doc.querySelectorAll === 'function' ? doc.querySelectorAll('.armory-loadout-slot[data-slot-category]') : []);
     if (slots && slots.length > 0) {
@@ -967,9 +967,9 @@ class ModalView {
     const metaFn = getWordMetaFn || this.getWordMetaFn;
 
     this.deckWordsScroll.innerHTML = '';
-    if (Array.isArray(this.deckWordsScroll.children)) {
-      this.deckWordsScroll.children.length = 0;
-    }
+    this._deckEntriesByRank = new Map();
+    this._deckGameState = gameState;
+    this._bindDeckCardClicks();
 
     const unlocked = gameState.unlockedRanks || [1];
     const unlockedSet = new Set(unlocked);
@@ -991,19 +991,28 @@ class ModalView {
     const masteryFilter = this.lexiconMasteryFilter || 'all';
     const query = (this.lexiconSearchQuery || '').trim().toLowerCase();
 
+    // Rank search only applies to rank-shaped queries ("12" or "#12"), matched by prefix
+    const rankQuery = /^#?\d+$/.test(query) ? query.replace('#', '') : '';
+    const rankMatches = (rank) => rankQuery !== '' && String(rank).startsWith(rankQuery);
+
     const entries = [];
     for (let i = 0; i < baseRanks.length; i++) {
       const rank = baseRanks[i];
       const meta = metaFn ? metaFn(rank) : null;
       if (!meta) continue;
 
-      const tel = this._computeWordTelemetry(rank, meta, gameState, unlockedSet);
-
-      // 1. Pattern filter
+      // Filters that only need metadata run first, so telemetry is computed only for
+      // words that can still be shown
+      const isDiscovered = unlockedSet.has(rank);
       if (patternFilter !== 'all') {
         const matchesPattern = meta.bucketId === patternFilter || (Array.isArray(meta.tags) && meta.tags.includes(patternFilter));
         if (!matchesPattern) continue;
       }
+      if (masteryFilter !== 'all' && !isDiscovered) continue;
+      if (query && isDiscovered && !rankMatches(rank)
+        && !String(meta.word || '').toLowerCase().includes(query)) continue;
+
+      const tel = this._computeWordTelemetry(rank, meta, gameState, unlockedSet);
 
       // 2. Rarity filter
       if (rarityFilter !== 'all') {
@@ -1019,20 +1028,14 @@ class ModalView {
         }
       }
 
-      // 4. Search query filter
+      // 4. Search query filter (discovered words were already matched above)
       if (query) {
-        // Rank search only applies to rank-shaped queries ("12" or "#12"), matched by prefix
-        const rankQuery = /^#?\d+$/.test(query) ? query.replace('#', '') : '';
-        const rankMatch = rankQuery !== '' && String(rank).startsWith(rankQuery);
-        if (tel.isDiscovered) {
-          const wordMatch = String(meta.word || '').toLowerCase().includes(query);
-          if (!wordMatch && !rankMatch) continue;
-        } else {
+        if (!tel.isDiscovered) {
           // Undiscovered words only match by rank or a full tier name so ??? words aren't
           // spoiled and partial word searches aren't flooded with unrelated ??? cards
           const tierMatch = String(meta.tierName || '').toLowerCase() === query
             || String(tel.tierCode || '').toLowerCase() === query;
-          if (!rankMatch && !tierMatch) continue;
+          if (!rankMatches(rank) && !tierMatch) continue;
         }
       }
 
@@ -1081,7 +1084,10 @@ class ModalView {
     const doc = this._getDoc();
     if (!doc) return;
 
-    entries.forEach(({ rank, meta, tel }) => {
+    const fragment = doc.createDocumentFragment();
+    entries.forEach((entry) => {
+      const { rank, meta, tel } = entry;
+      this._deckEntriesByRank.set(String(rank), entry);
       const chip = doc.createElement('div');
       chip.dataset.rank = String(rank);
       const tierName = meta.tierName || tel.tierCode;
@@ -1113,11 +1119,21 @@ class ModalView {
         `;
       }
 
-      chip.addEventListener('click', () => {
-        this.openLexiconWordModal(rank, meta, tel, gameState);
-      });
+      fragment.appendChild(chip);
+    });
+    this.deckWordsScroll.appendChild(fragment);
+  }
 
-      this.deckWordsScroll.appendChild(chip);
+  // One delegated click handler for the whole grid instead of a listener per card
+  _bindDeckCardClicks() {
+    if (this._deckClicksBoundTo === this.deckWordsScroll) return;
+    this._deckClicksBoundTo = this.deckWordsScroll;
+    this.deckWordsScroll.addEventListener('click', (e) => {
+      const chip = e.target && e.target.closest ? e.target.closest('.deck-word-chip') : null;
+      const entry = chip && this._deckEntriesByRank ? this._deckEntriesByRank.get(chip.dataset.rank) : null;
+      if (entry) {
+        this.openLexiconWordModal(entry.rank, entry.meta, entry.tel, this._deckGameState);
+      }
     });
   }
 
@@ -1315,7 +1331,6 @@ class ModalView {
     const loadoutBar = this.armoryLoadoutBar || (rootDoc && typeof rootDoc.getElementById === 'function' ? rootDoc.getElementById('armory-loadout-bar') : null);
     if (loadoutBar && rootDoc && typeof rootDoc.createElement === 'function') {
       loadoutBar.innerHTML = '';
-      if (Array.isArray(loadoutBar.children)) loadoutBar.children.length = 0;
       const slotDefs = [
         { category: 'theme', label: 'STAGE THEME', item: cosmeticsModel.getTheme(equipped.theme) },
         { category: 'flowFx', label: 'FLOW FX', item: cosmeticsModel.getFlowFx(equipped.flowFx) },

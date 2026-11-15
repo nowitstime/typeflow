@@ -5562,6 +5562,7 @@ class SessionModel extends _SessionEmitterBase {
     this.endTime = null;
     this.wordStartTime = null;
     this.lastWordEndTime = null;
+    this.wordTimeCreditedUntil = null;
     this.rollingKeystrokeTimestamps = [];
     this.wpmHistory = [];
     this.correctKeystrokes = 0;
@@ -5601,6 +5602,7 @@ class SessionModel extends _SessionEmitterBase {
     this.endTime = null;
     this.wordStartTime = null;
     this.lastWordEndTime = null;
+    this.wordTimeCreditedUntil = null;
     this.rollingKeystrokeTimestamps = [];
     this.wpmHistory = [];
     this.correctKeystrokes = 0;
@@ -5653,6 +5655,7 @@ class SessionModel extends _SessionEmitterBase {
     this.startTime = now;
     this.wordStartTime = now;
     this.lastWordEndTime = now;
+    this.wordTimeCreditedUntil = now;
     this.emit('start', { mode: this.mode, startTime: now });
   }
   getCurrentWordText() {
@@ -5996,9 +5999,14 @@ class SessionModel extends _SessionEmitterBase {
       wordStartTime: savedWordStartTime,
       lastWordEndTime: savedLastWordEndTime
     };
-    const wordDurationSec = savedWordStartTime > 0
-      ? Math.max(0.1, Math.min(15, (now - savedWordStartTime) / 1000))
+    const MAX_WORD_GAP_MS = 2000;
+    const durationStart = this.wordTimeCreditedUntil
+      ? Math.max(this.wordTimeCreditedUntil, savedWordStartTime - MAX_WORD_GAP_MS)
+      : savedWordStartTime;
+    const wordDurationSec = durationStart > 0
+      ? Math.max(0.1, Math.min(15, (now - durationStart) / 1000))
       : 0;
+    this.wordTimeCreditedUntil = now;
     this.currentWordCharCorrect = [];
     this.lastWordEndTime = now;
     this.hadBackspaceOnCurrentWord = false;
@@ -6322,6 +6330,7 @@ class SessionModel extends _SessionEmitterBase {
       maxMomentum: Math.round(run.maxMomentum),
       wpmHistory: run.wpmHistory
     };
+    if (run.mods) summary.mods = run.mods;
     this.lastCompletedFlowRun = summary;
     this.emit('flowRunCompleted', summary);
     return summary;
@@ -11327,7 +11336,7 @@ class ModalView {
         b.classList.toggle('active', (b.dataset.filter || 'all') === this.currentArmoryFilter);
       });
     }
-    const slots = (this.armoryLoadoutBar && Array.isArray(this.armoryLoadoutBar.children) && this.armoryLoadoutBar.children.length > 0)
+    const slots = (this.armoryLoadoutBar && this.armoryLoadoutBar.children && this.armoryLoadoutBar.children.length > 0)
       ? this.armoryLoadoutBar.children
       : (doc && typeof doc.querySelectorAll === 'function' ? doc.querySelectorAll('.armory-loadout-slot[data-slot-category]') : []);
     if (slots && slots.length > 0) {
@@ -11467,7 +11476,7 @@ class ModalView {
     const seen = st.seen ?? st.timesSeen ?? 0;
     const avgWpm = Math.round(st.avgWpm ?? st.lastWpm ?? 0);
     const lastWpm = Math.round(st.lastWpm ?? st.avgWpm ?? 0);
-    const bestWpm = Math.round(st.bestWpm ?? Math.max(avgWpm, lastWpm));
+    const bestWpm = Math.round(st.bestWpm > 0 ? st.bestWpm : Math.max(avgWpm, lastWpm));
     const cleanHits = st.streak ?? st.cleanHits ?? 0;
     const bestStreak = Math.max(st.bestStreak || 0, cleanHits);
     const fixedErr = st.totalFixedErr ?? Math.round(st.fixedErr || 0);
@@ -11791,9 +11800,9 @@ class ModalView {
     if (getWordMetaFn) this.getWordMetaFn = getWordMetaFn;
     const metaFn = getWordMetaFn || this.getWordMetaFn;
     this.deckWordsScroll.innerHTML = '';
-    if (Array.isArray(this.deckWordsScroll.children)) {
-      this.deckWordsScroll.children.length = 0;
-    }
+    this._deckEntriesByRank = new Map();
+    this._deckGameState = gameState;
+    this._bindDeckCardClicks();
     const unlocked = gameState.unlockedRanks || [1];
     const unlockedSet = new Set(unlocked);
     const discoveredPctStr = `${((unlocked.length / 1000) * 100).toFixed(1)}%`;
@@ -11811,16 +11820,22 @@ class ModalView {
     const rarityFilter = this.lexiconRarityFilter || 'all';
     const masteryFilter = this.lexiconMasteryFilter || 'all';
     const query = (this.lexiconSearchQuery || '').trim().toLowerCase();
+    const rankQuery = /^#?\d+$/.test(query) ? query.replace('#', '') : '';
+    const rankMatches = (rank) => rankQuery !== '' && String(rank).startsWith(rankQuery);
     const entries = [];
     for (let i = 0; i < baseRanks.length; i++) {
       const rank = baseRanks[i];
       const meta = metaFn ? metaFn(rank) : null;
       if (!meta) continue;
-      const tel = this._computeWordTelemetry(rank, meta, gameState, unlockedSet);
+      const isDiscovered = unlockedSet.has(rank);
       if (patternFilter !== 'all') {
         const matchesPattern = meta.bucketId === patternFilter || (Array.isArray(meta.tags) && meta.tags.includes(patternFilter));
         if (!matchesPattern) continue;
       }
+      if (masteryFilter !== 'all' && !isDiscovered) continue;
+      if (query && isDiscovered && !rankMatches(rank)
+        && !String(meta.word || '').toLowerCase().includes(query)) continue;
+      const tel = this._computeWordTelemetry(rank, meta, gameState, unlockedSet);
       if (rarityFilter !== 'all') {
         if (tel.tierCode !== rarityFilter && String(meta.tierName || '').toUpperCase() !== rarityFilter) {
           continue;
@@ -11832,14 +11847,10 @@ class ModalView {
         }
       }
       if (query) {
-        const rankStr = `#${rank}`;
-        const exactRankNum = String(rank) === query || rankStr === query;
-        if (tel.isDiscovered) {
-          const wordMatch = String(meta.word || '').toLowerCase().includes(query);
-          if (!wordMatch && !exactRankNum && !rankStr.includes(query)) continue;
-        } else {
-          const tierMatch = String(meta.tierName || tel.tierCode).toLowerCase().includes(query);
-          if (!exactRankNum && !rankStr.includes(query) && !tierMatch) continue;
+        if (!tel.isDiscovered) {
+          const tierMatch = String(meta.tierName || '').toLowerCase() === query
+            || String(tel.tierCode || '').toLowerCase() === query;
+          if (!rankMatches(rank) && !tierMatch) continue;
         }
       }
       entries.push({ rank, meta, tel });
@@ -11881,7 +11892,10 @@ class ModalView {
     }
     const doc = this._getDoc();
     if (!doc) return;
-    entries.forEach(({ rank, meta, tel }) => {
+    const fragment = doc.createDocumentFragment();
+    entries.forEach((entry) => {
+      const { rank, meta, tel } = entry;
+      this._deckEntriesByRank.set(String(rank), entry);
       const chip = doc.createElement('div');
       chip.dataset.rank = String(rank);
       const tierName = meta.tierName || tel.tierCode;
@@ -11911,10 +11925,19 @@ class ModalView {
           <span class="deck-chip-tier" style="font-size: 9px; color: ${tierColor}; text-transform: uppercase; font-weight: 700;">${tierName}</span>
         `;
       }
-      chip.addEventListener('click', () => {
-        this.openLexiconWordModal(rank, meta, tel, gameState);
-      });
-      this.deckWordsScroll.appendChild(chip);
+      fragment.appendChild(chip);
+    });
+    this.deckWordsScroll.appendChild(fragment);
+  }
+  _bindDeckCardClicks() {
+    if (this._deckClicksBoundTo === this.deckWordsScroll) return;
+    this._deckClicksBoundTo = this.deckWordsScroll;
+    this.deckWordsScroll.addEventListener('click', (e) => {
+      const chip = e.target && e.target.closest ? e.target.closest('.deck-word-chip') : null;
+      const entry = chip && this._deckEntriesByRank ? this._deckEntriesByRank.get(chip.dataset.rank) : null;
+      if (entry) {
+        this.openLexiconWordModal(entry.rank, entry.meta, entry.tel, this._deckGameState);
+      }
     });
   }
   renderClassicStats(stats, onSelectClassicTest = null) {
@@ -12087,7 +12110,6 @@ class ModalView {
     const loadoutBar = this.armoryLoadoutBar || (rootDoc && typeof rootDoc.getElementById === 'function' ? rootDoc.getElementById('armory-loadout-bar') : null);
     if (loadoutBar && rootDoc && typeof rootDoc.createElement === 'function') {
       loadoutBar.innerHTML = '';
-      if (Array.isArray(loadoutBar.children)) loadoutBar.children.length = 0;
       const slotDefs = [
         { category: 'theme', label: 'STAGE THEME', item: cosmeticsModel.getTheme(equipped.theme) },
         { category: 'flowFx', label: 'FLOW FX', item: cosmeticsModel.getFlowFx(equipped.flowFx) },
@@ -12600,35 +12622,7 @@ class GameController {
       (gameState.eggBasket || []).length >= 3
     );
     this.hudView.updateSoundState(this.audioService.isEnabled());
-    const isHidden = this.storageService.getHiddenMode ? this.storageService.getHiddenMode() : false;
-    const hiddenMethod = this.storageService.getHiddenMethod ? this.storageService.getHiddenMethod() : 'word';
-    const hiddenWordDistance = this.storageService.getHiddenWordDistance ? this.storageService.getHiddenWordDistance() : 1;
-    this.sessionModel.setHiddenMode(isHidden);
-    this.sessionModel.setHiddenMethod(hiddenMethod);
-    this.sessionModel.setHiddenWordDistance(hiddenWordDistance);
-    this.stageView.setHiddenMode(isHidden);
-    this.stageView.setHiddenMethod(hiddenMethod);
-    this.stageView.setHiddenWordDistance(hiddenWordDistance);
-    if (this.hudView.updateHiddenModeState) {
-      this.hudView.updateHiddenModeState(isHidden, hiddenMethod, hiddenWordDistance);
-    }
-    this.ghostEnabled = this.storageService.getGhostCursor ? this.storageService.getGhostCursor() : false;
-    this.ghostSpeed = this.storageService.getGhostSpeed ? this.storageService.getGhostSpeed() : 50;
-    if (this.hudView.updateGhostState) {
-      this.hudView.updateGhostState(this.ghostEnabled, this.ghostSpeed);
-    }
-    this.wordDifficulty = this.storageService.getWordDifficulty ? this.storageService.getWordDifficulty() : 'normal';
-    this.punctuationEnabled = this.storageService.getPunctuationMode ? this.storageService.getPunctuationMode() : false;
-    this.capitalsEnabled = this.storageService.getCapitalsMode ? this.storageService.getCapitalsMode() : false;
-    if (this.hudView.updateWordDifficultyState) {
-      this.hudView.updateWordDifficultyState(this.wordDifficulty);
-    }
-    if (this.hudView.updatePunctuationState) {
-      this.hudView.updatePunctuationState(this.punctuationEnabled);
-    }
-    if (this.hudView.updateCapitalsState) {
-      this.hudView.updateCapitalsState(this.capitalsEnabled);
-    }
+    this._syncModsFromStorage();
     this.keyboardController.attach(
       typeof window !== 'undefined' ? window : null,
       this.stageView.typingInput,
@@ -12703,30 +12697,11 @@ class GameController {
       onResetRpg: () => {
         if (window.confirm('Reset Flow RPG progress back to Level 1 and 1 word ("the")?')) {
           this.storageService.resetGameSave();
-          this.eggNestModel.syncBasket([]);
-          if (this.eggNestModel.clearRevealedSlots) {
-            this.eggNestModel.clearRevealedSlots();
-          }
-          this.flowModel.reset(false, true);
-          this.flowModel.setTargetWpm(40);
-          this.hudView.syncTargetWpm(40);
-          const BigramClass = typeof BigramLedger !== 'undefined' ? BigramLedger : (typeof require !== 'undefined' ? require('../models/BigramLedger.js').BigramLedger : null);
-          if (BigramClass) {
-            this.bigramLedger = new BigramClass({});
-          }
-          this.pendingHatchedWords = [];
-          this.pendingRareEpicUnlocks = [];
-          this.activeRecapRun = null;
-          this.lastFlowRunEndTime = 0;
-          this.afkRecapTriggered = false;
-          if (this.nestView && this.nestView.updateFlowRecapPill) {
-            this.nestView.updateFlowRecapPill(null);
-          }
+          this._resetRpgRuntimeState();
           this.updateLevelHud();
           this.nestView.render(this.eggNestModel);
           this.resetTest();
-          const freshSave = this.storageService.getGameSave();
-          this.modalView.renderFlowStats(freshSave);
+          this._renderFlowStats();
           this.hudView.spawnXpToast('RPG Reset to Ground Zero!', 1.0, null, true);
         }
       },
@@ -12747,66 +12722,17 @@ class GameController {
             this.storageService.resetGameSave(true);
             this.storageService.resetClassicStats();
           }
-          this.eggNestModel.syncBasket([]);
-          if (this.eggNestModel.clearRevealedSlots) {
-            this.eggNestModel.clearRevealedSlots();
-          }
-          this.flowModel.reset(false, true);
-          this.flowModel.setTargetWpm(40);
-          this.hudView.syncTargetWpm(40);
-          const BigramClass = typeof BigramLedger !== 'undefined' ? BigramLedger : (typeof require !== 'undefined' ? require('../models/BigramLedger.js').BigramLedger : null);
-          if (BigramClass) {
-            this.bigramLedger = new BigramClass({});
-          }
+          this._resetRpgRuntimeState();
           if (this.achievementsModel) {
             this.achievementsModel.unlocked = {};
           }
-          this.pendingHatchedWords = [];
-          this.pendingRareEpicUnlocks = [];
-          this.activeRecapRun = null;
           this.activeClassicRecapRun = null;
-          this.lastFlowRunEndTime = 0;
-          this.afkRecapTriggered = false;
-          if (this.nestView && this.nestView.updateFlowRecapPill) {
-            this.nestView.updateFlowRecapPill(null);
-          }
-          this.wordDifficulty = 'normal';
-          this.punctuationEnabled = false;
-          this.capitalsEnabled = false;
-          this.ghostEnabled = false;
-          this.ghostSpeed = 50;
-          if (this.ghostPacerModel) {
-            this.ghostPacerModel.setEnabled(false);
-            this.ghostPacerModel.setSpeed(50);
-          }
-          this.sessionModel.setHiddenMode(false);
-          this.sessionModel.setHiddenMethod('word');
-          this.sessionModel.setHiddenWordDistance(1);
-          this.stageView.setHiddenMode(false);
-          this.stageView.setHiddenMethod('word');
-          this.stageView.setHiddenWordDistance(1);
-          if (this.hudView.updateHiddenModeState) {
-            this.hudView.updateHiddenModeState(false, 'word', 1);
-          }
-          if (this.hudView.updateGhostState) {
-            this.hudView.updateGhostState(false, 50);
-          }
-          if (this.hudView.updateWordDifficultyState) {
-            this.hudView.updateWordDifficultyState('normal');
-          }
-          if (this.hudView.updatePunctuationState) {
-            this.hudView.updatePunctuationState(false);
-          }
-          if (this.hudView.updateCapitalsState) {
-            this.hudView.updateCapitalsState(false);
-          }
+          this._syncModsFromStorage();
           this.applyEquippedCosmetics();
           this.updateLevelHud();
           this.nestView.render(this.eggNestModel);
           this.resetTest();
-          const freshSave = this.storageService.getGameSave();
-          const bucketStats = this.storageService.getBucketStats(freshSave);
-          this.modalView.renderFlowStats(freshSave, bucketStats, (r) => this.wordsModel.getWord(r), this.storageService);
+          this._renderFlowStats();
           this.modalView.renderClassicStats(this.storageService.getClassicStats(), this.modalView.onSelectClassicTest);
           if (this.achievementsModel && this.modalView.renderTrophies) {
             this.modalView.renderTrophies(this.achievementsModel, this.storageService);
@@ -13140,6 +13066,76 @@ class GameController {
     }
     return num;
   }
+  _syncModsFromStorage() {
+    const storage = this.storageService;
+    const isHidden = storage.getHiddenMode ? storage.getHiddenMode() : false;
+    const hiddenMethod = storage.getHiddenMethod ? storage.getHiddenMethod() : 'word';
+    const hiddenWordDistance = storage.getHiddenWordDistance ? storage.getHiddenWordDistance() : 1;
+    this.sessionModel.setHiddenMode(isHidden);
+    this.sessionModel.setHiddenMethod(hiddenMethod);
+    this.sessionModel.setHiddenWordDistance(hiddenWordDistance);
+    this.stageView.setHiddenMode(isHidden);
+    this.stageView.setHiddenMethod(hiddenMethod);
+    this.stageView.setHiddenWordDistance(hiddenWordDistance);
+    if (this.hudView.updateHiddenModeState) {
+      this.hudView.updateHiddenModeState(isHidden, hiddenMethod, hiddenWordDistance);
+    }
+    this.ghostEnabled = storage.getGhostCursor ? storage.getGhostCursor() : false;
+    this.ghostSpeed = storage.getGhostSpeed ? storage.getGhostSpeed() : 50;
+    if (this.hudView.updateGhostState) {
+      this.hudView.updateGhostState(this.ghostEnabled, this.ghostSpeed);
+    }
+    this.wordDifficulty = storage.getWordDifficulty ? storage.getWordDifficulty() : 'normal';
+    this.punctuationEnabled = storage.getPunctuationMode ? storage.getPunctuationMode() : false;
+    this.capitalsEnabled = storage.getCapitalsMode ? storage.getCapitalsMode() : false;
+    if (this.hudView.updateWordDifficultyState) {
+      this.hudView.updateWordDifficultyState(this.wordDifficulty);
+    }
+    if (this.hudView.updatePunctuationState) {
+      this.hudView.updatePunctuationState(this.punctuationEnabled);
+    }
+    if (this.hudView.updateCapitalsState) {
+      this.hudView.updateCapitalsState(this.capitalsEnabled);
+    }
+  }
+  _resetRpgRuntimeState() {
+    this.eggNestModel.syncBasket([]);
+    if (this.eggNestModel.clearRevealedSlots) {
+      this.eggNestModel.clearRevealedSlots();
+    }
+    this.flowModel.reset(false, true);
+    this.flowModel.setTargetWpm(40);
+    this.hudView.syncTargetWpm(40);
+    const BigramClass = typeof BigramLedger !== 'undefined' ? BigramLedger : (typeof require !== 'undefined' ? require('../models/BigramLedger.js').BigramLedger : null);
+    if (BigramClass) {
+      this.bigramLedger = new BigramClass({});
+    }
+    this.pendingHatchedWords = [];
+    this.pendingRareEpicUnlocks = [];
+    this.activeRecapRun = null;
+    this.lastFlowRunEndTime = 0;
+    this.afkRecapTriggered = false;
+    if (this.nestView && this.nestView.updateFlowRecapPill) {
+      this.nestView.updateFlowRecapPill(null);
+    }
+  }
+  _renderFlowStats() {
+    const gameState = this.storageService.getGameSave();
+    this.modalView.renderFlowStats(
+      gameState,
+      this.storageService.getBucketStats(gameState),
+      (r) => this.wordsModel.getWord(r),
+      this.storageService,
+      (runItem) => {
+        this.closeStats();
+        if (this.currentMode !== 'flow') {
+          this.switchMode('flow');
+        }
+        this.openFlowRecap(false, runItem);
+      }
+    );
+    return gameState;
+  }
   _getTextModOptions() {
     return {
       capitals: Boolean(this.capitalsEnabled),
@@ -13338,6 +13334,7 @@ class GameController {
       this.classicTimerInterval = null;
     }
     this._finalizeActiveFlowRun();
+    this.classicRunMods = null;
     this.isFlowRecapVisible = false;
     this.isClassicRecapVisible = false;
     this.activeClassicRecapRun = null;
@@ -13413,6 +13410,7 @@ class GameController {
   }
   startClassicTimer() {
     if (this.classicTimerInterval) return;
+    this.classicRunMods = this._getActiveModsSnapshot('classic');
     this.hudView.updateTimer(this.sessionModel.duration);
     this.hudView.updateLiveClassicStats(0, 100);
     this.classicTimerInterval = setInterval(() => {
@@ -13431,7 +13429,8 @@ class GameController {
     this.deactivateZenFocus();
     this.lastTestFinishedTime = Date.now();
     const stats = this.sessionModel.calculateFinalStats();
-    const mods = this._getActiveModsSnapshot('classic');
+    const mods = this.classicRunMods || this._getActiveModsSnapshot('classic');
+    this.classicRunMods = null;
     stats.mods = mods;
     stats.hiddenMode = mods.hidden;
     this.stopGhostPacer(true);
@@ -13633,6 +13632,7 @@ class GameController {
         ? this.sessionModel.recordFlowRunWord(isCleanWord, liveWpm, this.flowModel.momentum, unlockedRanksCount)
         : null;
       if (!wasFlowRunActive && this.sessionModel.flowRun) {
+        this.sessionModel.flowRun.mods = this._getActiveModsSnapshot('flow');
         this.lastFlowTickTime = Date.now();
         this.lastFlowRunEndTime = 0;
         this.afkRecapTriggered = false;
@@ -14193,22 +14193,8 @@ class GameController {
   openStats(tab = 'flow') {
     this.resetTest();
     this.stageView.blurInput();
-    const gameState = this.storageService.getGameSave();
-    const bucketStats = this.storageService.getBucketStats(gameState);
     this.modalView.openStatsModal(tab);
-    this.modalView.renderFlowStats(
-      gameState,
-      bucketStats,
-      (r) => this.wordsModel.getWord(r),
-      this.storageService,
-      (runItem) => {
-        this.closeStats();
-        if (this.currentMode !== 'flow') {
-          this.switchMode('flow');
-        }
-        this.openFlowRecap(false, runItem);
-      }
-    );
+    const gameState = this._renderFlowStats();
     this.modalView.renderClassicStats(
       this.storageService.getClassicStats(),
       (testItem) => {
